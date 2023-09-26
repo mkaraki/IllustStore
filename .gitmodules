@@ -1,0 +1,3 @@
+[submodule "submodules/a1111-sd-webui-tagcomplete"]
+	path = submodules/a1111-sd-webui-tagcomplete
+	url = https://github.com/DominikDoom/a1111-sd-webui-tagcomplete.git

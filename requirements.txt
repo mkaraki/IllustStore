@@ -1,0 +1,2 @@
+gradio==3.44.4
+deepdanbooru[tensorflow]==1.0.2
