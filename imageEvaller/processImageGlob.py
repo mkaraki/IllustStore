@@ -32,9 +32,17 @@ def is_tag_danbooru_exists(tag):
 
 
 def add_image(i_path, image):
+    tag_items = None
+    try:
+        tag_items = image_proc(image).items()
+    except Exception as e:
+        sys.stderr.write(f"Failed to tagging {i_path}: {e}\n")
+        return
+
     image_abs = os.path.abspath(i_path)
     dbCursor.execute("INSERT INTO illusts(path) VALUES(%s)", (image_abs,))
     illustId = dbCursor.lastrowid
+
     for t, a in image_proc(image).items():
         tagId = is_tag_danbooru_exists(t)
         if tagId == False:
@@ -47,6 +55,7 @@ def add_image(i_path, image):
             (illustId, tagId, a),
         )
         print(f"{i_path} has {t} ({a})")
+
     db.commit()
 
 
