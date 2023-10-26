@@ -27,8 +27,8 @@ RUN a2enmod rewrite
 COPY --from=require-server /app/vendor /var/www/html/vendor
 
 COPY *.php /var/www/html/
-COPY views /var/www/html/
-COPY assets /var/www/html/
+COPY views/*.php /var/www/html/views/
+COPY assets/* /var/www/html/assets/
 COPY .htaccess /var/www/html/
 
 RUN mkdir /var/www/html/cache
