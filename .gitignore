@@ -1,7 +1,1 @@
-/.venv
-/__pycache__
-/.vscode
-/models
-!/models/.gitkeep
-/local-tests
-/flagged
+/dbdebug

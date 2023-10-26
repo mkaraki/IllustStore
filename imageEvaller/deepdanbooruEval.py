@@ -30,32 +30,28 @@ from functools import cache
 
 
 @cache
-def _load_model(model_path = None):
-    if (model_path == None):
-        model_path = "models/deepdanbooru/model.h5";
+def _load_model(model_path=None):
+    if model_path == None:
+        model_path = "models/deepdanbooru/model.h5"
     return tensorflow.keras.models.load_model(filepath=model_path, compile=False)
 
 
 @cache
 def _load_tags(tags_path=None):
-    if (tags_path == None):
+    if tags_path == None:
         tags_path = "models/deepdanbooru/tags.txt"
     return deepdanbooru.data.load_tags(tags_path=tags_path)
 
 
 # Based on:
 # - https://github.com/KichangKim/DeepDanbooru/blob/05eb3c39b0fae43e3caf39df801615fe79b27c2f/deepdanbooru/data/__init__.py#L13
-def _image_preprocess(
-    image,
-    width,
-    height
-):
+def _image_preprocess(image, width, height):
     image = tensorflow.image.resize(
-                image,
-                size=(height, width),
-                method=tensorflow.image.ResizeMethod.AREA,
-                preserve_aspect_ratio=True,
-            )
+        image,
+        size=(height, width),
+        method=tensorflow.image.ResizeMethod.AREA,
+        preserve_aspect_ratio=True,
+    )
 
     image = image.numpy()
     image = deepdanbooru.image.transform_and_pad_image(image, width, height)
@@ -76,7 +72,7 @@ def _evaluate(
     width = model.input_shape[2]
     height = model.input_shape[1]
 
-    if (threshold == None):
+    if threshold == None:
         threshold = 0.5
 
     image = _image_preprocess(image, width, height)
@@ -98,14 +94,27 @@ def _evaluate(
 # Requires Image(type="numpy")
 def evaluateForGradioInput(
     image,
-    tags_path = None,
-    model_path = None,
-    threshold = None,
+    tags_path=None,
+    model_path=None,
+    threshold=None,
 ):
     model = _load_model(model_path)
     tags = _load_tags(tags_path)
 
-    taglist = _evaluate(image, model, tags)
+    taglist = _evaluate(image, model, tags, threshold)
+    return taglist
+
+
+def evaluateTfImage(
+    image,
+    tags_path=None,
+    model_path=None,
+    threshold=None,
+):
+    model = _load_model(model_path)
+    tags = _load_tags(tags_path)
+
+    taglist = _evaluate(image, model, tags, threshold)
     return taglist
 
 

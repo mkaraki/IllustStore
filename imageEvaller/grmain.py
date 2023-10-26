@@ -12,18 +12,20 @@ import os
 #dde("local-tests/00000-48126753.png")
 
 
-
 def image_mod(image):
     print('[DeepDanbooru] Image queued');
     res = deepdanbooruEval.evaluateForGradioInput(image);
     print('[DeepDanbooru] Got result');
     return {k: float(v) for k, v in res}
 
+
 gr_app = gr.Interface(
     image_mod,
     gr.Image(type="numpy"),
     gr.Label(),
+    allow_flagging='never',
 )
+
 
 if __name__ == "__main__":
     gr_app.launch()

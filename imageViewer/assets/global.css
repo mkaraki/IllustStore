@@ -1,0 +1,28 @@
+ul.forever-ul {
+    margin: 0;
+    padding: 0;
+}
+
+dd>ul.forever-ul {
+    display: inline-block;
+}
+
+ul.forever-ul>li {
+    list-style: none;
+    display: inline-block;
+    padding-right: 15px;
+}
+
+.query-ind {
+    font-family: monospace;
+}
+
+.query-h1 {
+    font-size: 16pt;
+}
+
+.viewer-img {
+    display: block;
+    max-height: calc(100vh - 120px);
+    max-width: 100vw;
+}

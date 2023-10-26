@@ -1,0 +1,12 @@
+{
+    "require": {
+        "klein/klein": "dev-master",
+        "sergeytsalkov/meekrodb": "^2.4"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/mkaraki/klein.php"
+        }
+    ]
+}
