@@ -1,7 +1,7 @@
 import deepdanbooruEval
 import os
 import sys
-import glob
+from glob import glob, iglob
 import tensorflow
 import mysql.connector
 
@@ -9,6 +9,8 @@ db = mysql.connector.connect(
     user="illustStore", passwd="illustStore", host="db", db="illustStore"
 )
 dbCursor = db.cursor(dictionary=True, buffered=True)
+
+print("Db connected.")
 
 
 def image_proc(image):
@@ -48,7 +50,8 @@ def add_image(i_path, image):
     db.commit()
 
 
-for i in glob.glob("./images/**/*.jpg"):
+print("glob: *.jpg")
+for i in iglob("./images/**/*.jpg", recursive=True):
     if is_exists(i):
         print(f"Skipped: {i}")
         continue
@@ -63,7 +66,8 @@ for i in glob.glob("./images/**/*.jpg"):
     add_image(i, img)
 
 
-for i in glob.glob("./images/**/*.png"):
+print("glob: *.png")
+for i in iglob("./images/**/*.png", recursive=True):
     if is_exists(i):
         print(f"Skipped: {i}")
         continue
@@ -79,3 +83,5 @@ for i in glob.glob("./images/**/*.png"):
 
 db.close()
 dbCursor.close()
+
+print("Db closed.")
