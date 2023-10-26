@@ -2,12 +2,21 @@ version: "3.7"
 
 services:
   runner:
-    build: .
+    build: imageEvaller
     volumes:
-      - ./models:/usr/src/app/models:ro
-      - ./images:/usr/src/app/images:ro
+      - ./imageEvaller/models:/usr/src/app/models:ro
+      - ./imageEvaller/images:/usr/src/app/images:ro
     environment:
       - CUDA_VISIBLE_DEVICES=""
+
+  viewer:
+    build: imageViewer
+    volumes:
+      - ./imageEvaller/images:/usr/src/app/images:ro
+      - ./imageViewer:/var/www/html:ro
+    ports:
+      - 7090:80
+
   db:
     image: mariadb
     environment:
@@ -17,4 +26,4 @@ services:
       - MARIADB_PASSWORD=illustStore
     volumes:
       - ./dbdebug:/var/lib/mysql:Z
-      - ../init.db:/docker-entrypoint-initdb.d:ro
+      - ./init.db:/docker-entrypoint-initdb.d:ro

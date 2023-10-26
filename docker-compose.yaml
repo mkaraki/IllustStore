@@ -12,7 +12,6 @@ services:
   viewer:
     build: imageViewer
     volumes:
-      - ./imageEvaller/images:/usr/src/app/images:ro
       - ./imageViewer:/var/www/html:ro
     ports:
       - 7090:80
