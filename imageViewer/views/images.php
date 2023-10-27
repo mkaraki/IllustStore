@@ -9,10 +9,29 @@
 </head>
 
 <body>
-    <h1><?= $this->sqlQuery ?></h1>
     <header>
         <h1 class="query-ind query-h1">Query: <?= $this->escape($this->searchParam) ?></h1>
     </header>
+    <?php if (isset($this->pageType)) : ?>
+        <div class="query-info">
+            <?php if ($this->pageType === 'tag') : ?>
+                <span class="query-info-item">TagId: <?= $this->tagId ?></span>
+                <?php if ($this->tagDanbooru !== null) : ?>
+                    <span class="query-info-item">
+                        Danbooru: <a href="https://danbooru.donmai.us/wiki_pages/<?= urlencode($this->tagDanbooru) ?>"><?= $this->escape($this->tagDanbooru) ?></a>
+                    </span>
+                <?php endif; ?>
+                <?php if ($this->tagPixivJpn !== null) : ?>
+                    <span class="query-info-item">
+                        Pixiv: <a href="https://www.pixiv.net/tags/<?= urlencode($this->tagPixivJpn) ?>"><?= $this->escape($this->tagPixivJpn) ?></a>
+                        <?php if ($this->tagPixivEng !== null) : ?>
+                            [<?= $this->escape($this->tagPixivEng) ?>]
+                        <?php endif; ?>
+                    </span>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
     <?php foreach ($this->images as $img) : ?>
         <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
     <?php endforeach; ?>

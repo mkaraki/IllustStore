@@ -120,6 +120,12 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
 
     $service->render(__DIR__ . '/views/images.php', [
         'searchParam' => 'tag:' . $service->escape($tagData['tagName']),
+        'pageType' => 'tag',
+        'tagId' => $request->tagId,
+        'tagName' => $tagData['tagName'],
+        'tagDanbooru' => $tagData['tagDanbooru'],
+        'tagPixivJpn' => $tagData['tagPixivJpn'],
+        'tagPixivEng' => $tagData['tagPixivEng'],
         'images' => DB::query(
             'SELECT
                 illustId AS id
