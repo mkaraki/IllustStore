@@ -21,7 +21,9 @@ $maxCount = DB::queryFirstField(
     'SELECT COUNT(tagId) FROM tagAssign GROUP BY tagId'
 );
 
-$sizeDiff = 20.0 / $maxCount;
+$maxCount = doubleval($maxCount);
+$calcMaxCount = $maxCount - 1.0;
+$usableSize = 20.0;
 $initSize = 12.0;
 ?>
 <!DOCTYPE html>
@@ -37,7 +39,7 @@ $initSize = 12.0;
 <body>
     <ul class="forever-ul tag-cloud">
         <?php foreach ($res as $v) : ?>
-            <li><a href="/tag/<?= $v['id'] ?>" style="font-size: <?= $initSize + ($sizeDiff * $v['count']) ?>pt"><?= htmlentities($v['tagName']) ?></a> (<?= $v['count'] ?>)</li>
+            <li><a href="/tag/<?= $v['id'] ?>" style="font-size: <?= $initSize + ((-pow((doubleval($v['count']) / $maxCount) - 1, 2) + 1) * $usableSize) ?>pt"><?= htmlentities($v['tagName']) ?></a> (<?= $v['count'] ?>)</li>
         <?php endforeach; ?>
     </ul>
     <footer>
