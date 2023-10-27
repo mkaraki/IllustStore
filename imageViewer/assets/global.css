@@ -26,3 +26,15 @@ ul.forever-ul>li {
     max-height: calc(100vh - 120px);
     max-width: 100vw;
 }
+
+.query-info {
+    margin-bottom: 30px;
+}
+
+.query-info-item {
+    padding-right: 20px
+}
+
+.tag-cloud a {
+    font-size: 12pt;
+}
