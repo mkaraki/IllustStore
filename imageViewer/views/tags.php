@@ -10,7 +10,7 @@
 
 <body>
     <ul class="forever-ul">
-        <?php foreach (DB::query('SELECT id, tagName FROM tags') as $v) : ?>
+        <?php foreach (DB::query('SELECT id, tagName FROM tags ORDER BY tagName') as $v) : ?>
             <li><a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a></li>
         <?php endforeach; ?>
     </ul>
