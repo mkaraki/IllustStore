@@ -14,7 +14,7 @@
         <h1 class="query-ind query-h1">Query: <?= $this->escape($this->searchParam) ?></h1>
     </header>
     <?php foreach ($this->images as $img) : ?>
-        <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img"></a>
+        <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
     <?php endforeach; ?>
 </body>
 

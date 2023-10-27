@@ -2,7 +2,25 @@
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/_config.php';
 
+const IMG_SCALE_SIZE = 250.0;
+
 $klein = new \Klein\Klein();
+
+function fileMTimeMod($file, $serverDirective, $response)
+{
+    $filemtime = filemtime($file);
+    $curFileDt_str = gmdate('D, d M Y H:i:s', $filemtime) . ' GMT';
+    if (isset($serverDirective['HTTP_IF_MODIFIED_SINCE'])) {
+        if ($serverDirective['HTTP_IF_MODIFIED_SINCE'] === $curFileDt_str) {
+            $response->code(304);
+            return true;
+        }
+    } else {
+        header('Last-Modified: ' . $curFileDt_str);
+    }
+
+    return false;
+}
 
 $klein->respond('/image/', function ($request, $response, $service, $app) {
     $service->render(__DIR__ . '/views/images.php', [
@@ -43,6 +61,9 @@ $klein->respond('/image/[i:imageId]/raw', function ($request, $response, $servic
         return;
     }
 
+    if (fileMTimeMod($img, $_SERVER, $response))
+        return;
+
     $extEval = strtolower($img);
     if (str_ends_with($extEval, '.png')) {
         $response->header('Content-type', 'image/png');
@@ -61,21 +82,21 @@ $klein->respond('/image/[i:imageId]/thumb', function ($request, $response, $serv
         return;
     }
 
-    $imgScaleSize = 250.0;
+    if (fileMTimeMod($img, $_SERVER, $response))
+        return;
 
     $imgo = imagecreatefromstring(file_get_contents($img));
-    if (imagesx($imgo) > $imgScaleSize) {
-        $imgo = imagescale($imgo, $imgScaleSize);
+    if (imagesx($imgo) > IMG_SCALE_SIZE) {
+        $imgo = imagescale($imgo, IMG_SCALE_SIZE);
     }
 
-    if (imagesy($imgo) > $imgScaleSize) {
+    if (imagesy($imgo) > IMG_SCALE_SIZE) {
         $imgW = doubleval(imagesx($imgo));
         $imgH = doubleval(imagesy($imgo));
-        $yScale = $imgScaleSize / $imgH;
+        $yScale = IMG_SCALE_SIZE / $imgH;
         $newW = $imgW * $yScale;
-        $imgo = imagescale($imgo, $newW, $imgScaleSize);
+        $imgo = imagescale($imgo, $newW, IMG_SCALE_SIZE);
     }
-
 
     $response->header('Content-Type', 'image/webp');
 
