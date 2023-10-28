@@ -35,6 +35,27 @@
     <?php foreach ($this->images as $img) : ?>
         <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
     <?php endforeach; ?>
+    <?php if (isset($this->paginationTotal) && $this->paginationTotal > 1) : ?>
+        <div>
+            <?php for ($i = 1; $i <= $this->paginationTotal; $i++) : ?>
+                <?php if ($this->paginationNow === $i) : ?>
+                    <?= $i ?>
+                <?php else : ?>
+                    <a href="?p=<?= $i ?>"><?= $i ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($this->paginationItemCount)) : ?>
+        <div>
+            <?= $this->paginationItemCount ?> Items
+        </div>
+        <?php if (isset($this->paginationItemStart) && isset($this->paginationItemEnd)) : ?>
+            <div>
+                Showing <?= $this->paginationItemStart ?> - <?= $this->paginationItemEnd ?>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
 </body>
 
 </html>

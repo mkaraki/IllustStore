@@ -118,6 +118,29 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
         return;
     }
 
+    $imageCnt = DB::queryFirstField(
+        'SELECT COUNT(illustId) FROM tagAssign WHERE tagId = %i',
+        $request->tagId
+    );
+
+    $p = $_GET['p'] ?? '1';
+    $p = intval($p);
+    $sttIdx = ($p - 1) * 100;
+    $maxPage = ceil(doubleval($imageCnt) / 100.0);
+
+    $images = DB::query(
+        'SELECT
+                illustId AS id
+            FROM
+                tagAssign
+            WHERE
+                tagId = %i
+            LIMIT 100
+            OFFSET %i',
+        $request->tagId,
+        $sttIdx
+    );
+
     $service->render(__DIR__ . '/views/images.php', [
         'searchParam' => 'tag:' . $service->escape($tagData['tagName']),
         'pageType' => 'tag',
@@ -126,15 +149,12 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
         'tagDanbooru' => $tagData['tagDanbooru'],
         'tagPixivJpn' => $tagData['tagPixivJpn'],
         'tagPixivEng' => $tagData['tagPixivEng'],
-        'images' => DB::query(
-            'SELECT
-                illustId AS id
-            FROM
-                tagAssign
-            WHERE
-                tagId = %i',
-            $request->tagId
-        )
+        'images' => $images,
+        'paginationTotal' => $maxPage,
+        'paginationNow' => $p,
+        'paginationItemCount' => $imageCnt,
+        'paginationItemStart' => $sttIdx,
+        'paginationItemEnd' => $sttIdx + 100,
     ]);
 });
 
