@@ -110,16 +110,26 @@ $klein->respond('/image/[i:imageId]/thumb', function ($request, $response, $serv
         return;
 
     $imgo = imagecreatefromstring(file_get_contents($img));
-    if (imagesx($imgo) > IMG_SCALE_SIZE) {
-        $imgo = imagescale($imgo, IMG_SCALE_SIZE);
-    }
 
-    if (imagesy($imgo) > IMG_SCALE_SIZE) {
-        $imgW = doubleval(imagesx($imgo));
-        $imgH = doubleval(imagesy($imgo));
-        $yScale = IMG_SCALE_SIZE / $imgH;
-        $newW = $imgW * $yScale;
-        $imgo = imagescale($imgo, $newW, IMG_SCALE_SIZE);
+    $origImgX = doubleval(imagesx($imgo));
+    $origImgY = doubleval(imagesy($imgo));
+
+    if ($origImgX > 250 || $origImgY > 250) {
+        $newX = 0;
+        $newY = 0;
+
+        if ($origImgX > $origImgY) {
+            $newX = 250;
+            $newY = ($origImgY * (250.0 / $origImgX));
+        } else {
+            $newY = 250;
+            $newX = ($origImgX * (250.0 / $origImgY));
+        }
+
+        $newImgObj = imagecreatetruecolor($newX, $newY);
+        imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
+
+        $imgo = $newImgObj;
     }
 
     $response->header('Content-Type', 'image/webp');
