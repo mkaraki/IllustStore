@@ -69,3 +69,7 @@ ul.forever-ul>li form input[type="submit"] {
     margin-right: 15px;
     display: inline-block;
 }
+
+.text-decoration--none {
+    text-decoration: none;
+}

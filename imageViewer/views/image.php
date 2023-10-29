@@ -35,7 +35,7 @@
                             </li>
                         <?php endforeach; ?>
                         <li>
-                            <a href="/image/<?= $this->imageId ?>/tag/new">＋</a>
+                            <a href="/image/<?= $this->imageId ?>/tag/new" class="text-decoration--none">➕</a>
                         </li>
                     </ul>
                 </dd>
