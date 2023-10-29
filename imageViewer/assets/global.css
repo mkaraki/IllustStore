@@ -1,3 +1,7 @@
+body {
+    margin: 8px;
+}
+
 ul.forever-ul {
     margin: 0;
     padding: 0;
@@ -24,7 +28,7 @@ ul.forever-ul>li {
 .viewer-img {
     display: block;
     max-height: calc(100vh - 120px);
-    max-width: 100vw;
+    max-width: calc(100vw - 16px);
 }
 
 .query-info {
@@ -43,7 +47,12 @@ ul.forever-ul>li {
     text-align: center;
 }
 
+#search-tag-auto-complete {
+    max-width: calc(100vw - 16px);
+}
+
 #search-tag-auto-complete>a {
     color: orangered;
     margin-right: 15px;
+    display: inline-block;
 }
