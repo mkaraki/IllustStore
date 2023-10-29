@@ -23,9 +23,32 @@ function fileMTimeMod($file, $serverDirective, $response)
 }
 
 $klein->respond('/image/', function ($request, $response, $service, $app) {
+    $imageCnt = DB::queryFirstField(
+        'SELECT COUNT(id) FROM illusts'
+    );
+
+    $p = $_GET['p'] ?? '1';
+    $p = intval($p);
+    $sttIdx = ($p - 1) * 100;
+    $maxPage = ceil(doubleval($imageCnt) / 100.0);
+
     $service->render(__DIR__ . '/views/images.php', [
         'searchParam' => '*',
-        'images' => DB::query('SELECT * FROM illusts')
+        'images' => DB::query(
+            'SELECT
+                *
+            FROM
+                illusts
+            LIMIT 100
+            OFFSET %i',
+            $request->tagId,
+            $sttIdx
+        ),
+        'paginationTotal' => $maxPage,
+        'paginationNow' => $p,
+        'paginationItemCount' => $imageCnt,
+        'paginationItemStart' => $sttIdx,
+        'paginationItemEnd' => $sttIdx + 100,
     ]);
 });
 
