@@ -284,4 +284,15 @@ $klein->respond('/', function ($request, $response, $service, $app) {
     $service->render(__DIR__ . '/views/index.php');
 });
 
+$klein->respond('POST', '/util/tag/complete', function ($request, $response, $service, $app) {
+    $queryObj = json_decode($request->body(), true);
+    if (!isset($queryObj['w'])) {
+        $response->code(400);
+        return var_export($request->body());
+        return;
+    }
+    $res = DB::queryFirstColumn("SELECT tagName FROM tags WHERE tagName LIKE %ss", $queryObj['w']);
+    $response->json(['sw' => $res]);
+});
+
 $klein->dispatch();

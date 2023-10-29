@@ -42,3 +42,8 @@ ul.forever-ul>li {
 .text-align--center {
     text-align: center;
 }
+
+#search-tag-auto-complete>a {
+    color: orangered;
+    margin-right: 15px;
+}
