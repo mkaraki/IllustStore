@@ -65,7 +65,8 @@ $klein->respond('/image/[i:imageId]', function ($request, $response, $service, $
         'tags' => DB::query(
             'SELECT
                 tA.tagId AS id,
-                t.tagName
+                t.tagName,
+                tA.autoAssigned
             FROM
                 tagAssign tA,
                 tags t
@@ -299,6 +300,15 @@ $klein->respond('POST', '/util/tag/complete', function ($request, $response, $se
 
 $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($request, $response, $service, $app) {
     DB::delete('tagAssign', [
+        'illustId' => $request->illustId,
+        'tagId' => $request->tagId,
+    ]);
+
+    $response->redirect('/image/' . $request->illustId, 302);
+});
+
+$klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($request, $response, $service, $app) {
+    DB::update('tagAssign', ['autoAssigned' => false], [
         'illustId' => $request->illustId,
         'tagId' => $request->tagId,
     ]);

@@ -22,6 +22,13 @@
                         <?php foreach ($this->tags as $v) : ?>
                             <li>
                                 <a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a>
+                                <?php if ($v['autoAssigned'] === '1') : ?>
+                                    <form action="/image/<?= $this->imageId ?>/tag/<?= $v['id'] ?>/approve" method="post" onsubmit="return confirm('Are you sure to approve tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
+                                        <input type="submit" value="🤖">
+                                    </form>
+                                <?php else : ?>
+                                    <span>✅</span>
+                                <?php endif; ?>
                                 <form action="/image/<?= $this->imageId ?>/tag/<?= $v['id'] ?>/delete" method="post" onsubmit="return confirm('Are you sure to delete tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
                                     <input type="submit" value="🗑️">
                                 </form>
