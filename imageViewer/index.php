@@ -271,6 +271,8 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
 
     $service->render(__DIR__ . '/views/images.php', [
         'searchParam' => $searchQuery,
+        'pageType' => 'search',
+        'searchQuery' => $searchQuery,
         'images' => $images,
         'paginationTotal' => $maxPage,
         'paginationNow' => $p,

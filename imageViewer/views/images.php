@@ -41,7 +41,11 @@
                 <?php if ($this->paginationNow === $i) : ?>
                     <?= $i ?>
                 <?php else : ?>
-                    <a href="?p=<?= $i ?>"><?= $i ?></a>
+                    <?php if (isset($this->pageType) && $this->pageType === 'search') : ?>
+                        <a href="?q=<?= urlencode($this->searchQuery) ?>&p=<?= $i ?>"><?= $i ?></a>
+                    <?php else : ?>
+                        <a href="?p=<?= $i ?>"><?= $i ?></a>
+                    <?php endif; ?>
                 <?php endif; ?>
             <?php endfor; ?>
         </div>
