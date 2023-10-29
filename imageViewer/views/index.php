@@ -22,9 +22,10 @@
     </div>
     <div>
         <ul class="forever-ul">
-            <?php foreach (DB::query('SELECT * FROM tags ORDER BY RAND() LIMIT 8') as $v) : ?>
+            <?php foreach (DB::query('SELECT * FROM tags ORDER BY RAND() LIMIT 7') as $v) : ?>
                 <li><a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a></li>
             <?php endforeach; ?>
+            <li><a href="/tag/">more...</a></li>
         </ul>
     </div>
 </body>
