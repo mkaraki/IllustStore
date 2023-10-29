@@ -52,7 +52,7 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
     ]);
 });
 
-$klein->respond('/image/[i:imageId]', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $service, $app) {
     $img = DB::queryFirstRow('SELECT path FROM illusts WHERE id = %i', $request->imageId);
     if ($img === null) {
         $response->code(404);
@@ -304,7 +304,7 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($r
         'tagId' => $request->tagId,
     ]);
 
-    $response->redirect('/image/' . $request->illustId, 302);
+    $response->redirect('/image/' . $request->illustId, 303);
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($request, $response, $service, $app) {
@@ -313,7 +313,64 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($
         'tagId' => $request->tagId,
     ]);
 
-    $response->redirect('/image/' . $request->illustId, 302);
+    $response->redirect('/image/' . $request->illustId, 303);
+});
+
+$klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
+    $img = DB::queryFirstRow('SELECT path FROM illusts WHERE id = %i', $request->illustId);
+    if ($img === null) {
+        $response->code(404);
+        return;
+    }
+
+    $service->render(__DIR__ . '/views/newTagAssign.php', [
+        'imageId' => $request->illustId,
+        'srvPath' => $img['path'],
+        'tags' => DB::query(
+            'SELECT
+                tA.tagId AS id,
+                t.tagName,
+                tA.autoAssigned
+            FROM
+                tagAssign tA,
+                tags t
+            WHERE
+                tA.tagId = t.id AND
+                tA.illustId = %i
+            ORDER BY t.tagName',
+            $request->illustId,
+        ),
+    ]);
+});
+
+$klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
+
+    $newTagId = $_POST['newTagId'] ?? 'UNABLE';
+    if (!is_numeric($newTagId)) {
+        $response->code(400);
+        return;
+    }
+    $newTagId = intval($newTagId);
+
+    $img = DB::queryFirstRow('SELECT path FROM illusts WHERE id = %i', $request->illustId);
+    if ($img === null) {
+        $response->code(404);
+        return;
+    }
+
+    $tagData = DB::queryFirstRow('SELECT * FROM tags WHERE id = %i', $newTagId);
+    if ($tagData === null) {
+        $response->code(404);
+        return;
+    }
+
+    DB::insert('tagAssign', [
+        'illustId' => $request->illustId,
+        'tagId' => $newTagId,
+        'autoAssigned' => false,
+    ]);
+
+    $response->redirect('/image/' . $request->illustId, 303);
 });
 
 $klein->dispatch();

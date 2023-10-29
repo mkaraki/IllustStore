@@ -34,6 +34,9 @@
                                 </form>
                             </li>
                         <?php endforeach; ?>
+                        <li>
+                            <a href="/image/<?= $this->imageId ?>/tag/new">＋</a>
+                        </li>
                     </ul>
                 </dd>
                 <dt>Server Path</dt>
