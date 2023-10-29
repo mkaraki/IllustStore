@@ -48,7 +48,8 @@ $klein->respond('/image/[i:imageId]', function ($request, $response, $service, $
                 tags t
             WHERE
                 tA.tagId = t.id AND
-                tA.illustId = %i',
+                tA.illustId = %i
+            ORDER BY t.tagName',
             $request->imageId,
         ),
     ]);
