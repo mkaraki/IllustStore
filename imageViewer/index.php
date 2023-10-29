@@ -182,4 +182,96 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
     ]);
 });
 
+$klein->respond('/search', function ($request, $response, $service, $app) {
+    $searchQuery = $_GET['q'] ?? '';
+    if ($searchQuery === '') {
+        $response->redirect('/', 302);
+        return;
+    }
+
+    $searchTags = [];
+
+    $searchQuery = str_replace('　', ' ', $searchQuery);
+    $searchQuerySplitted = explode(' ', $searchQuery);
+
+    foreach ($searchQuerySplitted as $query) {
+        $tagId = DB::queryFirstField(
+            'SELECT
+                id
+            FROM
+                tags
+            WHERE
+                LOWER(tagName) = LOWER(%s) OR
+                LOWER(tagDanbooru) = LOWER(%s) OR
+                LOWER(tagPixivJpn) = LOWER(%s) OR
+                LOWER(tagPixivEng) = LOWER(%s)',
+            $query,
+            $query,
+            $query,
+            $query
+        );
+
+        if ($tagId === null) continue;
+
+        $searchTags[] = $tagId;
+    }
+
+    $imageCnt = DB::queryFirstField(
+        'SELECT
+                COUNT(i.id) OVER()
+            FROM
+                tagAssign tA,
+                tags t,
+                illusts i
+            WHERE
+                tA.tagId = t.id AND
+                tA.illustId = i.id AND
+                tagId IN %li
+            GROUP BY i.id
+            HAVING COUNT(i.id) = %i
+            LIMIT 1',
+        $searchTags,
+        count($searchTags),
+    );
+
+    $p = $_GET['p'] ?? '1';
+    $p = intval($p);
+    $sttIdx = ($p - 1) * 100;
+    $maxPage = ceil(doubleval($imageCnt) / 100.0);
+
+    $images = DB::query(
+        'SELECT
+                i.id AS id
+            FROM
+                tagAssign tA,
+                tags t,
+                illusts i
+            WHERE
+                tA.tagId = t.id AND
+                tA.illustId = i.id AND
+                (tagId IN %li)
+            GROUP BY i.id
+            HAVING COUNT(i.id) = %i
+            LIMIT 100
+            OFFSET %i',
+        $searchTags,
+        count($searchTags),
+        $sttIdx
+    );
+
+    $service->render(__DIR__ . '/views/images.php', [
+        'searchParam' => $searchQuery,
+        'images' => $images,
+        'paginationTotal' => $maxPage,
+        'paginationNow' => $p,
+        'paginationItemCount' => $imageCnt,
+        'paginationItemStart' => $sttIdx,
+        'paginationItemEnd' => $sttIdx + 100,
+    ]);
+});
+
+$klein->respond('/', function ($request, $response, $service, $app) {
+    $service->render(__DIR__ . '/views/index.php');
+});
+
 $klein->dispatch();
