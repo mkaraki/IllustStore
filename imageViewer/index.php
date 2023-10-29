@@ -373,4 +373,45 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
     $response->redirect('/image/' . $request->illustId, 303);
 });
 
+$klein->respond('GET', '/tag/new', function ($request, $response, $service, $app) {
+    $service->render(__DIR__ . '/views/newTag.php');
+});
+
+$klein->respond('POST', '/tag/new', function ($request, $response, $service, $app) {
+    $tagName = trim($_POST['tagName'] ?? '');
+    if (empty($tagName)) {
+        $response->code(400);
+        return;
+    }
+    if (str_contains($tagName, ' ') || str_contains($tagName, '　')) {
+        $response->code(400);
+        return 'Tag Name must not contains white space';
+    }
+
+    $searchTag = DB::queryFirstRow('SELECT id FROM tags WHERE tagName = %s', $tagName);
+    if ($searchTag !== null) {
+        $response->code(400);
+        return 'Already exists';
+    }
+
+    $tagDanbooru = trim($_POST['tagDanbooru'] ?? '');
+    $tagDanbooru = empty($tagDanbooru) ? null : $tagDanbooru;
+
+    $tagPixivJpn = trim($_POST['tagPixivJpn'] ?? '');
+    $tagPixivJpn = empty($tagPixivJpn) ? null : $tagPixivJpn;
+
+    $tagPixivEng = trim($_POST['tagPixivEng'] ?? '');
+    $tagPixivEng = empty($tagPixivEng) ? null : $tagPixivEng;
+
+    DB::insert('tags', [
+        'tagName' => $tagName,
+        'tagDanbooru' => $tagDanbooru,
+        'tagPixivJpn' => $tagPixivJpn,
+        'tagPixivEng' => $tagPixivEng,
+    ]);
+
+    $response->redirect('/tag/', 303);
+});
+
+
 $klein->dispatch();

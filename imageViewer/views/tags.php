@@ -37,6 +37,10 @@ $initSize = 12.0;
 </head>
 
 <body>
+    <header>
+        <h1 class="query-ind query-h1">Tags</h1>
+        <a href="/tag/new">New tag</a>
+    </header>
     <ul class="forever-ul tag-cloud">
         <?php foreach ($res as $v) : ?>
             <li><a href="/tag/<?= $v['id'] ?>" style="font-size: <?= $initSize + ((-pow((doubleval($v['count']) / $maxCount) - 1, 2) + 1) * $usableSize) ?>pt"><?= htmlentities($v['tagName']) ?></a> (<?= $v['count'] ?>)</li>
