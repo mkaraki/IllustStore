@@ -193,7 +193,7 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
 });
 
 $klein->respond('/search', function ($request, $response, $service, $app) {
-    $searchQuery = $_GET['q'] ?? '';
+    $searchQuery = trim($_GET['q'] ?? '');
     if ($searchQuery === '') {
         $response->redirect('/', 302);
         return;
