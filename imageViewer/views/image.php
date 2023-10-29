@@ -20,7 +20,12 @@
                 <dd>
                     <ul class="forever-ul">
                         <?php foreach ($this->tags as $v) : ?>
-                            <li><a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a></li>
+                            <li>
+                                <a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a>
+                                <form action="/image/<?= $this->imageId ?>/tag/<?= $v['id'] ?>/delete" method="post" onsubmit="return confirm('Are you sure to delete tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
+                                    <input type="submit" value="🗑️">
+                                </form>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
                 </dd>

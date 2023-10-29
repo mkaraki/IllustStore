@@ -297,4 +297,13 @@ $klein->respond('POST', '/util/tag/complete', function ($request, $response, $se
     $response->json(['sw' => $res]);
 });
 
+$klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($request, $response, $service, $app) {
+    DB::delete('tagAssign', [
+        'illustId' => $request->illustId,
+        'tagId' => $request->tagId,
+    ]);
+
+    $response->redirect('/image/' . $request->illustId, 302);
+});
+
 $klein->dispatch();

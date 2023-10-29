@@ -17,6 +17,19 @@ ul.forever-ul>li {
     padding-right: 15px;
 }
 
+ul.forever-ul>li form {
+    display: inline-block;
+}
+
+ul.forever-ul>li form input[type="submit"] {
+    background: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+
 .query-ind {
     font-family: monospace;
 }
