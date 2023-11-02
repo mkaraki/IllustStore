@@ -41,7 +41,6 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
                 illusts
             LIMIT 100
             OFFSET %i',
-            $request->tagId,
             $sttIdx
         ),
         'paginationTotal' => $maxPage,
