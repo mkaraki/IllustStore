@@ -68,7 +68,7 @@ for i in iglob("./images/**/*.jpg", recursive=True):
     img = None
     try:
         raw_data = tensorflow.io.read_file(i)
-        img = tensorflow.io.decode_jpeg(raw_data)
+        img = tensorflow.io.decode_jpeg(raw_data, channels=3)
     except Exception as e:
         sys.stderr.write(f"Failed to read {i}: {e}\n")
         continue
@@ -84,7 +84,7 @@ for i in iglob("./images/**/*.png", recursive=True):
     img = None
     try:
         raw_data = tensorflow.io.read_file(i)
-        img = tensorflow.io.decode_png(raw_data)
+        img = tensorflow.io.decode_png(raw_data, channels=3)
     except Exception as e:
         sys.stderr.write(f"Failed to read {i}: {e}\n")
         continue
