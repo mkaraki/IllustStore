@@ -52,7 +52,7 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
 });
 
 $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $service, $app) {
-    $img = DB::queryFirstRow('SELECT path FROM illusts WHERE id = %i', $request->imageId);
+    $img = DB::queryFirstRow('SELECT * FROM illusts WHERE id = %i', $request->imageId);
     if ($img === null) {
         $response->code(404);
         return;
@@ -75,6 +75,10 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
             ORDER BY t.tagName',
             $request->imageId,
         ),
+        'aHash' => $img['aHash'] ?? null,
+        'dHash' => $img['dHash'] ?? null,
+        'pHash' => $img['pHash'] ?? null,
+        'colorHash' => $img['colorHash'] ?? null,
     ]);
 });
 
@@ -412,5 +416,59 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
     $response->redirect('/tag/', 303);
 });
 
+$klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $service, $app) {
+    $hashType = null;
+    switch ($request->type) {
+        case 'aHash':
+            $hashType = 'aHash';
+            break;
+        case 'dHash':
+            $hashType = 'dHash';
+            break;
+        case 'pHash':
+            $hashType = 'pHash';
+            break;
+        case 'colorHash':
+            $hashType = 'colorHash';
+            break;
+        default:
+            $response->code(404);
+            return;
+    }
+
+    $imageCnt = DB::queryFirstField(
+        "SELECT COUNT(*) FROM illusts WHERE $hashType = %s",
+        $request->hash
+    );
+
+    $p = $_GET['p'] ?? '1';
+    $p = intval($p);
+    $sttIdx = ($p - 1) * 100;
+    $maxPage = ceil(doubleval($imageCnt) / 100.0);
+
+    $images = DB::query(
+        "SELECT
+                id
+            FROM
+                illusts
+            WHERE
+                $hashType = %s
+            LIMIT 100
+            OFFSET %i",
+        $request->hash,
+        $sttIdx
+    );
+
+    $service->render(__DIR__ . '/views/images.php', [
+        'searchParam' => $hashType . ':' . $service->escape($request->hash),
+        'pageType' => 'hash',
+        'images' => $images,
+        'paginationTotal' => $maxPage,
+        'paginationNow' => $p,
+        'paginationItemCount' => $imageCnt,
+        'paginationItemStart' => $sttIdx,
+        'paginationItemEnd' => $sttIdx + 100,
+    ]);
+});
 
 $klein->dispatch();
