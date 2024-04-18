@@ -6,7 +6,7 @@ COPY composer.* /app/
 
 RUN composer install --no-dev --ignore-platform-reqs
 
-FROM php:apache
+FROM php:8.3-apache
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/

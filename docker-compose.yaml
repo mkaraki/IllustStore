@@ -8,6 +8,8 @@ services:
       - ./imageEvaller/images:/usr/src/app/images:ro
     environment:
       - CUDA_VISIBLE_DEVICES=""
+    depends_on:
+      - db
 
   viewer:
     build: imageViewer
@@ -15,6 +17,8 @@ services:
       - ./imageEvaller/images:/usr/src/app/images:ro
     ports:
       - 7090:80
+    depends_on:
+      - db
 
   db:
     image: mariadb

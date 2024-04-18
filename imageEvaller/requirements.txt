@@ -1,2 +1,3 @@
 gradio==3.44.4
 deepdanbooru[tensorflow]==1.0.2
+ImageHash==4.3.1
