@@ -102,6 +102,48 @@ $klein->respond('/image/[i:imageId]/raw', function ($request, $response, $servic
     return file_get_contents($img);
 });
 
+$klein->respond('/image/[i:imageId]/large', function ($request, $response, $service, $app) {
+    $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
+    if ($img === null) {
+        $response->code(404);
+        return (var_export($img));
+        return;
+    }
+
+    if (fileMTimeMod($img, $_SERVER, $response))
+        return;
+
+    $imgo = imagecreatefromstring(file_get_contents($img));
+
+    $origImgX = doubleval(imagesx($imgo));
+    $origImgY = doubleval(imagesy($imgo));
+
+    if ($origImgX > 1920 || $origImgY > 1920) {
+        $newX = 0;
+        $newY = 0;
+
+        if ($origImgX > $origImgY) {
+            $newX = 1920;
+            $newY = ($origImgY * (1920.0 / $origImgX));
+        } else {
+            $newY = 1920;
+            $newX = ($origImgX * (1920.0 / $origImgY));
+        }
+
+        $newImgObj = imagecreatetruecolor($newX, $newY);
+        imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
+
+        $imgo = $newImgObj;
+    }
+
+    $response->header('Content-Type', 'image/webp');
+
+    ob_start();
+    imagewebp($imgo);
+    $response->body(ob_get_contents());
+    ob_end_clean();
+});
+
 $klein->respond('/image/[i:imageId]/thumb', function ($request, $response, $service, $app) {
     $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
     if ($img === null) {

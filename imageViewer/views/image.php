@@ -13,7 +13,9 @@
         <h1 class="query-ind query-h1">View: imageId:<?= $this->imageId ?></h1>
     </header>
     <div>
-        <img class="viewer-img" src="/image/<?= $this->imageId ?>/raw" alt="Image">
+        <a href="/image/<?= $this->imageId ?>/raw">
+            <img class="viewer-img" src="/image/<?= $this->imageId ?>/large" alt="Image">
+        </a>
         <div>
             <dl>
                 <dt>Tags</dt>
