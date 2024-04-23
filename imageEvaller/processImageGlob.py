@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(
                     description='Scan image files and tagging/hashing them.')
 
 argparse = parser.add_argument('--migrate-scan', action='store_true', help='Scan and update empty field if exists in DB.')
+argparse = parser.add_argument('--verbose', action='store_true', help='Verbose mode. Shows filenames')
 
 args = parser.parse_args()
 
@@ -156,7 +157,8 @@ for i in iglob("./images/**/*.jpg", recursive=True):
     img_id = get_image_id(i)
 
     if img_id != False and is_need_scan_even_exists() == False:
-        print(f"Exists: {i}")
+        if args.verbose:
+            print(f"Exists: {i}")
         continue
 
     img = None
@@ -169,12 +171,14 @@ for i in iglob("./images/**/*.jpg", recursive=True):
         continue
 
     if img_id != False:
-        print(f"Exists: {i}")
+        if args.verbose:
+            print(f"Exists: {i}")
         call_try_update_image_info(i, img, img_id)
         continue
     
     if img_id == False:
-        print(f"Processing: {i}")
+        if args.verbose:
+            print(f"Processing: {i}")
         add_image(i, img)
 
 
@@ -184,7 +188,8 @@ for i in iglob("./images/**/*.png", recursive=True):
     img_id = get_image_id(i)
 
     if img_id != False and is_need_scan_even_exists() == False:
-        print(f"Exists: {i}")
+        if args.verbose:
+            print(f"Exists: {i}")
         continue
 
     img = None
@@ -197,12 +202,14 @@ for i in iglob("./images/**/*.png", recursive=True):
         continue
 
     if img_id != False:
-        print(f"Exists: {i}")
+        if args.verbose:
+            print(f"Exists: {i}")
         call_try_update_image_info(i, img, img_id)
         continue
     
     if img_id == False:
-        print(f"Processing: {i}")
+        if args.verbose:
+            print(f"Processing: {i}")
         add_image(i, img)
 
 db.close()
