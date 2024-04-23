@@ -2,10 +2,20 @@ import deepdanbooruEval
 import os
 import sys
 from glob import glob, iglob
+import argparse
+
 import tensorflow
 import mysql.connector
 from PIL import Image
 import imagehash
+
+parser = argparse.ArgumentParser(
+                    prog='IllustStore Image Evaluator',
+                    description='Scan image files and tagging/hashing them.')
+
+argparse = parser.add_argument('--migrate-scan', action='store_true', help='Scan and update empty field if exists in DB.')
+
+args = parser.parse_args()
 
 db = mysql.connector.connect(
     user="illustStore", passwd="illustStore", host="db", db="illustStore"
@@ -43,6 +53,12 @@ def is_tag_danbooru_exists(tag):
     return dbCursor.fetchone()["id"]
 
 
+def is_need_scan_even_exists():
+    if args.migrate_scan == False:
+        return False
+    return True
+
+
 def add_image(i_path, image):
     image_abs = os.path.abspath(i_path)
     dbCursor.execute("INSERT INTO illusts(path) VALUES(%s)",
@@ -58,6 +74,14 @@ def add_image(i_path, image):
 
 
 def call_try_update_image_info(i_path, image, img_id):
+    """
+    Call try_update_image_info and commit or rollback.
+    This should be called from image glob loop (when Image exists in DB).
+    This function will skip if not migrate scan mode.
+    """
+    if args.migrate_scan == False:
+        return True
+
     res = try_update_image_info(i_path, image, img_id)
     if res == False:
         sys.stderr.write(f"Failed to update {i_path}: {e}. Rolling Back.\n")
@@ -129,7 +153,14 @@ def add_image_hash(img_id, image):
 
 print("glob: *.jpg")
 for i in iglob("./images/**/*.jpg", recursive=True):
+    img_id = get_image_id(i)
+
+    if img_id != False and is_need_scan_even_exists() == False:
+        print(f"Exists: {i}")
+        continue
+
     img = None
+
     try:
         raw_data = tensorflow.io.read_file(i)
         img = tensorflow.io.decode_jpeg(raw_data, channels=3)
@@ -137,19 +168,27 @@ for i in iglob("./images/**/*.jpg", recursive=True):
         sys.stderr.write(f"Failed to read {i}: {e}\n")
         continue
 
-    img_id = get_image_id(i)
     if img_id != False:
         print(f"Exists: {i}")
         call_try_update_image_info(i, img, img_id)
         continue
+    
+    if img_id == False:
+        print(f"Processing: {i}")
+        add_image(i, img)
 
-    print(f"Processing: {i}")
-    add_image(i, img)
 
 
 print("glob: *.png")
 for i in iglob("./images/**/*.png", recursive=True):
+    img_id = get_image_id(i)
+
+    if img_id != False and is_need_scan_even_exists() == False:
+        print(f"Exists: {i}")
+        continue
+
     img = None
+
     try:
         raw_data = tensorflow.io.read_file(i)
         img = tensorflow.io.decode_png(raw_data, channels=3)
@@ -157,14 +196,14 @@ for i in iglob("./images/**/*.png", recursive=True):
         sys.stderr.write(f"Failed to read {i}: {e}\n")
         continue
 
-    img_id = get_image_id(i)
     if img_id != False:
         print(f"Exists: {i}")
         call_try_update_image_info(i, img, img_id)
         continue
     
-    print(f"Processing: {i}")
-    add_image(i, img)
+    if img_id == False:
+        print(f"Processing: {i}")
+        add_image(i, img)
 
 db.close()
 dbCursor.close()
