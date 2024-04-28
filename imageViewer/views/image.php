@@ -73,11 +73,19 @@
                         </a>
                     </dd>
                 <?php endif; ?>
+                <dt>Metadata Provider</dt>
+                <dd>
+                    <?php if ($this->metadata['metadataProviderName'] !== null) : ?>
+                        <?= $this->escape($this->metadata['metadataProviderName']) ?>
+                    <?php else : ?>
+                        <span>No Provider</span>
+                    <?php endif; ?>
+                </dd>
                 <?php if (isset($this->metadata['metadataProviderUrl'])) : ?>
-                    <dt>Metadata Provider</dt>
+                    <dt>Provider's content page</dt>
                     <dd>
                         <a href="<?= $this->metadata['metadataProviderUrl'] ?>" target="_blank">
-                            <?= $this->escape($this->metadata['metadataProviderName']) ?>
+                            <?= $this->escape($this->metadata['metadataProviderUrl']) ?>
                         </a>
                     </dd>
                 <?php endif; ?>
