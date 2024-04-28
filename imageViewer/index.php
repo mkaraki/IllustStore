@@ -77,12 +77,16 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
 
     $metadata = [
         'metadataProviderName' => $metadataProviderName ?? null,
-        'metadataApiUrl' => $metadataApiUrl ?? null,
-        'metadataProviderUrl' => $metadataProviderUrl ?? null,
-        'metadataSourceUrl' => $metadataSourceUrl ?? null,
         'apiMetadata' => null,
     ];
-    if ($metadata['metadataApiUrl'] !== null) {
+    if ($metadataProviderUrl !== null && !empty($metadataProviderUrl)) {
+        $metadata['metadataProviderUrl'] = $metadataProviderUrl;
+    }
+    if ($metadataSourceUrl !== null && !empty($metadataSourceUrl)) {
+        $metadata['metadataSourceUrl'] = $metadataSourceUrl;
+    }
+    if ($metadata['metadataApiUrl'] !== null && !empty($metadata['metadataApiUrl'])) {
+        $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
         $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
     }
 
