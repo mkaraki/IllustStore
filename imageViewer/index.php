@@ -64,8 +64,18 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
 
         if (!preg_match($provider['pathPattern'], $img['path'])) continue;
         
+        if ($provider['apiUrlReplacement'] === null || empty($provider['apiUrlReplacement'])) {
+            $metadataApiUrl = null;
+        } else {
         $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
+        }
+
+        if ($provider['providerUrlReplacement'] === null || empty($provider['providerUrlReplacement'])) {
+            $metadataProviderUrl = null;
+        } else {
         $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
+        }
+
         $metadataProviderName = $provider['name'];
 
         if ($provider['sourceUrlReplacement'] !== null) {
@@ -77,16 +87,12 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
 
     $metadata = [
         'metadataProviderName' => $metadataProviderName ?? null,
+        'metadataProviderUrl' => $metadataProviderUrl ?? null,
+        'metadataSourceUrl' => $metadataSourceUrl ?? null,
+        'metadataApiUrl' => $metadataApiUrl ?? null,
         'apiMetadata' => null,
     ];
-    if ($metadataProviderUrl !== null && !empty($metadataProviderUrl)) {
-        $metadata['metadataProviderUrl'] = $metadataProviderUrl;
-    }
-    if ($metadataSourceUrl !== null && !empty($metadataSourceUrl)) {
-        $metadata['metadataSourceUrl'] = $metadataSourceUrl;
-    }
-    if ($metadata['metadataApiUrl'] !== null && !empty($metadata['metadataApiUrl'])) {
-        $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
+    if ($metadata['metadataApiUrl'] !== null) {
         $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
     }
 
