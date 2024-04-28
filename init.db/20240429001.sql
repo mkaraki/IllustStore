@@ -4,5 +4,5 @@ CREATE TABLE metadata_provider(
     pathPattern TEXT NOT NULL,
     providerUrlReplacement TEXT NOT NULL,
     apiUrlReplacement TEXT,
-    sourceUrlReplacement TEXT,
+    sourceUrlReplacement TEXT
 );
