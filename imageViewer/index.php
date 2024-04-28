@@ -58,6 +58,32 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         return;
     }
 
+    $metadataProviders = DB::query('SELECT * FROM metadataProviders');
+    foreach ($metadataProviders as $provider) {
+        if (!preg_match($provider['pathPattern'], $img['path'])) continue;
+        
+        $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
+        $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
+        $metadataProviderName = $provider['name'];
+
+        if ($provider['sourceUrlReplacement'] !== null) {
+            $metadataSourceUrl = preg_replace($provider['pathPattern'], $provider['sourceUrlReplacement'], $img['path']);
+        } else {
+            $metadataSourceUrl = null;
+        }
+    }
+
+    $metadata = [
+        'metadataProviderName' => $metadataProviderName ?? null,
+        'metadataApiUrl' => $metadataApiUrl ?? null,
+        'metadataProviderUrl' => $metadataProviderUrl ?? null,
+        'metadataSourceUrl' => $metadataSourceUrl ?? null,
+        'apiMetadata' => null,
+    ];
+    if ($metadata['metadataApiUrl'] !== null) {
+        $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
+    }
+
     $service->render(__DIR__ . '/views/image.php', [
         'imageId' => $request->imageId,
         'srvPath' => $img['path'],
@@ -79,6 +105,7 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         'dHash' => $img['dHash'] ?? null,
         'pHash' => $img['pHash'] ?? null,
         'colorHash' => $img['colorHash'] ?? null,
+        'metadata' => $metadata,
     ]);
 });
 

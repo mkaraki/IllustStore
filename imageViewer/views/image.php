@@ -73,6 +73,20 @@
                         </a>
                     </dd>
                 <?php endif; ?>
+                <?php if (isset($this->metadata['metadataProviderUrl'])) : ?>
+                    <dt>Metadata Provider</dt>
+                    <dd>
+                        <a href="<?= $this->metadata['metadataProviderUrl'] ?>" target="_blank">
+                            <?= $this->escape($this->metadata['metadataProviderName']) ?>
+                        </a>
+                    </dd>
+                <?php endif; ?>
+                <?php if (isset($this->metadata['apiMetadata'])) : ?>
+                    <?php foreach ($this->metadata['apiMetadata'] as $k => $v) : ?>
+                        <dt>Metadata API: <?= $this->escape($k) ?></dt>
+                        <dd><?= $this->escape($v) ?></dd>
+                    <?php endforeach; ?>
+                <?php endif; ?>
                 <dt>Server Path</dt>
                 <dd><?= $this->escape($this->srvPath) ?></dd>
             </dl>
