@@ -58,7 +58,7 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         return;
     }
 
-    $metadataProviders = DB::query('SELECT * FROM metadataProviders');
+    $metadataProviders = DB::query('SELECT * FROM metadata_provider');
     foreach ($metadataProviders as $provider) {
         if (!preg_match($provider['pathPattern'], $img['path'])) continue;
         
