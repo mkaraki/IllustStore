@@ -95,13 +95,14 @@
                         <dd><?= $this->escape($v) ?></dd>
                     <?php endforeach; ?>
                 <?php endif; ?>
-                <?php if (isset($this->metadata('metadataSourceUrl'))) : ?>
+                <?php if (isset($this->metadata['metadataSourceUrl'])) : ?>
                     <dt>Source URL</dt>
                     <dd>
                         <a href="<?= $this->metadata['metadataSourceUrl'] ?>" target="_blank" rel="noreferrer">
                             <?= $this->escape($this->metadata['metadataSourceUrl']) ?>
                         </a>
                     </dd>
+                <?php endif; ?>
                 <dt>Server Path</dt>
                 <dd><?= $this->escape($this->srvPath) ?></dd>
             </dl>
