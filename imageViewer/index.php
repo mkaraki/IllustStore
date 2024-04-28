@@ -60,6 +60,8 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
 
     $metadataProviders = DB::query('SELECT * FROM metadata_provider');
     foreach ($metadataProviders as $provider) {
+        $provider['pathPattern'] = '/' . str_replace('/', '\/', $provider['pathPattern']) . '/';
+
         if (!preg_match($provider['pathPattern'], $img['path'])) continue;
         
         $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
