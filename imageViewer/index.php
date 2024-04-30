@@ -67,13 +67,13 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         if ($provider['apiUrlReplacement'] === null || empty($provider['apiUrlReplacement'])) {
             $metadataApiUrl = null;
         } else {
-        $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
+            $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
         }
 
         if ($provider['providerUrlReplacement'] === null || empty($provider['providerUrlReplacement'])) {
             $metadataProviderUrl = null;
         } else {
-        $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
+            $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
         }
 
         $metadataProviderName = $provider['name'];
@@ -550,6 +550,51 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 100,
     ]);
+});
+
+### =================================
+### Admin
+### =================================
+
+$klein->respond('GET', '/admin/provider', function ($request, $response, $service, $app) {
+    $service->render(__DIR__ . '/views/admin/provider.php', [
+        'providers' => DB::query('SELECT * FROM metadata_provider'),
+    ]);
+});
+
+$klein->respond('GET', '/admin/provider.add', function ($request, $response, $service, $app) {
+    $service->render(__DIR__ . '/views/admin/provider.add.php');
+});
+
+$klein->respond('POST', '/admin/provider.add', function($request, $response, $service, $app) {
+    $name = trim($_POST['name'] ?? '');
+    $pathPattern = trim($_POST['pathPattern'] ?? '');
+    $urlReplacePattern = trim($_POST['urlReplacePattern'] ?? '');
+    $apiReplacePattern = trim($_POST['apiReplacePattern'] ?? '');
+    $sourceUrlReplace = trim($_POST['sourceUrlReplace'] ?? '');
+
+    if (empty($name) || empty($pathPattern) || empty($urlReplacePattern)) {
+        $response->code(400);
+        return;
+    }
+
+    $to_put = [
+        'name' => $name,
+        'pathPattern' => $pathPattern,
+        'providerUrlReplacement' => $urlReplacePattern,
+    ];
+
+    if (!empty($apiReplacePattern)) {
+        $to_put['apiUrlReplacement'] = $apiReplacePattern;
+    }
+
+    if (!empty($sourceUrlReplace)) {
+        $to_put['sourceUrlReplacement'] = $sourceUrlReplace;
+    }
+
+    DB::insert('metadata_provider', $to_put);
+
+    $response->redirect('/admin/provider', 303);
 });
 
 $klein->dispatch();
