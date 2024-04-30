@@ -73,6 +73,36 @@
                         </a>
                     </dd>
                 <?php endif; ?>
+                <dt>Metadata Provider</dt>
+                <dd>
+                    <?php if ($this->metadata['metadataProviderName'] !== null) : ?>
+                        <?= $this->escape($this->metadata['metadataProviderName']) ?>
+                    <?php else : ?>
+                        <span>No Provider</span>
+                    <?php endif; ?>
+                </dd>
+                <?php if (isset($this->metadata['metadataProviderUrl'])) : ?>
+                    <dt>Provider's content page</dt>
+                    <dd>
+                        <a href="<?= $this->metadata['metadataProviderUrl'] ?>" target="_blank">
+                            <?= $this->escape($this->metadata['metadataProviderUrl']) ?>
+                        </a>
+                    </dd>
+                <?php endif; ?>
+                <?php if (isset($this->metadata['apiMetadata'])) : ?>
+                    <?php foreach ($this->metadata['apiMetadata'] as $k => $v) : ?>
+                        <dt>Metadata API: <?= $this->escape($k) ?></dt>
+                        <dd><?= $this->escape($v) ?></dd>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                <?php if (isset($this->metadata['metadataSourceUrl'])) : ?>
+                    <dt>Source URL</dt>
+                    <dd>
+                        <a href="<?= $this->metadata['metadataSourceUrl'] ?>" target="_blank" rel="noreferrer">
+                            <?= $this->escape($this->metadata['metadataSourceUrl']) ?>
+                        </a>
+                    </dd>
+                <?php endif; ?>
                 <dt>Server Path</dt>
                 <dd><?= $this->escape($this->srvPath) ?></dd>
             </dl>

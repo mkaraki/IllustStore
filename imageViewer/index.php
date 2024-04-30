@@ -58,6 +58,44 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         return;
     }
 
+    $metadataProviders = DB::query('SELECT * FROM metadata_provider');
+    foreach ($metadataProviders as $provider) {
+        $provider['pathPattern'] = '/' . str_replace('/', '\/', $provider['pathPattern']) . '/';
+
+        if (!preg_match($provider['pathPattern'], $img['path'])) continue;
+        
+        if ($provider['apiUrlReplacement'] === null || empty($provider['apiUrlReplacement'])) {
+            $metadataApiUrl = null;
+        } else {
+        $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
+        }
+
+        if ($provider['providerUrlReplacement'] === null || empty($provider['providerUrlReplacement'])) {
+            $metadataProviderUrl = null;
+        } else {
+        $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
+        }
+
+        $metadataProviderName = $provider['name'];
+
+        if ($provider['sourceUrlReplacement'] !== null) {
+            $metadataSourceUrl = preg_replace($provider['pathPattern'], $provider['sourceUrlReplacement'], $img['path']);
+        } else {
+            $metadataSourceUrl = null;
+        }
+    }
+
+    $metadata = [
+        'metadataProviderName' => $metadataProviderName ?? null,
+        'metadataProviderUrl' => $metadataProviderUrl ?? null,
+        'metadataSourceUrl' => $metadataSourceUrl ?? null,
+        'metadataApiUrl' => $metadataApiUrl ?? null,
+        'apiMetadata' => null,
+    ];
+    if ($metadata['metadataApiUrl'] !== null) {
+        $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
+    }
+
     $service->render(__DIR__ . '/views/image.php', [
         'imageId' => $request->imageId,
         'srvPath' => $img['path'],
@@ -79,6 +117,7 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         'dHash' => $img['dHash'] ?? null,
         'pHash' => $img['pHash'] ?? null,
         'colorHash' => $img['colorHash'] ?? null,
+        'metadata' => $metadata,
     ]);
 });
 
