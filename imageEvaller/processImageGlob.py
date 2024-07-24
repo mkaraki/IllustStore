@@ -200,6 +200,7 @@ def add_image_hash(img_id, image):
 
 if args.force_delete_all_images:
     print("Deleting all images")
+    dbCursor.execute("DELETE FROM tagNegativeAssign")
     dbCursor.execute("DELETE FROM tagAssign")
     dbCursor.execute("DELETE FROM illusts")
     if args.delete_all_tags:
