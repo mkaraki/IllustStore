@@ -79,7 +79,7 @@
                                             </li>
                                         <?php endforeach; ?>
                                         <li>
-                                            <a href="/image/<?= $this->imageId ?>/tag/new" class="text-decoration--none">➕</a>
+                                            <a href="/image/<?= $i['imageId'] ?>/tag/new?pending=<?= $this->paginationNow ?>" class="text-decoration--none">➕</a>
                                         </li>
                                     </ul>
                                 </dd>

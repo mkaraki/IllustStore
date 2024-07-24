@@ -469,6 +469,7 @@ $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $respo
             ORDER BY t.tagName',
             $request->illustId,
         ),
+        'pending' => intval($_GET['pending'] ?? '0'),
     ]);
 });
 

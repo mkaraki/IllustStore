@@ -44,6 +44,7 @@ if (count($this->tags) > 0) {
                         <div>
                             <label for="newTag">New tag:</label>
                             <input type="text" name="newTagId" id="newTag" list="newTagList" required>
+                            <input type="hidden" name="pending" value="<?= $this->pending ?>">
                             <datalist id="newTagList">
                                 <?php foreach ($selectableTags as $t) : ?>
                                     <option value="<?= $t['id'] ?>"><?= $this->escape($t['tagName']) ?></option>
