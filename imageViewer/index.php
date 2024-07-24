@@ -368,7 +368,16 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
 });
 
 $klein->respond('/', function ($request, $response, $service, $app) {
-    $service->render(__DIR__ . '/views/index.php');
+    $service->render(__DIR__ . '/views/index.php', [
+        'images' => DB::query(
+            'SELECT
+                id
+            FROM
+                illusts
+            ORDER BY RAND()
+            LIMIT 20'
+        ),
+    ]);
 });
 
 $klein->respond('POST', '/util/tag/complete', function ($request, $response, $service, $app) {

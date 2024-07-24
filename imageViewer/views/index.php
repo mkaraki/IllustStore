@@ -30,6 +30,14 @@
             <li><a href="/tag/">more...</a></li>
         </ul>
     </div>
+    <div>
+        Random images
+        <div>
+            <?php foreach ($this->images as $img) : ?>
+                <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
+            <?php endforeach; ?>
+        </div>
+    </div>
     <script>
         const sQ = document.getElementById('searchQuery');
         const searchTagAutoComplete = document.getElementById('search-tag-auto-complete');
