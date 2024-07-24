@@ -1,0 +1,1 @@
+CREATE INDEX tagAssign_tagId_index ON tagAssign(tagId);
