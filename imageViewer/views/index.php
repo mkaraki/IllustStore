@@ -8,7 +8,7 @@
     <title>Illust Store</title>
 </head>
 
-<body class="text-align--center">
+<body class="text-align--center margin-bottom-children-div">
     <div>
         <h1>Illust Store</h1>
     </div>

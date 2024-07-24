@@ -73,3 +73,7 @@ ul.forever-ul>li form input[type="submit"] {
 .text-decoration--none {
     text-decoration: none;
 }
+
+.margin-bottom-children-div>div {
+    margin-bottom: 15px;
+}
