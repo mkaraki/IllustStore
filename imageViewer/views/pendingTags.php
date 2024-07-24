@@ -112,14 +112,20 @@
                 <a href="?p=<?= $this->paginationNow - 1 ?>">Previous</a> |
             <?php endif; ?>
             <?= $this->paginationNow ?>
-            <?php if ($this->paginationHasNext) : ?>
+            <?php if ($this->paginationNow < $this->paginationTotal) : ?>
                 | <a href="?p=<?= $this->paginationNow + 1 ?>">Next</a>
             <?php endif; ?>
         <?php endif; ?>
-        <?php if (isset($this->paginationItemStart) && isset($this->paginationItemEnd)) : ?>
+        <?php if (isset($this->paginationItemCount) && isset($this->paginationTotal)) : ?>
             <div>
-                Showing <?= $this->paginationItemStart ?> - <?= $this->paginationItemEnd ?>. <br />
+                <?= $this->paginationItemCount ?> items.
+                <?= $this->paginationTotal ?> pages.
             </div>
+            <?php if (isset($this->paginationItemStart) && isset($this->paginationItemEnd)) : ?>
+                <div>
+                    Showing <?= $this->paginationItemStart ?> - <?= $this->paginationItemEnd ?>. <br />
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </footer>
 </body>

@@ -559,9 +559,14 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
 });
 
 $klein->respond('GET', '/tag/pending', function($request, $response, $service, $app) {
+    $imageCnt = DB::queryFirstField(
+        'SELECT COUNT(DISTINCT tA.illustId) FROM tagAssign tA WHERE tA.autoAssigned = TRUE'
+    );
+
     $p = $_GET['p'] ?? '1';
     $p = intval($p);
     $sttIdx = ($p - 1) * 30;
+    $maxPage = ceil(doubleval($imageCnt) / 30.0);
 
     $pendingTags = DB::query(
             'SELECT
@@ -579,10 +584,11 @@ $klein->respond('GET', '/tag/pending', function($request, $response, $service, $
 
     $service->render(__DIR__ . '/views/pendingTags.php', [
         'pendingTags' => $pendingTags,
+        'paginationTotal' => $maxPage,
         'paginationNow' => $p,
+        'paginationItemCount' => $imageCnt,
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 30,
-        'paginationHasNext' => count($pendingTags) === 30,
     ]);
 });
 
