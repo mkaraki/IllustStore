@@ -8,7 +8,7 @@
     <title>Illust Store</title>
 </head>
 
-<body class="text-align--center">
+<body class="text-align--center margin-bottom-children-div">
     <div>
         <h1>Illust Store</h1>
     </div>
@@ -29,6 +29,77 @@
             <?php endforeach; ?>
             <li><a href="/tag/">more...</a></li>
         </ul>
+    </div>
+    <div>
+        <?php
+        $nonTaggedImageAndTag = DB::queryFirstRow(
+            'SELECT
+                res.imageId,
+                res.tagId,
+                res.tagName
+            FROM
+                (
+                    SELECT
+                        tA.illustId AS imageId,
+                        tA.tagId AS tagId,
+                        t.tagName AS tagName
+                    FROM
+                        tagAssign tA,
+                        tags t
+                    WHERE
+                        tA.autoAssigned = 1 AND
+                        t.id = tA.tagId
+                    LIMIT 5000
+                ) res
+            ORDER BY
+                RAND()
+            LIMIT 1'
+        );
+        ?>
+        <?php if ($nonTaggedImageAndTag !== null) : ?>
+            Tagging
+            <div>
+                <table class="margin--auto">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <a href="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/raw">
+                                    <img src="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/thumb" alt="img" loading="lazy" />
+                                </a>
+                            </td>
+                            <td class="padding-left--30px">
+                                Is this image contains
+                                <code>
+                                    <a href="/tag/<?= $nonTaggedImageAndTag['tagId'] ?>">
+                                        <?= htmlentities($nonTaggedImageAndTag['tagName']) ?>
+                                    </a>
+                                </code>?
+                                <br /><br />
+                                <ul class="forever-ul">
+                                    <li>
+                                        <form
+                                            action="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/tag/<?= $nonTaggedImageAndTag['tagId'] ?>/approve"
+                                            method="post"
+                                            onsubmit="return confirm('Are you sure to approve tag: <?= str_replace("'", "\'", $nonTaggedImageAndTag['tagName']) ?>?')"
+                                            >
+                                            <input type="submit" value="Yes" />
+                                        </form>
+                                        |
+                                        <form
+                                            action="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/tag/<?= $nonTaggedImageAndTag['tagId'] ?>/delete"
+                                            method="post"
+                                            onsubmit="return confirm('Are you sure to blacklist tag: <?= str_replace("'", "\'", $nonTaggedImageAndTag['tagName']) ?>?')"
+                                            >
+                                            <input type="submit" value="No" />
+                                        </form>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
     </div>
     <div>
         Random images

@@ -1,0 +1,1 @@
+CREATE INDEX tagAssign_autoAssigned_index ON tagAssign(autoAssigned);

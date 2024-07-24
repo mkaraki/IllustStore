@@ -56,7 +56,7 @@ $initSize = 12.0;
 <body>
     <header>
         <h1 class="query-ind query-h1">Tags</h1>
-        <a href="/tag/new">New tag</a>
+        <a href="/tag/new">New tag</a> | <a href="/tag/pending">Tagging queue</a>
     </header>
     <ul class="forever-ul tag-cloud">
         <?php foreach ($res as $v) : ?>
