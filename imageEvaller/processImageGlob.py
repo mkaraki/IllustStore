@@ -173,6 +173,14 @@ def add_image_tags(illustId, image):
                 "INSERT INTO tags(tagName, tagDanbooru) VALUES (%s, %s)", (t, t)
             )
             tagId = dbCursor.lastrowid
+
+        # Skip if detected tag is blacklisted in illust.
+        # This may won't work as user expected. Because this method only runs when program didn't detected any tags registered in DB.
+        # ToDo: Re-scan tag for each image to register new detected tags (by model changes). #12
+        dbCursor.execute("SELECT tagId FROM tagNegativeAssign WHERE illustId = %s AND tagId = %s", (illustId, tagId,))
+        if dbCursor.rowcount > 0:
+            continue
+
         dbCursor.execute(
             "INSERT INTO tagAssign(illustId, tagId, autoAssigned, accuracy) VALUES (%s, %s, TRUE, %s)",
             (illustId, tagId, a,),
