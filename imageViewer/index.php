@@ -63,17 +63,17 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         $provider['pathPattern'] = '/' . str_replace('/', '\/', $provider['pathPattern']) . '/';
 
         if (!preg_match($provider['pathPattern'], $img['path'])) continue;
-        
+
         if ($provider['apiUrlReplacement'] === null || empty($provider['apiUrlReplacement'])) {
             $metadataApiUrl = null;
         } else {
-        $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
+            $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
         }
 
         if ($provider['providerUrlReplacement'] === null || empty($provider['providerUrlReplacement'])) {
             $metadataProviderUrl = null;
         } else {
-        $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
+            $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
         }
 
         $metadataProviderName = $provider['name'];
@@ -133,6 +133,18 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
     ]);
 });
 
+function return_raw_image($imagePath, $response)
+{
+    $extEval = strtolower($imagePath);
+    if (str_ends_with($extEval, '.png')) {
+        $response->header('Content-type', 'image/png');
+    } else if (str_ends_with($extEval, '.jpg') || str_ends_with($extEval, '.jpeg')) {
+        $response->header('Content-type', 'image/jpeg');
+    }
+
+    return file_get_contents($imagePath);
+};
+
 $klein->respond('/image/[i:imageId]/raw', function ($request, $response, $service, $app) {
     $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
     if ($img === null) {
@@ -143,17 +155,12 @@ $klein->respond('/image/[i:imageId]/raw', function ($request, $response, $servic
     if (fileMTimeMod($img, $_SERVER, $response))
         return;
 
-    $extEval = strtolower($img);
-    if (str_ends_with($extEval, '.png')) {
-        $response->header('Content-type', 'image/png');
-    } else if (str_ends_with($extEval, '.jpg') || str_ends_with($extEval, '.jpeg')) {
-        $response->header('Content-type', 'image/jpeg');
-    }
-
-    return file_get_contents($img);
+    return return_raw_image($img, $response);
 });
 
 $klein->respond('/image/[i:imageId]/large', function ($request, $response, $service, $app) {
+    ini_set("memory_limit", "512M");
+
     $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
     if ($img === null) {
         $response->code(404);
@@ -164,27 +171,31 @@ $klein->respond('/image/[i:imageId]/large', function ($request, $response, $serv
     if (fileMTimeMod($img, $_SERVER, $response))
         return;
 
-    $imgo = imagecreatefromstring(file_get_contents($img));
+    try {
+        $imgo = imagecreatefromstring(file_get_contents($img));
 
-    $origImgX = doubleval(imagesx($imgo));
-    $origImgY = doubleval(imagesy($imgo));
+        $origImgX = doubleval(imagesx($imgo));
+        $origImgY = doubleval(imagesy($imgo));
 
-    if ($origImgX > 1920 || $origImgY > 1920) {
-        $newX = 0;
-        $newY = 0;
+        if ($origImgX > 1920 || $origImgY > 1920) {
+            $newX = 0;
+            $newY = 0;
 
-        if ($origImgX > $origImgY) {
-            $newX = 1920;
-            $newY = ($origImgY * (1920.0 / $origImgX));
-        } else {
-            $newY = 1920;
-            $newX = ($origImgX * (1920.0 / $origImgY));
+            if ($origImgX > $origImgY) {
+                $newX = 1920;
+                $newY = ($origImgY * (1920.0 / $origImgX));
+            } else {
+                $newY = 1920;
+                $newX = ($origImgX * (1920.0 / $origImgY));
+            }
+
+            $newImgObj = imagecreatetruecolor($newX, $newY);
+            imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
+
+            $imgo = $newImgObj;
         }
-
-        $newImgObj = imagecreatetruecolor($newX, $newY);
-        imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
-
-        $imgo = $newImgObj;
+    } catch (Exception $e) {
+        return return_raw_image($img, $response);
     }
 
     $response->header('Content-Type', 'image/webp');
@@ -196,6 +207,8 @@ $klein->respond('/image/[i:imageId]/large', function ($request, $response, $serv
 });
 
 $klein->respond('/image/[i:imageId]/thumb', function ($request, $response, $service, $app) {
+    ini_set("memory_limit", "512M");
+
     $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
     if ($img === null) {
         $response->code(404);
@@ -206,27 +219,31 @@ $klein->respond('/image/[i:imageId]/thumb', function ($request, $response, $serv
     if (fileMTimeMod($img, $_SERVER, $response))
         return;
 
-    $imgo = imagecreatefromstring(file_get_contents($img));
+    try {
+        $imgo = imagecreatefromstring(file_get_contents($img));
 
-    $origImgX = doubleval(imagesx($imgo));
-    $origImgY = doubleval(imagesy($imgo));
+        $origImgX = doubleval(imagesx($imgo));
+        $origImgY = doubleval(imagesy($imgo));
 
-    if ($origImgX > 250 || $origImgY > 250) {
-        $newX = 0;
-        $newY = 0;
+        if ($origImgX > 250 || $origImgY > 250) {
+            $newX = 0;
+            $newY = 0;
 
-        if ($origImgX > $origImgY) {
-            $newX = 250;
-            $newY = ($origImgY * (250.0 / $origImgX));
-        } else {
-            $newY = 250;
-            $newX = ($origImgX * (250.0 / $origImgY));
+            if ($origImgX > $origImgY) {
+                $newX = 250;
+                $newY = ($origImgY * (250.0 / $origImgX));
+            } else {
+                $newY = 250;
+                $newX = ($origImgX * (250.0 / $origImgY));
+            }
+
+            $newImgObj = imagecreatetruecolor($newX, $newY);
+            imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
+
+            $imgo = $newImgObj;
         }
-
-        $newImgObj = imagecreatetruecolor($newX, $newY);
-        imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
-
-        $imgo = $newImgObj;
+    } catch (Exception $e) {
+        return return_raw_image($img, $response);
     }
 
     $response->header('Content-Type', 'image/webp');
@@ -418,12 +435,9 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($r
     ]);
 
     $pendingCode = intval($_POST['pending'] ?? '0');
-    if ($pendingCode > 0)
-    {
+    if ($pendingCode > 0) {
         $response->redirect('/tag/pending?p=' . $pendingCode, 303);
-    }
-    else
-    {
+    } else {
         $response->redirect('/image/' . $request->illustId, 303);
     }
 });
@@ -435,12 +449,9 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($
     ]);
 
     $pendingCode = intval($_POST['pending'] ?? '0');
-    if ($pendingCode > 0)
-    {
+    if ($pendingCode > 0) {
         $response->redirect('/tag/pending?p=' . $pendingCode, 303);
-    }
-    else
-    {
+    } else {
         $response->redirect('/image/' . $request->illustId, 303);
     }
 });
@@ -509,12 +520,9 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
     }
 
     $pendingCode = intval($_POST['pending'] ?? '0');
-    if ($pendingCode > 0)
-    {
+    if ($pendingCode > 0) {
         $response->redirect('/tag/pending?p=' . $pendingCode, 303);
-    }
-    else
-    {
+    } else {
         $response->redirect('/image/' . $request->illustId, 303);
     }
 });
@@ -559,7 +567,7 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
     $response->redirect('/tag/', 303);
 });
 
-$klein->respond('GET', '/tag/pending', function($request, $response, $service, $app) {
+$klein->respond('GET', '/tag/pending', function ($request, $response, $service, $app) {
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(DISTINCT tA.illustId) FROM tagAssign tA WHERE tA.autoAssigned = TRUE'
     );
@@ -570,7 +578,7 @@ $klein->respond('GET', '/tag/pending', function($request, $response, $service, $
     $maxPage = ceil(doubleval($imageCnt) / 30.0);
 
     $pendingTags = DB::query(
-            'SELECT
+        'SELECT
                 tA.illustId AS imageId
             FROM
                 tagAssign tA
@@ -580,7 +588,7 @@ $klein->respond('GET', '/tag/pending', function($request, $response, $service, $
                 tA.illustId
             LIMIT 30
             OFFSET %i',
-            $sttIdx
+        $sttIdx
     );
 
     $service->render(__DIR__ . '/views/pendingTags.php', [
