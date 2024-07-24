@@ -417,7 +417,15 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($r
         'tagId' => $request->tagId,
     ]);
 
-    $response->redirect('/image/' . $request->illustId, 303);
+    $pendingCode = intval($_POST['pending'] ?? '0');
+    if ($pendingCode > 0)
+    {
+        $response->redirect('/tag/pending?p=' . $pendingCode, 303);
+    }
+    else
+    {
+        $response->redirect('/image/' . $request->illustId, 303);
+    }
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($request, $response, $service, $app) {
@@ -426,7 +434,15 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($
         'tagId' => $request->tagId,
     ]);
 
-    $response->redirect('/image/' . $request->illustId, 303);
+    $pendingCode = intval($_POST['pending'] ?? '0');
+    if ($pendingCode > 0)
+    {
+        $response->redirect('/tag/pending?p=' . $pendingCode, 303);
+    }
+    else
+    {
+        $response->redirect('/image/' . $request->illustId, 303);
+    }
 });
 
 $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
@@ -491,7 +507,15 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
         ]);
     }
 
-    $response->redirect('/image/' . $request->illustId, 303);
+    $pendingCode = intval($_POST['pending'] ?? '0');
+    if ($pendingCode > 0)
+    {
+        $response->redirect('/tag/pending?p=' . $pendingCode, 303);
+    }
+    else
+    {
+        $response->redirect('/image/' . $request->illustId, 303);
+    }
 });
 
 $klein->respond('GET', '/tag/new', function ($request, $response, $service, $app) {
@@ -532,6 +556,34 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
     ]);
 
     $response->redirect('/tag/', 303);
+});
+
+$klein->respond('GET', '/tag/pending', function($request, $response, $service, $app) {
+    $p = $_GET['p'] ?? '1';
+    $p = intval($p);
+    $sttIdx = ($p - 1) * 30;
+
+    $pendingTags = DB::query(
+            'SELECT
+                tA.illustId AS imageId
+            FROM
+                tagAssign tA
+            WHERE
+                tA.autoAssigned = TRUE
+            GROUP BY
+                tA.illustId
+            LIMIT 30
+            OFFSET %i',
+            $sttIdx
+    );
+
+    $service->render(__DIR__ . '/views/pendingTags.php', [
+        'pendingTags' => $pendingTags,
+        'paginationNow' => $p,
+        'paginationItemStart' => $sttIdx,
+        'paginationItemEnd' => $sttIdx + 30,
+        'paginationHasNext' => count($pendingTags) === 30,
+    ]);
 });
 
 $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $service, $app) {
