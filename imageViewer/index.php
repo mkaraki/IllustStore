@@ -113,6 +113,18 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
             ORDER BY t.tagName',
             $request->imageId,
         ),
+        'negativeTags' => DB::query(
+            'SELECT
+                tNA.tagId AS id,
+                t.tagName
+            FROM
+                tagNegativeAssign tNA,
+                tags t
+            WHERE
+                tNA.tagId = t.id AND
+                tNA.illustId = %i',
+            $request->imageId,
+        ),
         'aHash' => $img['aHash'] ?? null,
         'dHash' => $img['dHash'] ?? null,
         'pHash' => $img['pHash'] ?? null,
@@ -392,6 +404,14 @@ $klein->respond('POST', '/util/tag/complete', function ($request, $response, $se
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($request, $response, $service, $app) {
+    $isNegativeExists = DB::queryFirstRow('SELECT * FROM tagNegativeAssign WHERE illustId = %i AND tagId = %i', $request->illustId, $request->tagId);
+    if ($isNegativeExists === null) {
+        DB::insert('tagNegativeAssign', [
+            'illustId' => $request->illustId,
+            'tagId' => $request->tagId,
+        ]);
+    }
+
     DB::delete('tagAssign', [
         'illustId' => $request->illustId,
         'tagId' => $request->tagId,
@@ -462,6 +482,14 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
         'tagId' => $newTagId,
         'autoAssigned' => false,
     ]);
+
+    $isNegativeExists = DB::queryFirstRow('SELECT * FROM tagNegativeAssign WHERE illustId = %i AND tagId = %i', $request->illustId, $newTagId);
+    if ($isNegativeExists !== null) {
+        DB::delete('tagNegativeAssign', [
+            'illustId' => $request->illustId,
+            'tagId' => $newTagId,
+        ]);
+    }
 
     $response->redirect('/image/' . $request->illustId, 303);
 });
