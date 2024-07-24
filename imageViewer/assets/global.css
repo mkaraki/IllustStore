@@ -75,5 +75,13 @@ ul.forever-ul>li form input[type="submit"] {
 }
 
 .margin-bottom-children-div>div {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.margin--auto {
+    margin: auto;
+}
+
+.padding-left--30px {
+    padding-left: 30px;
 }
