@@ -133,16 +133,57 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
     ]);
 });
 
-function return_raw_image($imagePath, $response)
+function get_image_load_mode($imagePath): string
 {
     $extEval = strtolower($imagePath);
-    if (str_ends_with($extEval, '.png')) {
-        $response->header('Content-type', 'image/png');
-    } else if (str_ends_with($extEval, '.jpg') || str_ends_with($extEval, '.jpeg')) {
-        $response->header('Content-type', 'image/jpeg');
+    switch (true) {
+        default:
+        case str_ends_with($extEval, '.png'):
+        case str_ends_with($extEval, '.jpg'):
+        case str_ends_with($extEval, '.jpeg'):
+        case str_ends_with($extEval, '.webp'):
+            return 'default';
+
+        case str_ends_with($extEval, '.lep'):
+            return 'lepton';
+    }
+}
+
+function get_image_data($imagePath, $mode = 'default'): string
+{
+    switch ($mode) {
+        case 'default':
+        default:
+            return file_get_contents($imagePath);
+            break;
+
+        case 'lepton':
+            return convert_lepton_to_jpeg(file_get_contents($imagePath));
+            break;
+    }
+}
+
+function return_raw_image($imagePath, $response): string
+{
+    $extEval = strtolower($imagePath);
+    switch (true) {
+        case str_ends_with($extEval, '.png'):
+            $response->header('Content-Type', 'image/png');
+            break;
+
+        case str_ends_with($extEval, '.jpg'):
+        case str_ends_with($extEval, '.jpeg'):
+        case str_ends_with($extEval, '.lep'):
+            $response->header('Content-Type', 'image/jpeg');
+            break;
+
+        case str_ends_with($extEval, '.webp'):
+            $response->header('Content-Type', 'image/webp');
+            break;
     }
 
-    return file_get_contents($imagePath);
+    $imgMode = get_image_load_mode($imagePath);
+    return get_image_data($imagePath, $imgMode);
 };
 
 $klein->respond('/image/[i:imageId]/raw', function ($request, $response, $service, $app) {
@@ -172,7 +213,8 @@ $klein->respond('/image/[i:imageId]/large', function ($request, $response, $serv
         return;
 
     try {
-        $imgo = imagecreatefromstring(file_get_contents($img));
+        $imgMode = get_image_load_mode($img);
+        $imgo = imagecreatefromstring(get_image_data($img, $imgMode));
 
         $origImgX = doubleval(imagesx($imgo));
         $origImgY = doubleval(imagesy($imgo));
@@ -220,7 +262,8 @@ $klein->respond('/image/[i:imageId]/thumb', function ($request, $response, $serv
         return;
 
     try {
-        $imgo = imagecreatefromstring(file_get_contents($img));
+        $imgMode = get_image_load_mode($img);
+        $imgo = imagecreatefromstring(get_image_data($img, $imgMode));
 
         $origImgX = doubleval(imagesx($imgo));
         $origImgY = doubleval(imagesy($imgo));
