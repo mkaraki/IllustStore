@@ -1,14 +1,15 @@
 import deepdanbooruEval
 import os
 import sys
-from glob import glob, iglob
+from glob import iglob
 import argparse
 from pathlib import Path
 
 import tensorflow
 import mysql.connector
-from PIL import Image
 import imagehash
+
+import LibLepton
 
 parser = argparse.ArgumentParser(
                     prog='IllustStore Image Evaluator',
@@ -278,6 +279,71 @@ for i in iglob("./images/**/*.png", recursive=True):
         if args.verbose:
             print(f"Processing: {i}")
         add_image(i, img)
+
+
+
+#print("glob: *.webp")
+#for i in iglob("./images/**/*.webp", recursive=True):
+#    img_id = get_image_id(i)
+#
+#    if img_id != False and is_need_scan_even_exists() == False:
+#        if args.verbose:
+#            print(f"Exists: {i}")
+#        continue
+#
+#    img = None
+#
+#    try:
+#        raw_data = tensorflow.io.read_file(i)
+#        # There are no decode_webp function. 
+#        # ToDo: Use another or convert to jpeg.
+#        img = tensorflow.io.decode_webp(raw_data, channels=3)
+#    except Exception as e:
+#        sys.stderr.write(f"Failed to read {i}: {e}\n")
+#        continue
+#
+#    if img_id != False:
+#        if args.verbose:
+#            print(f"Exists: {i}")
+#        call_try_update_image_info(i, img, img_id)
+#        continue
+#    
+#    if img_id == False:
+#        if args.verbose:
+#            print(f"Processing: {i}")
+#        add_image(i, img)
+
+
+print("glob: *.lep")
+lepton_util = LibLepton.LeptonConvert()
+for i in iglob("./images/**/*.lep", recursive=True):
+    img_id = get_image_id(i)
+
+    if img_id != False and is_need_scan_even_exists() == False:
+        if args.verbose:
+            print(f"Exists: {i}")
+        continue
+
+    img = None
+
+    try:
+        jpeg_data = lepton_util.load_lepton_from_path(i)
+        img = tensorflow.io.decode_jpeg(bytes(jpeg_data), channels=3)
+    except Exception as e:
+        sys.stderr.write(f"Failed to read {i}: {e}\n")
+        continue
+
+    if img_id != False:
+        if args.verbose:
+            print(f"Exists: {i}")
+        call_try_update_image_info(i, img, img_id)
+        continue
+    
+    if img_id == False:
+        if args.verbose:
+            print(f"Processing: {i}")
+        add_image(i, img)
+
 
 db.close()
 dbCursor.close()
