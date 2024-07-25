@@ -26,6 +26,12 @@ RUN a2enmod rewrite
 
 COPY --from=require-server /app/vendor /var/www/html/vendor
 
+RUN export PHP_EXTENSION_DIR=$(php-config --extension-dir)
+RUN export PHP_INI_DIR=$(php-config --ini-dir)
+
+COPY --from=ghcr.io/mkaraki/microsoft_lepton_jpeg_rust_php:latest /pack/ms-lepton.so $PHP_EXTENSION_DIR/ms-lepton.so
+COPY --from=ghcr.io/mkaraki/microsoft_lepton_jpeg_rust_php:latest /pack/20-ms-lepton.ini $PHP_INI_DIR/conf.d/20-ms-lepton.ini
+
 RUN mkdir /var/www/html/cache
 
 COPY .htaccess /var/www/html/
