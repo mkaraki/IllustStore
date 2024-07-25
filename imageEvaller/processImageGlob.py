@@ -5,7 +5,9 @@ from glob import iglob
 import argparse
 from pathlib import Path
 
+from PIL import Image
 import tensorflow
+import numpy
 import mysql.connector
 import imagehash
 
@@ -282,36 +284,34 @@ for i in iglob("./images/**/*.png", recursive=True):
 
 
 
-#print("glob: *.webp")
-#for i in iglob("./images/**/*.webp", recursive=True):
-#    img_id = get_image_id(i)
-#
-#    if img_id != False and is_need_scan_even_exists() == False:
-#        if args.verbose:
-#            print(f"Exists: {i}")
-#        continue
-#
-#    img = None
-#
-#    try:
-#        raw_data = tensorflow.io.read_file(i)
-#        # There are no decode_webp function. 
-#        # ToDo: Use another or convert to jpeg.
-#        img = tensorflow.io.decode_webp(raw_data, channels=3)
-#    except Exception as e:
-#        sys.stderr.write(f"Failed to read {i}: {e}\n")
-#        continue
-#
-#    if img_id != False:
-#        if args.verbose:
-#            print(f"Exists: {i}")
-#        call_try_update_image_info(i, img, img_id)
-#        continue
-#    
-#    if img_id == False:
-#        if args.verbose:
-#            print(f"Processing: {i}")
-#        add_image(i, img)
+print("glob: *.webp")
+for i in iglob("./images/**/*.webp", recursive=True):
+    img_id = get_image_id(i)
+
+    if img_id != False and is_need_scan_even_exists() == False:
+        if args.verbose:
+            print(f"Exists: {i}")
+        continue
+
+    img = None
+
+    try:
+        img = numpy.array(Image.open(i))
+        img = img[:,:,:3]
+    except Exception as e:
+        sys.stderr.write(f"Failed to read {i}: {e}\n")
+        continue
+
+    if img_id != False:
+        if args.verbose:
+            print(f"Exists: {i}")
+        call_try_update_image_info(i, img, img_id)
+        continue
+    
+    if img_id == False:
+        if args.verbose:
+            print(f"Processing: {i}")
+        add_image(i, img)
 
 
 print("glob: *.lep")
