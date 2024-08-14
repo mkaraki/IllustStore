@@ -4,29 +4,68 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a9a672e45785b8dc9069592e07bd3e9",
+    "content-hash": "7f3ac2319079d685e3c77275b82ca530",
     "packages": [
+        {
+            "name": "jbelien/phpstan-sarif-formatter",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jbelien/phpstan-sarif-formatter.git",
+                "reference": "40f88bb5bea22135469b1851a59b0b17d347fd99"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jbelien/phpstan-sarif-formatter/zipball/40f88bb5bea22135469b1851a59b0b17d347fd99",
+                "reference": "40f88bb5bea22135469b1851a59b0b17d347fd99",
+                "shasum": ""
+            },
+            "require": {
+                "nette/utils": "^3.2",
+                "php": "^8.1",
+                "phpstan/phpstan": "^1.9"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PHPStanSarifErrorFormatter\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "SARIF formatter for PHPStan",
+            "support": {
+                "issues": "https://github.com/jbelien/phpstan-sarif-formatter/issues",
+                "source": "https://github.com/jbelien/phpstan-sarif-formatter/tree/1.0.0"
+            },
+            "time": "2023-01-28T14:51:02+00:00"
+        },
         {
             "name": "klein/klein",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mkaraki/klein.php.git",
-                "reference": "8fe1599e6f6fd880eefa47bbdb0dd9dc3d315b2b"
+                "reference": "108d71c9137595ed4cf7c0d1116c64460bdc7af0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mkaraki/klein.php/zipball/8fe1599e6f6fd880eefa47bbdb0dd9dc3d315b2b",
-                "reference": "8fe1599e6f6fd880eefa47bbdb0dd9dc3d315b2b",
+                "url": "https://api.github.com/repos/mkaraki/klein.php/zipball/108d71c9137595ed4cf7c0d1116c64460bdc7af0",
+                "reference": "108d71c9137595ed4cf7c0d1116c64460bdc7af0",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "jbelien/phpstan-sarif-formatter": "^1.0",
+                "php": ">=8.1.0"
             },
             "require-dev": {
+                "phpstan/phpstan": "^1.11",
                 "phpunit/php-code-coverage": "10",
                 "phpunit/phpunit": "10",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "squizlabs/php_codesniffer": "3.7.2",
+                "vimeo/psalm": "^5.25"
             },
             "default-branch": true,
             "type": "library",
@@ -68,20 +107,164 @@
             "support": {
                 "source": "https://github.com/mkaraki/klein.php/tree/master"
             },
-            "time": "2023-10-02T07:50:32+00:00"
+            "time": "2024-07-30T17:57:45+00:00"
         },
         {
-            "name": "sergeytsalkov/meekrodb",
-            "version": "v2.5",
+            "name": "nette/utils",
+            "version": "v3.2.10",
             "source": {
                 "type": "git",
-                "url": "https://github.com/SergeyTsalkov/meekrodb.git",
-                "reference": "723ca4df069065a5a37c904ede110dd06adca863"
+                "url": "https://github.com/nette/utils.git",
+                "reference": "a4175c62652f2300c8017fb7e640f9ccb11648d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SergeyTsalkov/meekrodb/zipball/723ca4df069065a5a37c904ede110dd06adca863",
-                "reference": "723ca4df069065a5a37c904ede110dd06adca863",
+                "url": "https://api.github.com/repos/nette/utils/zipball/a4175c62652f2300c8017fb7e640f9ccb11648d2",
+                "reference": "a4175c62652f2300c8017fb7e640f9ccb11648d2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2 <8.4"
+            },
+            "conflict": {
+                "nette/di": "<3.0.6"
+            },
+            "require-dev": {
+                "jetbrains/phpstorm-attributes": "dev-master",
+                "nette/tester": "~2.0",
+                "phpstan/phpstan": "^1.0",
+                "tracy/tracy": "^2.3"
+            },
+            "suggest": {
+                "ext-gd": "to use Image",
+                "ext-iconv": "to use Strings::webalize(), toAscii(), chr() and reverse()",
+                "ext-intl": "to use Strings::webalize(), toAscii(), normalize() and compare()",
+                "ext-json": "to use Nette\\Utils\\Json",
+                "ext-mbstring": "to use Strings::lower() etc...",
+                "ext-tokenizer": "to use Nette\\Utils\\Reflection::getUseStatements()",
+                "ext-xml": "to use Strings::length() etc. when mbstring is not available"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.2-dev"
+                }
+            },
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause",
+                "GPL-2.0-only",
+                "GPL-3.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "David Grudl",
+                    "homepage": "https://davidgrudl.com"
+                },
+                {
+                    "name": "Nette Community",
+                    "homepage": "https://nette.org/contributors"
+                }
+            ],
+            "description": "🛠  Nette Utils: lightweight utilities for string & array manipulation, image handling, safe JSON encoding/decoding, validation, slug or strong password generating etc.",
+            "homepage": "https://nette.org",
+            "keywords": [
+                "array",
+                "core",
+                "datetime",
+                "images",
+                "json",
+                "nette",
+                "paginator",
+                "password",
+                "slugify",
+                "string",
+                "unicode",
+                "utf-8",
+                "utility",
+                "validation"
+            ],
+            "support": {
+                "issues": "https://github.com/nette/utils/issues",
+                "source": "https://github.com/nette/utils/tree/v3.2.10"
+            },
+            "time": "2023-07-30T15:38:18+00:00"
+        },
+        {
+            "name": "phpstan/phpstan",
+            "version": "1.11.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpstan/phpstan.git",
+                "reference": "640410b32995914bde3eed26fa89552f9c2c082f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/640410b32995914bde3eed26fa89552f9c2c082f",
+                "reference": "640410b32995914bde3eed26fa89552f9c2c082f",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2|^8.0"
+            },
+            "conflict": {
+                "phpstan/phpstan-shim": "*"
+            },
+            "bin": [
+                "phpstan",
+                "phpstan.phar"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHPStan - PHP Static Analysis Tool",
+            "keywords": [
+                "dev",
+                "static analysis"
+            ],
+            "support": {
+                "docs": "https://phpstan.org/user-guide/getting-started",
+                "forum": "https://github.com/phpstan/phpstan/discussions",
+                "issues": "https://github.com/phpstan/phpstan/issues",
+                "security": "https://github.com/phpstan/phpstan/security/policy",
+                "source": "https://github.com/phpstan/phpstan-src"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/ondrejmirtes",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/phpstan",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-08-08T09:02:50+00:00"
+        },
+        {
+            "name": "sergeytsalkov/meekrodb",
+            "version": "v2.5.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/SergeyTsalkov/meekrodb.git",
+                "reference": "08b683a274365983aaf033cf9c589dcbe5190028"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/SergeyTsalkov/meekrodb/zipball/08b683a274365983aaf033cf9c589dcbe5190028",
+                "reference": "08b683a274365983aaf033cf9c589dcbe5190028",
                 "shasum": ""
             },
             "require": {
@@ -114,9 +297,9 @@
             "support": {
                 "email": "support@meekro.com",
                 "issues": "https://github.com/SergeyTsalkov/meekrodb/issues",
-                "source": "https://github.com/SergeyTsalkov/meekrodb/tree/v2.5"
+                "source": "https://github.com/SergeyTsalkov/meekrodb/tree/v2.5.1"
             },
-            "time": "2023-09-13T20:06:20+00:00"
+            "time": "2023-10-10T00:28:49+00:00"
         }
     ],
     "packages-dev": [],
@@ -127,7 +310,10 @@
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "ext-gd": "*",
+        "ext-imagick": "*"
+    },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

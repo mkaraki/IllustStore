@@ -1,7 +1,9 @@
 {
     "require": {
         "klein/klein": "dev-master",
-        "sergeytsalkov/meekrodb": "^2.4"
+        "sergeytsalkov/meekrodb": "^2.4",
+        "ext-gd": "*",
+        "ext-imagick": "*"
     },
     "repositories": [
         {

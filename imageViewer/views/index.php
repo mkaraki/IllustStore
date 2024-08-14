@@ -16,9 +16,17 @@
         <form action="/search" method="get">
             <div>
                 <input type="text" name="q" id="searchQuery" />
-                <input type="submit" value="Search">
+                <input type="submit" value="Search" />
             </div>
             <div id="search-tag-auto-complete"></div>
+        </form>
+    </div>
+    <div>
+        <form action="/search/image" enctype="multipart/form-data" method="post">
+            <div>
+                <input type="file" name="img" accept="image/*" />
+                <input type="submit" value="Image Search" />
+            </div>
         </form>
     </div>
     <div>

@@ -28,7 +28,7 @@ FROM php:8.3-apache
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 ENV IPE_GD_WITHOUTAVIF=1
-RUN install-php-extensions gd mysqli
+RUN install-php-extensions gd imagick mysqli
 RUN pecl install apcu \
     && docker-php-ext-install opcache \
     && docker-php-ext-enable apcu
@@ -37,6 +37,11 @@ RUN <<EOF cat >> $PHP_INI_DIR/conf.d/apcu.ini
 [apcu]
 apc.enable=1
 apc.enable_cli=1
+EOF
+
+RUN <<EOF cat >> $PHP_INI_DIR/conf.d/more-upload-size.ini
+upload_max_filesize = 150M
+post_max_size = 150M
 EOF
 
 RUN a2enmod rewrite
