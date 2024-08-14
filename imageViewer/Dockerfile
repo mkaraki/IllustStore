@@ -3,7 +3,7 @@ FROM php:8.3 AS build-lepton
 RUN apt-get update && \
     apt-get install -y \
     libclang-dev \
-    curl \ 
+    curl \
     git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -55,6 +55,8 @@ RUN echo extension=ms-lepton.so > $(php-config --ini-dir)/20-ms-lepton.ini
 RUN mkdir /var/www/html/cache
 
 COPY .htaccess /var/www/html/
+COPY ImageHash/*.php /var/www/html/ImageHash/
 COPY assets/* /var/www/html/assets/
 COPY *.php /var/www/html/
 COPY views/*.php /var/www/html/views/
+COPY routes/*.php /var/www/html/routes/
