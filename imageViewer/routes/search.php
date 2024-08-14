@@ -119,24 +119,66 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
         $threshold = intval($_GET['threshold']);
     }
 
-    $imageCnt = DB::queryFirstField(
-        "SELECT
+    if ($threshold === 0 || isset($_GET['exact']))
+    {
+        $threshold = 'exact';
+        $exact = true;
+    }
+    else
+    {
+        $exact = false;
+    }
+
+    if ($exact)
+    {
+        $imageCnt = DB::queryFirstField(
+            "SELECT
                 COUNT(i.id)
             FROM
                 illusts i
             WHERE
-                BIT_COUNT(i.$hashType XOR CONVERT(%s, BINARY)) < %i",
-        $request->hash,
-        $threshold,
-    );
+                i.$hashType = CONVERT(%s, BINARY)",
+            $request->hash,
+        );
+    }
+    else
+    {
+        $imageCnt = DB::queryFirstField(
+            "SELECT
+                    COUNT(i.id)
+                FROM
+                    illusts i
+                WHERE
+                    BIT_COUNT(i.$hashType XOR CONVERT(%s, BINARY)) < %i",
+            $request->hash,
+            $threshold,
+        );
+    }
 
     $p = $_GET['p'] ?? '1';
     $p = intval($p);
     $sttIdx = ($p - 1) * 100;
     $maxPage = ceil(doubleval($imageCnt) / 100.0);
 
-    $images = DB::query(
-        "SELECT
+    if ($exact)
+    {
+        $images = DB::query(
+            "SELECT
+                i.id
+            FROM
+                illusts i
+            WHERE
+                i.$hashType = CONVERT(%s, BINARY)
+            LIMIT 100
+            OFFSET %i",
+            $request->hash,
+            $sttIdx
+        );
+    }
+    else
+    {
+        $images = DB::query(
+            "SELECT
                 i.id
             FROM
                 illusts i
@@ -144,10 +186,11 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
                 BIT_COUNT(i.$hashType XOR CONVERT(%s, BINARY)) < %i
             LIMIT 100
             OFFSET %i",
-        $request->hash,
-        $threshold,
-        $sttIdx
-    );
+            $request->hash,
+            $threshold,
+            $sttIdx
+        );
+    }
 
     $service->render(__DIR__ . '/../views/images.php', [
         'searchParam' => $hashType . ':' . $service->escape($request->hash) . ' threshold:' . $threshold,
