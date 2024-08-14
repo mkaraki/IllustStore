@@ -1,7 +1,13 @@
 <?php
 global $klein;
 $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $service, $app) {
-    $img = DB::queryFirstRow('SELECT * FROM illusts WHERE id = %i', $request->imageId);
+    $img = DB::queryFirstRow('SELECT 
+        i.path,
+        CONV(i.aHash, 10, 16) as aHash,
+        CONV(i.dHash, 10, 16) as dHash,
+        CONV(i.pHash, 10, 16) as pHash,
+        CONV(i.colorHash, 10, 16) as colorHash
+     FROM illusts i WHERE id = %i', $request->imageId);
     if ($img === null) {
         $response->code(404);
         return;
@@ -77,7 +83,7 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         'aHash' => $img['aHash'] ?? null,
         'dHash' => $img['dHash'] ?? null,
         'pHash' => $img['pHash'] ?? null,
-        'colorHash' => $img['colorHash'] ?? null,
+        'colorHash' => $img['colorHash'],
         'metadata' => $metadata,
     ]);
 });

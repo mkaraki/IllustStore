@@ -137,7 +137,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
             FROM
                 illusts i
             WHERE
-                i.$hashType = CONVERT(%s, BINARY)",
+                i.$hashType = CONV(%s, 16, 10)",
             $request->hash,
         );
     }
@@ -149,7 +149,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
                 FROM
                     illusts i
                 WHERE
-                    BIT_COUNT(i.$hashType XOR CONVERT(%s, BINARY)) < %i",
+                    BIT_COUNT(i.$hashType ^ CONV(%s, 16, 10)) < %i",
             $request->hash,
             $threshold,
         );
@@ -168,7 +168,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
             FROM
                 illusts i
             WHERE
-                i.$hashType = CONVERT(%s, BINARY)
+                i.$hashType = CONV(%s, 16, 10)
             LIMIT 100
             OFFSET %i",
             $request->hash,
@@ -183,7 +183,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
             FROM
                 illusts i
             WHERE
-                BIT_COUNT(i.$hashType XOR CONVERT(%s, BINARY)) < %i
+                BIT_COUNT(i.$hashType ^ CONV(%s, 16, 10)) < %i
             LIMIT 100
             OFFSET %i",
             $request->hash,
