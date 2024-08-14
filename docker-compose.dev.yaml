@@ -16,7 +16,7 @@ services:
     build: imageViewer
     volumes:
       - ./imageEvaller/images:/usr/src/app/images:ro
-      - ./imageViewer:/var/www/html:ro
+      - ./imageViewer:/var/www/html
     ports:
       - 7090:80
     depends_on:
@@ -32,3 +32,5 @@ services:
     volumes:
       - ./dbdebug:/var/lib/mysql:Z
       - ./init.db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - 7091:3306

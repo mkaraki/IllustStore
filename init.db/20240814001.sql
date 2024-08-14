@@ -1,0 +1,21 @@
+UPDATE illusts
+SET aHash = CONVERT(aHash, BINARY)
+WHERE aHash IS NOT NULL;
+
+UPDATE illusts
+SET dHash = CONVERT(dHash, BINARY)
+WHERE dHash IS NOT NULL;
+
+UPDATE illusts
+SET pHash = CONVERT(pHash, BINARY)
+WHERE pHash IS NOT NULL;
+
+UPDATE illusts
+SET colorHash = CONVERT(colorHash, BINARY)
+WHERE colorHash IS NOT NULL;
+
+ALTER TABLE illusts
+MODIFY aHash VARBINARY(64),
+MODIFY dHash VARBINARY(64),
+MODIFY pHash VARBINARY(64),
+MODIFY colorHash VARBINARY(48);

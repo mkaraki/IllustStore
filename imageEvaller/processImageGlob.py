@@ -206,7 +206,7 @@ def add_image_hash(img_id, image):
         sys.stderr.write(f"Failed to hash: {e}\n")
         return False
 
-    dbCursor.execute("UPDATE illusts SET aHash = %s, pHash = %s, dHash = %s, colorHash = %s WHERE id = %s", (aHash, pHash, dHash, colorHash, img_id,))
+    dbCursor.execute("UPDATE illusts SET aHash = CONVERT(%s, BINARY), pHash = CONVERT(%s, BINARY), dHash = CONVERT(%s, BINARY), colorHash = CONVERT(%s, BINARY) WHERE id = %s", (aHash, pHash, dHash, colorHash, img_id,))
 
 
 if args.force_delete_all_images:

@@ -51,251 +51,9 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
     ]);
 });
 
-$klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $service, $app) {
-    $img = DB::queryFirstRow('SELECT * FROM illusts WHERE id = %i', $request->imageId);
-    if ($img === null) {
-        $response->code(404);
-        return;
-    }
+require __DIR__ . '/routes/image.php';
 
-    $metadataProviders = DB::query('SELECT * FROM metadata_provider');
-    foreach ($metadataProviders as $provider) {
-        $provider['pathPattern'] = '/' . str_replace('/', '\/', $provider['pathPattern']) . '/';
-
-        if (!preg_match($provider['pathPattern'], $img['path'])) continue;
-
-        if ($provider['apiUrlReplacement'] === null || empty($provider['apiUrlReplacement'])) {
-            $metadataApiUrl = null;
-        } else {
-            $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $img['path']);
-        }
-
-        if ($provider['providerUrlReplacement'] === null || empty($provider['providerUrlReplacement'])) {
-            $metadataProviderUrl = null;
-        } else {
-            $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $img['path']);
-        }
-
-        $metadataProviderName = $provider['name'];
-
-        if ($provider['sourceUrlReplacement'] !== null) {
-            $metadataSourceUrl = preg_replace($provider['pathPattern'], $provider['sourceUrlReplacement'], $img['path']);
-        } else {
-            $metadataSourceUrl = null;
-        }
-    }
-
-    $metadata = [
-        'metadataProviderName' => $metadataProviderName ?? null,
-        'metadataProviderUrl' => $metadataProviderUrl ?? null,
-        'metadataSourceUrl' => $metadataSourceUrl ?? null,
-        'metadataApiUrl' => $metadataApiUrl ?? null,
-        'apiMetadata' => null,
-    ];
-    if ($metadata['metadataApiUrl'] !== null) {
-        $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
-    }
-
-    $service->render(__DIR__ . '/views/image.php', [
-        'imageId' => $request->imageId,
-        'srvPath' => $img['path'],
-        'tags' => DB::query(
-            'SELECT
-                tA.tagId AS id,
-                t.tagName,
-                tA.autoAssigned
-            FROM
-                tagAssign tA,
-                tags t
-            WHERE
-                tA.tagId = t.id AND
-                tA.illustId = %i
-            ORDER BY t.tagName',
-            $request->imageId,
-        ),
-        'negativeTags' => DB::query(
-            'SELECT
-                tNA.tagId AS id,
-                t.tagName
-            FROM
-                tagNegativeAssign tNA,
-                tags t
-            WHERE
-                tNA.tagId = t.id AND
-                tNA.illustId = %i',
-            $request->imageId,
-        ),
-        'aHash' => $img['aHash'] ?? null,
-        'dHash' => $img['dHash'] ?? null,
-        'pHash' => $img['pHash'] ?? null,
-        'colorHash' => $img['colorHash'] ?? null,
-        'metadata' => $metadata,
-    ]);
-});
-
-function get_image_load_mode($imagePath): string
-{
-    $extEval = strtolower($imagePath);
-    switch (true) {
-        default:
-        case str_ends_with($extEval, '.png'):
-        case str_ends_with($extEval, '.jpg'):
-        case str_ends_with($extEval, '.jpeg'):
-        case str_ends_with($extEval, '.webp'):
-            return 'default';
-
-        case str_ends_with($extEval, '.lep'):
-            return 'lepton';
-    }
-}
-
-function get_image_data($imagePath, $mode = 'default'): string
-{
-    switch ($mode) {
-        case 'default':
-        default:
-            return file_get_contents($imagePath);
-            break;
-
-        case 'lepton':
-            return convert_lepton_to_jpeg(file_get_contents($imagePath));
-            break;
-    }
-}
-
-function return_raw_image($imagePath, $response): string
-{
-    $extEval = strtolower($imagePath);
-    switch (true) {
-        case str_ends_with($extEval, '.png'):
-            $response->header('Content-Type', 'image/png');
-            break;
-
-        case str_ends_with($extEval, '.jpg'):
-        case str_ends_with($extEval, '.jpeg'):
-        case str_ends_with($extEval, '.lep'):
-            $response->header('Content-Type', 'image/jpeg');
-            break;
-
-        case str_ends_with($extEval, '.webp'):
-            $response->header('Content-Type', 'image/webp');
-            break;
-    }
-
-    $imgMode = get_image_load_mode($imagePath);
-    return get_image_data($imagePath, $imgMode);
-};
-
-$klein->respond('/image/[i:imageId]/raw', function ($request, $response, $service, $app) {
-    $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
-    if ($img === null) {
-        $response->code(404);
-        return;
-    }
-
-    if (fileMTimeMod($img, $_SERVER, $response))
-        return;
-
-    return return_raw_image($img, $response);
-});
-
-$klein->respond('/image/[i:imageId]/large', function ($request, $response, $service, $app) {
-    ini_set("memory_limit", "512M");
-
-    $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
-    if ($img === null) {
-        $response->code(404);
-        return (var_export($img));
-        return;
-    }
-
-    if (fileMTimeMod($img, $_SERVER, $response))
-        return;
-
-    try {
-        $imgMode = get_image_load_mode($img);
-        $imgo = imagecreatefromstring(get_image_data($img, $imgMode));
-
-        $origImgX = doubleval(imagesx($imgo));
-        $origImgY = doubleval(imagesy($imgo));
-
-        if ($origImgX > 1920 || $origImgY > 1920) {
-            $newX = 0;
-            $newY = 0;
-
-            if ($origImgX > $origImgY) {
-                $newX = 1920;
-                $newY = ($origImgY * (1920.0 / $origImgX));
-            } else {
-                $newY = 1920;
-                $newX = ($origImgX * (1920.0 / $origImgY));
-            }
-
-            $newImgObj = imagecreatetruecolor($newX, $newY);
-            imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
-
-            $imgo = $newImgObj;
-        }
-    } catch (Exception $e) {
-        return return_raw_image($img, $response);
-    }
-
-    $response->header('Content-Type', 'image/webp');
-
-    ob_start();
-    imagewebp($imgo);
-    $response->body(ob_get_contents());
-    ob_end_clean();
-});
-
-$klein->respond('/image/[i:imageId]/thumb', function ($request, $response, $service, $app) {
-    ini_set("memory_limit", "512M");
-
-    $img = DB::queryFirstField('SELECT path FROM illusts WHERE id = %i', $request->imageId);
-    if ($img === null) {
-        $response->code(404);
-        return (var_export($img));
-        return;
-    }
-
-    if (fileMTimeMod($img, $_SERVER, $response))
-        return;
-
-    try {
-        $imgMode = get_image_load_mode($img);
-        $imgo = imagecreatefromstring(get_image_data($img, $imgMode));
-
-        $origImgX = doubleval(imagesx($imgo));
-        $origImgY = doubleval(imagesy($imgo));
-
-        if ($origImgX > 250 || $origImgY > 250) {
-            $newX = 0;
-            $newY = 0;
-
-            if ($origImgX > $origImgY) {
-                $newX = 250;
-                $newY = ($origImgY * (250.0 / $origImgX));
-            } else {
-                $newY = 250;
-                $newX = ($origImgX * (250.0 / $origImgY));
-            }
-
-            $newImgObj = imagecreatetruecolor($newX, $newY);
-            imagecopyresampled($newImgObj, $imgo, 0, 0, 0, 0, $newX, $newY, $origImgX, $origImgY);
-
-            $imgo = $newImgObj;
-        }
-    } catch (Exception $e) {
-        return return_raw_image($img, $response);
-    }
-
-    $response->header('Content-Type', 'image/webp');
-
-    ob_start();
-    imagewebp($imgo);
-    $response->body(ob_get_contents());
-    ob_end_clean();
-});
+require __DIR__ . '/routes/image_file.php';
 
 $klein->respond('/tag/', function ($request, $response, $service, $app) {
     $service->render(__DIR__ . '/views/tags.php');
@@ -310,7 +68,7 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
     }
 
     $imageCnt = DB::queryFirstField(
-        'SELECT COUNT(illustId) FROM tagAssign WHERE tagId = %i',
+        'SELECT COUNT(tA.illustId) FROM tagAssign tA WHERE tA.tagId = %i',
         $request->tagId
     );
 
@@ -321,11 +79,11 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
 
     $images = DB::query(
         'SELECT
-                illustId AS id
+                tA.illustId AS id
             FROM
-                tagAssign
+                tagAssign tA
             WHERE
-                tagId = %i
+                tA.tagId = %i
             LIMIT 100
             OFFSET %i',
         $request->tagId,
@@ -340,96 +98,6 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
         'tagDanbooru' => $tagData['tagDanbooru'],
         'tagPixivJpn' => $tagData['tagPixivJpn'],
         'tagPixivEng' => $tagData['tagPixivEng'],
-        'images' => $images,
-        'paginationTotal' => $maxPage,
-        'paginationNow' => $p,
-        'paginationItemCount' => $imageCnt,
-        'paginationItemStart' => $sttIdx,
-        'paginationItemEnd' => $sttIdx + 100,
-    ]);
-});
-
-$klein->respond('/search', function ($request, $response, $service, $app) {
-    $searchQuery = trim($_GET['q'] ?? '');
-    if ($searchQuery === '') {
-        $response->redirect('/', 302);
-        return;
-    }
-
-    $searchTags = [];
-
-    $searchQuery = str_replace('　', ' ', $searchQuery);
-    $searchQuerySplitted = explode(' ', $searchQuery);
-
-    foreach ($searchQuerySplitted as $query) {
-        $tagId = DB::queryFirstField(
-            'SELECT
-                id
-            FROM
-                tags
-            WHERE
-                LOWER(tagName) = LOWER(%s) OR
-                LOWER(tagDanbooru) = LOWER(%s) OR
-                LOWER(tagPixivJpn) = LOWER(%s) OR
-                LOWER(tagPixivEng) = LOWER(%s)',
-            $query,
-            $query,
-            $query,
-            $query
-        );
-
-        if ($tagId === null) continue;
-
-        $searchTags[] = $tagId;
-    }
-
-    $imageCnt = DB::queryFirstField(
-        'SELECT
-                COUNT(i.id) OVER()
-            FROM
-                tagAssign tA,
-                tags t,
-                illusts i
-            WHERE
-                tA.tagId = t.id AND
-                tA.illustId = i.id AND
-                tagId IN %li
-            GROUP BY i.id
-            HAVING COUNT(i.id) = %i
-            LIMIT 1',
-        $searchTags,
-        count($searchTags),
-    );
-
-    $p = $_GET['p'] ?? '1';
-    $p = intval($p);
-    $sttIdx = ($p - 1) * 100;
-    $maxPage = ceil(doubleval($imageCnt) / 100.0);
-
-    $images = DB::query(
-        'SELECT
-                i.id AS id
-            FROM
-                tagAssign tA,
-                tags t,
-                illusts i
-            WHERE
-                tA.tagId = t.id AND
-                tA.illustId = i.id AND
-                (tagId IN %li)
-            GROUP BY i.id
-            HAVING COUNT(i.id) = %i
-            LIMIT 100
-            OFFSET %i',
-        $searchTags,
-        count($searchTags),
-        $sttIdx
-    );
-
-    $service->render(__DIR__ . '/views/images.php', [
-        'searchParam' => $searchQuery,
-        'pageType' => 'search',
-        'searchQuery' => $searchQuery,
         'images' => $images,
         'paginationTotal' => $maxPage,
         'paginationNow' => $p,
@@ -456,7 +124,6 @@ $klein->respond('POST', '/util/tag/complete', function ($request, $response, $se
     $queryObj = json_decode($request->body(), true);
     if (!isset($queryObj['w'])) {
         $response->code(400);
-        return var_export($request->body());
         return;
     }
     $res = DB::queryFirstColumn("SELECT tagName FROM tags WHERE tagName LIKE %ss", $queryObj['w']);
@@ -644,59 +311,6 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
     ]);
 });
 
-$klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $service, $app) {
-    $hashType = null;
-    switch ($request->type) {
-        case 'aHash':
-            $hashType = 'aHash';
-            break;
-        case 'dHash':
-            $hashType = 'dHash';
-            break;
-        case 'pHash':
-            $hashType = 'pHash';
-            break;
-        case 'colorHash':
-            $hashType = 'colorHash';
-            break;
-        default:
-            $response->code(404);
-            return;
-    }
-
-    $imageCnt = DB::queryFirstField(
-        "SELECT COUNT(*) FROM illusts WHERE $hashType = %s",
-        $request->hash
-    );
-
-    $p = $_GET['p'] ?? '1';
-    $p = intval($p);
-    $sttIdx = ($p - 1) * 100;
-    $maxPage = ceil(doubleval($imageCnt) / 100.0);
-
-    $images = DB::query(
-        "SELECT
-                id
-            FROM
-                illusts
-            WHERE
-                $hashType = %s
-            LIMIT 100
-            OFFSET %i",
-        $request->hash,
-        $sttIdx
-    );
-
-    $service->render(__DIR__ . '/views/images.php', [
-        'searchParam' => $hashType . ':' . $service->escape($request->hash),
-        'pageType' => 'hash',
-        'images' => $images,
-        'paginationTotal' => $maxPage,
-        'paginationNow' => $p,
-        'paginationItemCount' => $imageCnt,
-        'paginationItemStart' => $sttIdx,
-        'paginationItemEnd' => $sttIdx + 100,
-    ]);
-});
+require __DIR__ . '/routes/search.php';
 
 $klein->dispatch();
