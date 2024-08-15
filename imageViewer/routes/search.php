@@ -108,7 +108,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
             break;
         case 'colorHash':
             $hashType = 'colorHash';
-            $threshold = 10;
+            $threshold = 3;
             break;
         default:
             $response->code(404);
