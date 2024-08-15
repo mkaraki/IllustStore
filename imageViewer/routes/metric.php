@@ -3,17 +3,17 @@ global $klein;
 $klein->respond('GET', '/metrics', function ($request, $response) {
     $ret = "# HELP illust_count Number of illusts registerd in DB.\n";
     $ret .= "# TYPE illust_count gauge\n";
-    $imgCount = DB::queryFirstField('SELECT count(*) FROM illusts');
+    $imgCount = DB::queryFirstField('SELECT count(i.id) FROM illusts i');
     $ret .= 'illust_count ' . $imgCount . "\n";
 
     $ret .= "# HELP tag_count Number of tags registerd in DB.\n";
     $ret .= "# TYPE tag_count gauge\n";
-    $tagCount = DB::queryFirstField('SELECT count(*) FROM tags');
+    $tagCount = DB::queryFirstField('SELECT count(t.id) FROM tags t');
     $ret .= 'tag_count ' . $tagCount . "\n";
 
     $ret .= "# HELP tag_assign_count Number of tags assign information table in DB.\n";
     $ret .= "# TYPE tag_assign_count gauge\n";
-    $tagCount = DB::queryFirstField('SELECT count(*) FROM tagAssign');
+    $tagCount = DB::queryFirstField('SELECT count(tA.illustId) FROM tagAssign tA');
     $ret .= 'tag_assign_count ' . $tagCount . "\n";
 
     $opcache_status = opcache_get_status(false);
