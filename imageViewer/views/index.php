@@ -157,7 +157,6 @@
         document.onpaste = (event) => {
             const clipData = event.clipboardData || window.clipboardData;
             if (clipData.files.length === 0) {
-                alert('No files found')
                 return;
             }
 
