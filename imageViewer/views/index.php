@@ -22,9 +22,9 @@
         </form>
     </div>
     <div>
-        <form action="/search/image" enctype="multipart/form-data" method="post">
+        <form action="/search/image" enctype="multipart/form-data" method="post" id="im-search-form">
             <div>
-                <input type="file" name="img" accept="image/*" />
+                <input type="file" name="img" accept="image/*" id="im-search-file" />
                 <input type="submit" value="Image Search" />
             </div>
         </form>
@@ -153,6 +153,22 @@
                     })
                 })
         }
+
+        document.onpaste = (event) => {
+            const clipData = event.clipboardData || window.clipboardData;
+            if (clipData.files.length === 0) {
+                alert('No files found')
+                return;
+            }
+
+            if (clipData.files.length > 1) {
+                alert('Only one file accepted')
+                return;
+            }
+
+            document.getElementById('im-search-file').files = clipData.files;
+            document.getElementById('im-search-form').submit()
+        };
     </script>
 </body>
 

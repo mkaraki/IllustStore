@@ -13,6 +13,9 @@
     <h1 class="query-ind query-h1">View: client-image</h1>
 </header>
 <div>
+    <?php if (isset($this->image)) : ?>
+        <img src="<?= $this->escape($this->image) ?>" alt="client-image" />
+    <?php endif; ?>
     <div>
         <dl>
             <?php if ($this->aHash !== null) : ?>

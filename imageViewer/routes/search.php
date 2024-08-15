@@ -218,15 +218,29 @@ $klein->respond('POST', '/search/image', function($request, $response, $service,
 
     $filePath = $files['img']['tmp_name'];
 
-    $im = new Imagick($filePath);
+    try {
+        $im = new Imagick($filePath);
+    }
+    catch (\ImagickException $e) {
+        $response->code(400);
+        return "Unsupported file submitted or reload detected.";
+    }
 
     $hasher = new ImageHasher();
+
+    $thumb_img = clone $im;
+    $thumb_img->scaleImage(300, 300, true);
+    $thumb_img->setCompressionQuality(50);
+    $thumb_img->setCompression(imagick::COMPRESSION_JPEG);
+    $thumb_img->setImageFormat('jpg');
+    $thumb_b64 = base64_encode($thumb_img->getImageBlob());
 
     $aHash = $hasher->average_hash($im)->hex();
     $dHash = $hasher->difference_hash($im)->hex();
     $pHash = $hasher->perceptual_hash($im)->hex();
 
     $service->render(__DIR__ . '/../views/client_image_hash_result.php', [
+        'image' => 'data:image/png;base64,' . $thumb_b64,
         'aHash' => $aHash,
         'dHash' => $dHash,
         'pHash' => $pHash,
