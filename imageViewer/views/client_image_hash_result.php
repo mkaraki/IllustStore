@@ -24,6 +24,7 @@
                     <a href="/search/aHash/<?= $this->escape($this->aHash) ?>">
                         <?= $this->escape($this->aHash) ?>
                     </a>
+                    (<a href="/search/aHash/<?= $this->escape($this->aHash) ?>?exact=1">exact</a>)
                 </dd>
             <?php endif; ?>
             <?php if ($this->pHash !== null) : ?>
@@ -32,6 +33,7 @@
                     <a href="/search/pHash/<?= $this->escape($this->pHash) ?>">
                         <?= $this->escape($this->pHash) ?>
                     </a>
+                    (<a href="/search/pHash/<?= $this->escape($this->pHash) ?>?exact=1">exact</a>)
                 </dd>
             <?php endif; ?>
             <?php if ($this->dHash !== null) : ?>
@@ -40,6 +42,7 @@
                     <a href="/search/dHash/<?= $this->escape($this->dHash) ?>">
                         <?= $this->escape($this->dHash) ?>
                     </a>
+                    (<a href="/search/dHash/<?= $this->escape($this->dHash) ?>?exact=1">exact</a>)
                 </dd>
             <?php endif; ?>
             <?php if ($this->colorHash !== null) : ?>
@@ -48,6 +51,7 @@
                     <a href="/search/colorHash/<?= $this->escape($this->colorHash) ?>">
                         <?= $this->escape($this->colorHash) ?>
                     </a>
+                    (<a href="/search/colorHash/<?= $this->escape($this->colorHash) ?>?exact=1">exact</a>)
                 </dd>
             <?php endif; ?>
         </dl>
