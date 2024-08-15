@@ -314,5 +314,6 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
 });
 
 require __DIR__ . '/routes/search.php';
+require __DIR__ . '/routes/metric.php';
 
 $klein->dispatch();
