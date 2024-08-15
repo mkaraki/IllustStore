@@ -43,21 +43,10 @@ if (count($this->tags) > 0) {
                     <form action="/image/<?= $this->imageId ?>/tag/new" method="post">
                         <div>
                             <label for="newTag">New tag:</label>
-                            <input type="text" name="newTagId" id="newTag" list="newTagList" required>
+                            <input type="text" name="newTagId" id="newTag" required>
                             <input type="hidden" name="pending" value="<?= $this->pending ?>">
-                            <datalist id="newTagList">
-                                <?php foreach ($selectableTags as $t) : ?>
-                                    <option value="<?= $t['id'] ?>"><?= $this->escape($t['tagName']) ?></option>
-                                <?php endforeach; ?>
-                            </datalist>
-                            <!--
-                            <select id="newTag" name="newTagId" required>
-                                <?php foreach ($selectableTags as $t) : ?>
-                                    <option value="<?= $t['id'] ?>"><?= $this->escape($t['tagName']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            -->
                         </div>
+                        <div id="tag-auto-complete"></div>
                         <div>
                             <input type="submit" value="Add">
                         </div>
@@ -66,6 +55,41 @@ if (count($this->tags) > 0) {
             </dl>
         </div>
     </div>
+
+<script>
+    const newTag = document.getElementById('newTag');
+    const tagAutoComplete = document.getElementById('tag-auto-complete');
+    newTag.oninput = () => {
+        if (newTag.value === '') {
+            return;
+        }
+        const sendBody = JSON.stringify({
+            'w': newTag.value
+        })
+
+        fetch('/util/tag/complete', {
+            'method': 'POST',
+            body: sendBody,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+            .then(d => d.json())
+            .then(d => {
+                tagAutoComplete.innerHTML = '';
+                d['sw'].forEach(v => {
+                    const acObj = document.createElement('a');
+                    acObj.href = 'javascript:void(0)';
+                    acObj.innerText = v;
+                    acObj.onclick = () => {
+                        newTag.value = v;
+                        newTag.focus();
+                    }
+                    tagAutoComplete.appendChild(acObj);
+                })
+            })
+    }
+</script>
 
 </body>
 

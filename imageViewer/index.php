@@ -195,37 +195,39 @@ $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $respo
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
-
-    $newTagId = $_POST['newTagId'] ?? 'UNABLE';
-    if (!is_numeric($newTagId)) {
+    $newTag = trim($_POST['newTagId'] ?? '', ' \n\r\t\v\x00　');
+    if ($newTag === '') {
         $response->code(400);
         return;
     }
-    $newTagId = intval($newTagId);
 
-    $img = DB::queryFirstRow('SELECT path FROM illusts WHERE id = %i', $request->illustId);
+    $img = DB::queryFirstRow('SELECT i.id, i.path FROM illusts i WHERE id = %i', $request->illustId);
     if ($img === null) {
         $response->code(404);
         return;
     }
 
-    $tagData = DB::queryFirstRow('SELECT * FROM tags WHERE id = %i', $newTagId);
+    $tagData = DB::queryFirstRow('SELECT t.id FROM tags t WHERE t.tagName = %s', $newTag);
     if ($tagData === null) {
         $response->code(404);
         return;
     }
 
     DB::insert('tagAssign', [
-        'illustId' => $request->illustId,
-        'tagId' => $newTagId,
+        'illustId' => $img['id'],
+        'tagId' => $tagData['id'],
         'autoAssigned' => false,
     ]);
 
-    $isNegativeExists = DB::queryFirstRow('SELECT * FROM tagNegativeAssign WHERE illustId = %i AND tagId = %i', $request->illustId, $newTagId);
+    $isNegativeExists = DB::queryFirstRow(
+        'SELECT * FROM tagNegativeAssign WHERE illustId = %i AND tagId = %i',
+        $img['id'],
+        $tagData['id']
+    );
     if ($isNegativeExists !== null) {
         DB::delete('tagNegativeAssign', [
-            'illustId' => $request->illustId,
-            'tagId' => $newTagId,
+            'illustId' => $img['id'],
+            'tagId' => $tagData['id'],
         ]);
     }
 
@@ -233,7 +235,7 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
     if ($pendingCode > 0) {
         $response->redirect('/tag/pending?p=' . $pendingCode, 303);
     } else {
-        $response->redirect('/image/' . $request->illustId, 303);
+        $response->redirect('/image/' . $img['id'], 303);
     }
 });
 
