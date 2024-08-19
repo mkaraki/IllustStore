@@ -26,5 +26,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY --from=build-lepton_jpeg_rust /lepton_jpeg_rust/target/release/liblepton_jpeg.so /usr/lib/liblepton_jpeg.so
 
-COPY lepton_utils.py /usr/src/app/
-COPY main.py /usr/src/app/
+COPY *.py /usr/src/app/
