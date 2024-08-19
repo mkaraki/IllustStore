@@ -12,6 +12,14 @@ services:
     depends_on:
       - db
 
+  compressor:
+    build: utils/imageCompress
+    volumes:
+      - ./utils/imageCompress:/usr/src/app/
+      - ./imageEvaller/images:/usr/src/app/images
+    depends_on:
+      - db
+
   viewer:
     build: imageViewer
     volumes:
@@ -24,6 +32,8 @@ services:
 
   db:
     image: mariadb
+    ports:
+      - 7091:3306
     environment:
       - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=yes
       - MARIADB_DATABASE=illustStore
@@ -32,5 +42,3 @@ services:
     volumes:
       - ./dbdebug:/var/lib/mysql:Z
       - ./init.db:/docker-entrypoint-initdb.d:ro
-    ports:
-      - 7091:3306

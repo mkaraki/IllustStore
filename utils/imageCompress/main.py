@@ -35,14 +35,14 @@ def get_image_id(img_path):
     image_parent = str(img_path_info.parent.absolute())
 
     # Add last `/` to parent path
-    if (image_parent.endswith("/") == False):
+    if not image_parent.endswith("/"):
         image_parent = image_parent + "/"
 
     # if Cache exists and parent is same, check cache
-    if (cache_exists_parent != None and image_parent == cache_exists_parent):
+    if cache_exists_parent is not None and image_parent == cache_exists_parent:
         # if ['path'] of cache_exists is same as image, return ['id'] field
         for i in cache_exists:
-            if (i['path'] == image):
+            if i['path'] == image:
                 return i['id']
 
         # if cache not overflowed, return False
@@ -99,11 +99,13 @@ for i in iglob("./images/**/*.jpg", recursive=True):
 
     if res:
         dbCursor.execute("UPDATE illusts SET path = %s WHERE id = %s", (new, img_id))
+        db.commit()
         if args.verbose:
-            print(f"{i}: converted to: {new}")
+            print(f"{img_id}: {i}: converted to: {new}")
+        os.remove(i)
     else:
         if args.verbose:
-            print(f"{i}: converted to: {new}")
+            print(f"{img_id}: {i}: not converted to: {new}")
 
 print("glob: *.png")
 for i in iglob("./images/**/*.png", recursive=True):
@@ -124,8 +126,10 @@ for i in iglob("./images/**/*.png", recursive=True):
 
     if res:
         dbCursor.execute("UPDATE illusts SET path = %s WHERE id = %s", (new, img_id))
+        db.commit()
         if args.verbose:
-            print(f"{i}: converted to: {new}")
+            print(f"{img_id}: {i}: converted to: {new}")
+        os.remove(i)
     else:
         if args.verbose:
-            print(f"{i}: converted to: {new}")
+            print(f"{img_id}: {i}: not converted to: {new}")

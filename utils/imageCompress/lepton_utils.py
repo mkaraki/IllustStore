@@ -2,7 +2,8 @@ from ctypes import *
 import os
 import io
 
-from PIL import Image
+from PIL import Image, ImageChops
+
 
 class LeptonConvert:
 
@@ -101,15 +102,21 @@ class LeptonUtils:
         pass
 
     @staticmethod
-    def verify_lepton_and_other(lepton_file, other_file):
+    def verify_lepton_and_other(other_file, lepton_file):
         lc = LeptonConvert()
-        lepton_data = Image.open(io.BytesIO(lc.load_lepton_from_path(lepton_file))).convert('RGB')
+        lep_dec_bytes = lc.load_lepton_from_path(lepton_file)
+        if lep_dec_bytes is None:
+            print("!lepton read error")
+            return False
+
+        lepton_data = Image.open(io.BytesIO(lep_dec_bytes)).convert('RGB')
         jpeg_data = Image.open(other_file).convert('RGB')
 
-        return lepton_data == jpeg_data
+        img_diff = ImageChops.difference(lepton_data, jpeg_data)
+        return not img_diff.getbbox()
 
     @staticmethod
-    def select_lepton_or_other(lepton_file, other_file):
+    def select_lepton_or_other(other_file, lepton_file):
         lepton_size = os.path.getsize(lepton_file)
         other_size = os.path.getsize(other_file)
 
@@ -124,25 +131,28 @@ class LeptonUtils:
         lc.convert_to_lepton(lepton_path, output_path)
 
     @staticmethod
-    def try_convert_lepton(lepton_path, output_path):
+    def try_convert_lepton(input_path, output_path):
         try:
-            LeptonUtils.convert_to_lepton(lepton_path, output_path)
+            LeptonUtils.convert_to_lepton(input_path, output_path)
 
-            verify = LeptonUtils.verify_lepton_and_other(lepton_path, output_path)
+            verify = LeptonUtils.verify_lepton_and_other(input_path, output_path)
 
             if not verify:
-                os.remove(lepton_path)
+                print("!vrfy")
+                os.remove(output_path)
                 return
 
-            sel = LeptonUtils.select_lepton_or_other(lepton_path, output_path)
+            sel = LeptonUtils.select_lepton_or_other(input_path, output_path)
 
             if sel != 'lepton':
-                os.remove(lepton_path)
+                print("!size")
+                os.remove(output_path)
                 return False
 
             return True
 
-        except:
-            if os.path.exists(lepton_path):
-                os.remove(lepton_path)
+        except Exception as e:
+            print("!expt", e)
+            if os.path.exists(output_path):
+                os.remove(output_path)
             return False

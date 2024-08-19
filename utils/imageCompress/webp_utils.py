@@ -2,6 +2,7 @@ import os
 
 import webp
 from PIL import Image
+from PIL import ImageChops
 
 
 class WebPUtils:
@@ -11,13 +12,14 @@ class WebPUtils:
 
     @staticmethod
     def verify_webp_and_other(webp_file, other_file):
-        webp_data = webp.load_image(webp_file, 'RGBA')
-        other_data = Image.open(other_file).convert('RGBA')
+        webp_data = Image.open(webp_file).convert('RGB')
+        other_data = Image.open(other_file).convert('RGB')
 
-        return webp_data == other_data
+        img_diff = ImageChops.difference(webp_data, other_data)
+        return not img_diff.getbbox()
 
     @staticmethod
-    def select_webp_or_other(webp_file, other_file):
+    def select_webp_or_other(other_file, webp_file):
         webp_size = os.path.getsize(webp_file)
         other_size = os.path.getsize(other_file)
 
@@ -45,18 +47,21 @@ class WebPUtils:
             verify = WebPUtils.verify_webp_and_other(image_path, output_path)
 
             if not verify:
-                os.remove(image_path)
+                print("!vrfy")
+                os.remove(output_path)
                 return False
 
             sel = WebPUtils.select_webp_or_other(image_path, output_path)
 
             if sel != 'webp':
-                os.remove(image_path)
+                print("!size")
+                os.remove(output_path)
                 return False
 
             return True
 
-        except:
+        except Exception as e:
+            print("!expt", e)
             if os.path.exists(output_path):
                 os.remove(output_path)
             return False
