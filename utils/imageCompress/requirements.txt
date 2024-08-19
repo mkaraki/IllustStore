@@ -1,0 +1,4 @@
+mysql-connector-python==8.2.0
+webp==0.4.0
+numpy==2.1.0
+pillow==10.4.0
