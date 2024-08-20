@@ -71,9 +71,15 @@
                     <tbody>
                         <tr>
                             <td>
-                                <a href="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/raw">
-                                    <img src="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/thumb" alt="img" loading="lazy" />
-                                </a>
+                                <?php if (defined("IMG_SERVER_BASE")) : ?>
+                                    <a href="<?= IMG_SERVER_BASE ?>/image/<?= $nonTaggedImageAndTag['imageId'] ?>/raw">
+                                        <img src="<?= IMG_SERVER_BASE ?>/image/<?= $nonTaggedImageAndTag['imageId'] ?>/thumb" alt="img" loading="lazy" />
+                                    </a>
+                                <?php else : ?>
+                                    <a href="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/raw">
+                                        <img src="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/thumb" alt="img" loading="lazy" />
+                                    </a>
+                                <?php endif; ?>
                             </td>
                             <td class="padding-left--30px">
                                 Is this image contains
@@ -112,9 +118,15 @@
     <div>
         Random images
         <div>
-            <?php foreach ($this->images as $img) : ?>
-                <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
-            <?php endforeach; ?>
+            <?php if (defined("IMG_SERVER_BASE")) : ?>
+                <?php foreach ($this->images as $img) : ?>
+                    <a href="/image/<?= $img['id'] ?>"><img src="<?= IMG_SERVER_BASE ?>/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <?php foreach ($this->images as $img) : ?>
+                    <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
     <script>

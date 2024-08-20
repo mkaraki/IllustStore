@@ -32,9 +32,15 @@
             <?php endif; ?>
         </div>
     <?php endif; ?>
-    <?php foreach ($this->images as $img) : ?>
-        <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
-    <?php endforeach; ?>
+    <?php if (defined("IMG_SERVER_BASE")) : ?>
+        <?php foreach ($this->images as $img) : ?>
+            <a href="/image/<?= $img['id'] ?>"><img src="<?= IMG_SERVER_BASE ?>/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
+        <?php endforeach; ?>
+    <?php else : ?>
+        <?php foreach ($this->images as $img) : ?>
+            <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
+        <?php endforeach; ?>
+    <?php endif; ?>
     <?php if (isset($this->paginationTotal) && $this->paginationTotal > 1) : ?>
         <div>
             <?php for ($i = 1; $i <= $this->paginationTotal; $i++) : ?>

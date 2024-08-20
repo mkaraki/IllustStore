@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   runner:
     build: imageEvaller
@@ -27,6 +25,15 @@ services:
       - ./imageViewer:/var/www/html
     ports:
       - 7090:80
+    depends_on:
+      - db
+
+  img-server:
+    build: imageServer
+    volumes:
+      - ./imageEvaller/images:/usr/src/app/images:ro
+    ports:
+      - 7092:8080
     depends_on:
       - db
 

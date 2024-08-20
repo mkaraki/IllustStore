@@ -52,9 +52,15 @@
                     ?>
                     <tr>
                         <td>
-                            <a href="/image/<?= $i['imageId'] ?>/raw">
-                                <img class="viewer-img" src="/image/<?= $i['imageId'] ?>/thumb" alt="Image" loading="lazy">
-                            </a>
+                            <?php if (defined("IMG_SERVER_BASE")) : ?>
+                                <a href="<?= IMG_SERVER_BASE ?>/image/<?= $i['imageId'] ?>/raw">
+                                    <img class="viewer-img" src="<?= IMG_SERVER_BASE ?>/image/<?= $i['imageId'] ?>/thumb" alt="Image" loading="lazy">
+                                </a>
+                            <?php else : ?>
+                                <a href="/image/<?= $i['imageId'] ?>/raw">
+                                    <img class="viewer-img" src="/image/<?= $i['imageId'] ?>/thumb" alt="Image" loading="lazy">
+                                </a>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <dl>
