@@ -65,6 +65,19 @@ func getContentTypeFromExtension(requestExtension string) string {
 	return contentType
 }
 
+func openDb() (*sql.DB, error) {
+	db, err := sql.Open("mysql", "illustStore:illustStore@tcp(db:3306)/illustStore")
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetConnMaxLifetime(time.Minute * 3)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
+
+	return db, nil
+}
+
 func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	variant := r.PathValue("variant")
 
@@ -124,10 +137,11 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// If there are no raw level cache,
 		// read from disk
-		db, err := sql.Open("mysql", "illustStore:illustStore@tcp(db:3306)/illustStore")
+
+		db, err := openDb()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte("DB error"))
+			_, _ = w.Write([]byte("Db open fail"))
 			fmt.Println(err)
 			return
 		}
