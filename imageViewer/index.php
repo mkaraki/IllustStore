@@ -201,7 +201,7 @@ $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $respo
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
-    $newTag = trim($_POST['newTagId'] ?? '', ' \n\r\t\v\x00　');
+    $newTag = trim($_POST['newTagId'] ?? '', " \n\r\t\v\x00　");
     if ($newTag === '') {
         $response->code(400);
         return;
