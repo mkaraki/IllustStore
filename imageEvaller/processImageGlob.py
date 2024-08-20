@@ -145,8 +145,8 @@ def call_try_update_image_info(i_path, image, img_id):
 def try_update_image_info(i_path, image, img_id):
     # Check is aHash, pHash, dHash, colorHash exists
     dbCursor.execute("SELECT id FROM illusts WHERE id = %s AND aHash IS NULL OR pHash IS NULL OR dHash IS NULL OR colorHash IS NULL", (img_id,))
-
     if dbCursor.rowcount > 0:
+        # If there are empty hash field
         res = add_image_hash(img_id, image)
         if res == False:
             return False
@@ -154,12 +154,30 @@ def try_update_image_info(i_path, image, img_id):
     # Check is tags exists
     dbCursor.execute("SELECT tagId FROM tagAssign WHERE illustId = %s", (img_id,))
     if dbCursor.rowcount < 1:
+        # if tags not exists
         res = add_image_tags(img_id, image)
+        if res == False:
+            return False
+
+    # Check is image size exists
+    dbCursor.execute("SELECT id FROM illusts WHERE id = %s AND width IS NULL OR height IS NULL", (img_id,))
+    if dbCursor.rowcount > 0:
+        # If there are empty img size field
+        res = add_image_size(img_id, image)
         if res == False:
             return False
 
     return True
 
+
+def add_image_size(img_id, image):
+    pilImg = tensorflow.keras.utils.array_to_img(image)
+
+    width, height = pilImg.size
+
+    dbCursor.execute("UPDATE illusts SET width = %s, height = %s WHERE id = %s", (width, height, img_id,))
+
+    return True
 
 def add_image_tags(illustId, image):
     tag_items = None

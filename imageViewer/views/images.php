@@ -32,15 +32,41 @@
             <?php endif; ?>
         </div>
     <?php endif; ?>
-    <?php if (defined("IMG_SERVER_BASE")) : ?>
-        <?php foreach ($this->images as $img) : ?>
-            <a href="/image/<?= $img['id'] ?>"><img src="<?= IMG_SERVER_BASE ?>/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
-        <?php endforeach; ?>
-    <?php else : ?>
-        <?php foreach ($this->images as $img) : ?>
-            <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
-        <?php endforeach; ?>
-    <?php endif; ?>
+    <?php foreach ($this->images as $img) : ?>
+        <a href="/image/<?= $img['id'] ?>">
+            <img
+                <?php if (defined("IMG_SERVER_BASE")) : // Use image server or not ?>
+                    src="<?= IMG_SERVER_BASE ?>/image/<?= $img['id'] ?>/thumb"
+                <?php else : ?>
+                    src="/image/<?= $img['id'] ?>/thumb"
+                <?php endif;                                         // end of image server selection. ?>
+                    alt="img" loading="lazy"
+                <?php // Width and height pre-notice.
+                    if (is_numeric($img['width']) && is_numeric($img['height'])) {
+                        $targetSize = 250.0;
+
+                        if ($img['width'] <= $targetSize && $img['height'] <= $targetSize) {
+                            print('width="' . $img['width'] . '" height="' . $img['height'] . '"');
+                        } else {
+                            $widthFloat = floatval($img['width']);
+                            $heightFloat = floatval($img['height']);
+
+                            if ($img['width'] > $img['height']) {
+                                $scale = $targetSize / $widthFloat;
+                            } else {
+                                $scale = $targetSize / $heightFloat;
+                            }
+
+                            $afterWidth = ceil($widthFloat * $scale);
+                            $afterHeight = ceil($heightFloat * $scale);
+
+                            print('width="' . $afterWidth . '" height="' . $afterHeight . '"');
+                        }
+                    }
+                // end of Width and height pre-notice ?>
+            />
+        </a>
+    <?php endforeach; ?>
     <?php if (isset($this->paginationTotal) && $this->paginationTotal > 1) : ?>
         <div>
             <?php for ($i = 1; $i <= $this->paginationTotal; $i++) : ?>

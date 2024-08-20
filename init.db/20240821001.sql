@@ -1,0 +1,2 @@
+ALTER TABLE illusts
+    ADD (width BIGINT UNSIGNED, height BIGINT UNSIGNED);

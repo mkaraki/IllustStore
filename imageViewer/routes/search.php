@@ -60,7 +60,9 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
 
     $images = DB::query(
         'SELECT
-                i.id AS id
+                i.id AS id,
+                i.width AS width,
+                i.height AS height
             FROM
                 tagAssign tA,
                 tags t,
@@ -164,7 +166,9 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
     {
         $images = DB::query(
             "SELECT
-                i.id
+                i.id,
+                i.width,
+                i.height
             FROM
                 illusts i
             WHERE
@@ -179,7 +183,9 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
     {
         $images = DB::query(
             "SELECT
-                i.id
+                i.id,
+                i.width,
+                i.height
             FROM
                 illusts i
             WHERE

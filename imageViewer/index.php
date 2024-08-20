@@ -36,9 +36,11 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
         'searchParam' => '*',
         'images' => DB::query(
             'SELECT
-                *
+                i.id,
+                i.width,
+                i.height
             FROM
-                illusts
+                illusts i
             LIMIT 100
             OFFSET %i',
             $sttIdx
@@ -79,11 +81,15 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
 
     $images = DB::query(
         'SELECT
-                tA.illustId AS id
+                tA.illustId AS id,
+                i.width AS width,
+                i.height AS height
             FROM
-                tagAssign tA
+                tagAssign tA,
+                illusts i
             WHERE
-                tA.tagId = %i
+                tA.tagId = %i AND
+                tA.illustId = i.id
             LIMIT 100
             OFFSET %i',
         $request->tagId,
