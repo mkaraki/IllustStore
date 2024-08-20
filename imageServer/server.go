@@ -132,6 +132,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		db.SetConnMaxLifetime(time.Minute * 3)
+		db.SetMaxOpenConns(30)
+		db.SetMaxIdleConns(30)
+
 		var path string
 		err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
 		if err != nil {
