@@ -65,17 +65,41 @@ func getContentTypeFromExtension(requestExtension string) string {
 	return contentType
 }
 
-func openDb() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "illustStore:illustStore@tcp(db:3306)/illustStore")
+var db *sql.DB
+
+func openDb() error {
+	var err error
+	if db != nil {
+		_ = db.Close()
+	}
+	db, err = sql.Open("mysql", "illustStore:illustStore@tcp(db:3306)/illustStore")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	db.SetConnMaxLifetime(time.Minute * 3)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
 
-	return db, nil
+	return nil
+}
+
+func useDb() error {
+	if db == nil {
+		err := openDb()
+		if err != nil {
+			return err
+		}
+	}
+
+	if db.Ping() != nil {
+		err := openDb()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func imageFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +162,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		// If there are no raw level cache,
 		// read from disk
 
-		db, err := openDb()
+		err = useDb()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Db open fail"))
@@ -147,16 +171,12 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var path string
-		{
-			defer db.Close()
-
-			err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
-			if err != nil {
-				w.WriteHeader(http.StatusNotFound)
-				_, _ = w.Write([]byte("Image not found or DB error"))
-				fmt.Println(err)
-				return
-			}
+		err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = w.Write([]byte("Image not found or DB error"))
+			fmt.Println(err)
+			return
 		}
 
 		imgExt := getExtensionFromFilePath(path)
