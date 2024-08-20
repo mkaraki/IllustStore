@@ -132,17 +132,17 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		db.SetConnMaxLifetime(time.Minute * 3)
-		db.SetMaxOpenConns(30)
-		db.SetMaxIdleConns(30)
-
 		var path string
-		err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte("Image not found or DB error"))
-			fmt.Println(err)
-			return
+		{
+			defer db.Close()
+
+			err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte("Image not found or DB error"))
+				fmt.Println(err)
+				return
+			}
 		}
 
 		imgExt := getExtensionFromFilePath(path)
