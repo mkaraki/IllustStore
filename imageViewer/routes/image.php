@@ -3,10 +3,10 @@ global $klein;
 $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $service, $app) {
     $img = DB::queryFirstRow('SELECT 
         i.path,
-        CONV(i.aHash, 10, 16) as aHash,
-        CONV(i.dHash, 10, 16) as dHash,
-        CONV(i.pHash, 10, 16) as pHash,
-        CONV(i.colorHash, 10, 16) as colorHash
+        CONVERT(CONV(i.aHash, 10, 16)    , CHAR) as aHash,
+        CONVERT(CONV(i.dHash, 10, 16)    , CHAR) as dHash,
+        CONVERT(CONV(i.pHash, 10, 16)    , CHAR) as pHash,
+        CONVERT(CONV(i.colorHash, 10, 16), CHAR) as colorHash
      FROM illusts i WHERE id = %i', $request->imageId);
     if ($img === null) {
         $response->code(404);
