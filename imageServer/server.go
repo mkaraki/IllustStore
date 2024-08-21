@@ -238,6 +238,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		contentType = getContentTypeFromExtension(imgExt)
 
 		fp, err := os.OpenFile(path, os.O_RDONLY, 0666)
+		defer fp.Close()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Unable to open file."))
