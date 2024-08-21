@@ -49,3 +49,7 @@ services:
     volumes:
       - ./dbdebug:/var/lib/mysql:Z
       - ./init.db:/docker-entrypoint-initdb.d:ro
+
+  memcached:
+    image: memcached:1.6-alpine
+    command: memcached -m 1024

@@ -5,10 +5,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/allegro/bigcache/v3"
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/eko/gocache/lib/v4/cache"
-	bigcache_store "github.com/eko/gocache/store/bigcache/v4"
+	"github.com/eko/gocache/lib/v4/store"
+	memcache_store "github.com/eko/gocache/store/memcache/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mkaraki/IllustStore/imageServer/lepton_jpeg"
 	"io"
@@ -137,10 +138,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check cache (variant level cache)
 	cachedImg, cErr1 := byteCacheManager.Get(cacheCtx, fmt.Sprintf("data/img/%s/%d", variant, imId))
-	cachedImgContentType, cErr2 := strCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId))
+	cachedImgContentType, cErr2 := byteCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId))
 
 	if cErr1 == nil && cErr2 == nil && len(cachedImg) > 1 {
-		w.Header().Set("Content-Type", cachedImgContentType)
+		w.Header().Set("Content-Type", string(cachedImgContentType))
 		w.WriteHeader(http.StatusOK)
 		_, _ = io.Copy(w, bytes.NewReader(cachedImg))
 		return
@@ -152,12 +153,12 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check cache (raw level cache)
 	cachedImg, cErr1 = byteCacheManager.Get(cacheCtx, fmt.Sprintf("data/img/raw/%d", imId))
-	cachedImgContentType, cErr2 = strCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/raw/%d/Content-Type", imId))
+	cachedImgContentType, cErr2 = byteCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/raw/%d/Content-Type", imId))
 
 	if cErr1 == nil && cErr2 == nil && len(cachedImg) > 0 {
 		// if there are cached raw file
 		_, _ = io.Copy(readBuff, bytes.NewReader(cachedImg))
-		contentType = cachedImgContentType
+		contentType = string(cachedImgContentType)
 	} else {
 		// If there are no raw level cache,
 		// read from disk
@@ -225,10 +226,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("data/img/raw/%d", imId),
 		readBuff.Bytes(),
 	)
-	_ = strCacheManager.Set(
+	_ = byteCacheManager.Set(
 		cacheCtx,
 		fmt.Sprintf("meta/img/raw/%d/Content-Type", imId),
-		contentType,
+		[]byte(contentType),
 	)
 
 	if do_resize {
@@ -284,10 +285,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Sprintf("data/img/%s/%d", variant, imId),
 			webpBytes,
 		)
-		_ = strCacheManager.Set(
+		_ = byteCacheManager.Set(
 			cacheCtx,
 			fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId),
-			"image/webp",
+			[]byte("image/webp"),
 		)
 
 		w.Header().Set("Content-Type", "image/webp")
@@ -308,57 +309,23 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 var byteCacheManager *cache.Cache[[]byte]
-var strCacheManager *cache.Cache[string]
 var cacheCtx context.Context
 
 func main() {
 	vips.Startup(nil)
 	defer vips.Shutdown()
 
-	bigcacheConfig := bigcache.Config{
-		Shards:             1024,
-		LifeWindow:         30 * time.Minute,
-		CleanWindow:        1 * time.Minute,
-		MaxEntriesInWindow: 1000 * 10 * 60,
-		MaxEntrySize:       500,
-		Verbose:            false,
-		HardMaxCacheSize:   4096,
-		OnRemove:           nil,
-		OnRemoveWithReason: nil,
-	}
+	byteMemcacheStore := memcache_store.NewMemcache(
+		memcache.New("memcached:11211"),
+		store.WithExpiration(2*time.Hour),
+	)
 
-	strBigcacheConfig := bigcache.Config{
-		Shards:             1024,
-		LifeWindow:         30 * time.Minute,
-		CleanWindow:        1 * time.Minute,
-		MaxEntriesInWindow: 1000 * 10 * 60,
-		MaxEntrySize:       500,
-		Verbose:            false,
-		HardMaxCacheSize:   128,
-		OnRemove:           nil,
-		OnRemoveWithReason: nil,
-	}
-
-	cacheCtx = context.Background()
-	byteBigcacheClient, err := bigcache.New(cacheCtx, bigcacheConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-	byteBigcacheStore := bigcache_store.NewBigcache(byteBigcacheClient)
-
-	strBigcacheClient, err := bigcache.New(cacheCtx, strBigcacheConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-	strBigcacheStore := bigcache_store.NewBigcache(strBigcacheClient)
-
-	byteCacheManager = cache.New[[]byte](byteBigcacheStore)
-	strCacheManager = cache.New[string](strBigcacheStore)
+	byteCacheManager = cache.New[[]byte](byteMemcacheStore)
 
 	http.HandleFunc("/image/{imageId}/{variant}", imageFileHandler)
 
 	fmt.Println("Starting server")
-	err = http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
