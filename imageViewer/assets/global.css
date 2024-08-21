@@ -40,8 +40,9 @@ ul.forever-ul>li form input[type="submit"] {
 
 .viewer-img {
     display: block;
-    max-height: calc(100vh - 120px);
-    max-width: calc(100vw - 16px);
+    margin: 0 auto;
+    max-height: 70vh;
+    max-width: 100%;
 }
 
 .query-info {
@@ -60,11 +61,13 @@ ul.forever-ul>li form input[type="submit"] {
     text-align: center;
 }
 
-#search-tag-auto-complete {
-    max-width: calc(100vw - 16px);
+#search-tag-auto-complete,
+#tag-auto-complete {
+    max-width: calc(100% - 16px);
 }
 
-#search-tag-auto-complete>a {
+#search-tag-auto-complete>a,
+#tag-auto-complete>a {
     color: orangered;
     margin-right: 15px;
     display: inline-block;
