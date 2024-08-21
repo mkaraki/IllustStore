@@ -101,6 +101,13 @@ var encodeResizedProcessingAverageMilliSecondsProm = promauto.NewGauge(prometheu
 	Help: "Average milli-second time for encode resized image",
 })
 
+var totalQueryProcessingAverageMilliSeconds float64 = 0.0
+var totalQueryProcessingAverageMilliSecondsCount float64 = 0.0
+var totalQueryProcessingAverageMilliSecondsProm = promauto.NewGauge(prometheus.GaugeOpts{
+	Name: "total_query_processing_average_milli_seconds",
+	Help: "Average milli-second for whole query processing",
+})
+
 var db *sql.DB
 
 func openDb() error {
@@ -144,6 +151,15 @@ func avgProcess(currentAvg float64, currentCnt float64, newItem float64) (float6
 }
 
 func imageFileHandler(w http.ResponseWriter, r *http.Request) {
+	totalStartTime := time.Now()
+	defer func(startTime time.Time) {
+		totalQueryProcessingAverageMilliSeconds, totalQueryProcessingAverageMilliSecondsCount = avgProcess(
+			totalQueryProcessingAverageMilliSeconds, totalQueryProcessingAverageMilliSecondsCount,
+			float64(time.Now().Sub(startTime).Milliseconds()),
+		)
+		totalQueryProcessingAverageMilliSecondsProm.Set(totalQueryProcessingAverageMilliSeconds)
+	}(totalStartTime)
+
 	variant := r.PathValue("variant")
 
 	var do_resize bool
@@ -244,7 +260,9 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		contentType = getContentTypeFromExtension(imgExt)
 
 		fp, err := os.OpenFile(path, os.O_RDONLY, 0666)
-		defer fp.Close()
+		defer func(fp *os.File) {
+			_ = fp.Close()
+		}(fp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Unable to open file."))
