@@ -6,6 +6,26 @@ $klein->respond('GET', '/metrics', function ($request, $response) {
     $imgCount = DB::queryFirstField('SELECT count(i.id) FROM illusts i');
     $ret .= 'illust_count ' . $imgCount . "\n";
 
+    $ret .= "# HELP jpeg_illust_count Number of jpeg illusts registerd in DB.\n";
+    $ret .= "# TYPE jpeg_illust_count gauge\n";
+    $imgCount = DB::queryFirstField("SELECT COUNT(*) FROM illusts WHERE path LIKE '%.jpg' OR path LIKE '%.jpeg'");
+    $ret .= 'jpeg_illust_count ' . $imgCount . "\n";
+
+    $ret .= "# HELP png_illust_count Number of png illusts registerd in DB.\n";
+    $ret .= "# TYPE png_illust_count gauge\n";
+    $imgCount = DB::queryFirstField("SELECT COUNT(*) FROM illusts WHERE path LIKE '%.png'");
+    $ret .= 'png_illust_count ' . $imgCount . "\n";
+
+    $ret .= "# HELP webp_illust_count Number of webp illusts registerd in DB.\n";
+    $ret .= "# TYPE webp_illust_count gauge\n";
+    $imgCount = DB::queryFirstField("SELECT COUNT(*) FROM illusts WHERE path LIKE '%.webp'");
+    $ret .= 'webp_illust_count ' . $imgCount . "\n";
+
+    $ret .= "# HELP lepton_illust_count Number of lepton illusts registerd in DB.\n";
+    $ret .= "# TYPE lepton_illust_count gauge\n";
+    $imgCount = DB::queryFirstField("SELECT COUNT(*) FROM illusts WHERE path LIKE '%.lep'");
+    $ret .= 'lepton_illust_count ' . $imgCount . "\n";
+
     $ret .= "# HELP tag_count Number of tags registerd in DB.\n";
     $ret .= "# TYPE tag_count gauge\n";
     $tagCount = DB::queryFirstField('SELECT count(t.id) FROM tags t');
