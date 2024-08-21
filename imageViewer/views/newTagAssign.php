@@ -24,7 +24,11 @@ if (count($this->tags) > 0) {
         <h1 class="query-ind query-h1">Tag Assign: imageId:<?= $this->imageId ?></h1>
     </header>
     <div>
-        <img class="viewer-img" src="/image/<?= $this->imageId ?>/thumb" alt="Image">
+        <?php if (defined("IMG_SERVER_BASE")) : ?>
+            <img class="viewer-img" src="<?= IMG_SERVER_BASE ?>/image/<?= $this->imageId ?>/thumb" alt="Image">
+        <?php else : ?>
+            <img class="viewer-img" src="/image/<?= $this->imageId ?>/thumb" alt="Image">
+        <?php endif; ?>
         <div>
             <dl>
                 <dt>Current Tags</dt>
