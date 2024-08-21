@@ -2,13 +2,9 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"database/sql"
 	"fmt"
-	"github.com/allegro/bigcache/v3"
 	"github.com/davidbyttow/govips/v2/vips"
-	"github.com/eko/gocache/lib/v4/cache"
-	bigcache_store "github.com/eko/gocache/store/bigcache/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mkaraki/IllustStore/imageServer/lepton_jpeg"
 	"io"
@@ -135,101 +131,65 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check cache (variant level cache)
-	cachedImg, cErr1 := byteCacheManager.Get(cacheCtx, fmt.Sprintf("data/img/%s/%d", variant, imId))
-	cachedImgContentType, cErr2 := strCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId))
-
-	if cErr1 == nil && cErr2 == nil && len(cachedImg) > 1 {
-		w.Header().Set("Content-Type", cachedImgContentType)
-		w.WriteHeader(http.StatusOK)
-		_, _ = io.Copy(w, bytes.NewReader(cachedImg))
-		return
-	}
-
 	// Prepare for raw image reading
 	readBuff := &bytes.Buffer{}
 	var contentType string
 
-	// Check cache (raw level cache)
-	cachedImg, cErr1 = byteCacheManager.Get(cacheCtx, fmt.Sprintf("data/img/raw/%d", imId))
-	cachedImgContentType, cErr2 = strCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/raw/%d/Content-Type", imId))
+	err = useDb()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("Db open fail"))
+		fmt.Println(err)
+		return
+	}
 
-	if cErr1 == nil && cErr2 == nil && len(cachedImg) > 0 {
-		// if there are cached raw file
-		_, _ = io.Copy(readBuff, bytes.NewReader(cachedImg))
-		contentType = cachedImgContentType
-	} else {
-		// If there are no raw level cache,
-		// read from disk
+	var path string
+	err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte("Image not found or DB error"))
+		fmt.Println(err)
+		return
+	}
 
-		err = useDb()
+	imgExt := getExtensionFromFilePath(path)
+
+	if !isSupportedImage(imgExt) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte("Unsupported image"))
+		return
+	}
+
+	contentType = getContentTypeFromExtension(imgExt)
+
+	fp, err := os.OpenFile(path, os.O_RDONLY, 0666)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("Unable to open file."))
+		fmt.Println(err)
+		return
+	}
+
+	switch imgExt {
+	case "lep":
+		err = lepton_jpeg.DecodeLepton(readBuff, fp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte("Db open fail"))
+			_, _ = w.Write([]byte("Unable to read/decode file"))
 			fmt.Println(err)
 			return
 		}
-
-		var path string
-		err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte("Image not found or DB error"))
-			fmt.Println(err)
-			return
-		}
-
-		imgExt := getExtensionFromFilePath(path)
-
-		if !isSupportedImage(imgExt) {
-			w.WriteHeader(http.StatusBadRequest)
-			_, _ = w.Write([]byte("Unsupported image"))
-			return
-		}
-
-		contentType = getContentTypeFromExtension(imgExt)
-
-		fp, err := os.OpenFile(path, os.O_RDONLY, 0666)
+	default:
+		_, err = io.Copy(readBuff, fp)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte("Unable to open file."))
+			_, _ = w.Write([]byte("Unable to read file"))
 			fmt.Println(err)
 			return
-		}
-
-		switch imgExt {
-		case "lep":
-			err = lepton_jpeg.DecodeLepton(readBuff, fp)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte("Unable to read/decode file"))
-				fmt.Println(err)
-				return
-			}
-		default:
-			_, err = io.Copy(readBuff, fp)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte("Unable to read file"))
-				fmt.Println(err)
-				return
-			}
 		}
 	}
 
 	// This section is after read raw image.
-
-	// cache read image
-	_ = byteCacheManager.Set(
-		cacheCtx,
-		fmt.Sprintf("data/img/raw/%d", imId),
-		readBuff.Bytes(),
-	)
-	_ = strCacheManager.Set(
-		cacheCtx,
-		fmt.Sprintf("meta/img/raw/%d/Content-Type", imId),
-		contentType,
-	)
 
 	if do_resize {
 		// Resize
@@ -279,17 +239,6 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_ = byteCacheManager.Set(
-			cacheCtx,
-			fmt.Sprintf("data/img/%s/%d", variant, imId),
-			webpBytes,
-		)
-		_ = strCacheManager.Set(
-			cacheCtx,
-			fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId),
-			"image/webp",
-		)
-
 		w.Header().Set("Content-Type", "image/webp")
 		w.WriteHeader(http.StatusOK)
 		_, err = io.Copy(w, bytes.NewBuffer(webpBytes))
@@ -307,58 +256,14 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var byteCacheManager *cache.Cache[[]byte]
-var strCacheManager *cache.Cache[string]
-var cacheCtx context.Context
-
 func main() {
 	vips.Startup(nil)
 	defer vips.Shutdown()
 
-	bigcacheConfig := bigcache.Config{
-		Shards:             1024,
-		LifeWindow:         30 * time.Minute,
-		CleanWindow:        1 * time.Minute,
-		MaxEntriesInWindow: 1000 * 10 * 60,
-		MaxEntrySize:       500,
-		Verbose:            false,
-		HardMaxCacheSize:   4096,
-		OnRemove:           nil,
-		OnRemoveWithReason: nil,
-	}
-
-	strBigcacheConfig := bigcache.Config{
-		Shards:             1024,
-		LifeWindow:         30 * time.Minute,
-		CleanWindow:        1 * time.Minute,
-		MaxEntriesInWindow: 1000 * 10 * 60,
-		MaxEntrySize:       500,
-		Verbose:            false,
-		HardMaxCacheSize:   128,
-		OnRemove:           nil,
-		OnRemoveWithReason: nil,
-	}
-
-	cacheCtx = context.Background()
-	byteBigcacheClient, err := bigcache.New(cacheCtx, bigcacheConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-	byteBigcacheStore := bigcache_store.NewBigcache(byteBigcacheClient)
-
-	strBigcacheClient, err := bigcache.New(cacheCtx, strBigcacheConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-	strBigcacheStore := bigcache_store.NewBigcache(strBigcacheClient)
-
-	byteCacheManager = cache.New[[]byte](byteBigcacheStore)
-	strCacheManager = cache.New[string](strBigcacheStore)
-
 	http.HandleFunc("/image/{imageId}/{variant}", imageFileHandler)
 
 	fmt.Println("Starting server")
-	err = http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
