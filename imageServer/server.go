@@ -70,27 +70,32 @@ func getContentTypeFromExtension(requestExtension string) string {
 }
 
 var imgCacheHitRate float64 = 0.0
+var imgCacheHitRateCount float64 = 1.0
 var imgCacheHitRateProm = promauto.NewGauge(prometheus.GaugeOpts{
 	Name: "image_cache_hit_rate",
 	Help: "Variant level image cache hit rate",
 })
 var imgRawCacheHitRate float64 = 0.0
+var imgRawCacheHitRateCount float64 = 0.0
 var imgRawCacheHitRateProm prometheus.Gauge = promauto.NewGauge(prometheus.GaugeOpts{
 	Name: "image_raw_cache_hit_rate",
 	Help: "Raw image cache hit rate",
 })
 
 var leptonProcessingAverageMilliSeconds float64 = 0.0
+var leptonProcessingAverageMilliSecondsCount float64 = 0.0
 var leptonProcessingAverageMilliSecondsProm = promauto.NewGauge(prometheus.GaugeOpts{
 	Name: "lepton_processing_average_milli_seconds",
 	Help: "Average milli-second time for decode lepton image",
 })
 var resizeProcessingAverageMilliSeconds float64 = 0.0
+var resizeProcessingAverageMilliSecondsCount float64 = 0.0
 var resizeProcessingAverageMilliSecondsProm = promauto.NewGauge(prometheus.GaugeOpts{
 	Name: "resize_processing_average_milli_seconds",
 	Help: "Average milli-second time for resizing image",
 })
 var encodeResizedProcessingAverageMilliSeconds float64 = 0.0
+var encodeResizedProcessingAverageMilliSecondsCount float64 = 0.0
 var encodeResizedProcessingAverageMilliSecondsProm = promauto.NewGauge(prometheus.GaugeOpts{
 	Name: "encode_resized_processing_average_milli_seconds",
 	Help: "Average milli-second time for encode resized image",
@@ -131,6 +136,11 @@ func useDb() error {
 	}
 
 	return nil
+}
+
+func avgProcess(currentAvg float64, currentCnt float64, newItem float64) (float64, float64) {
+	newCnt := currentCnt + 1
+	return ((currentAvg * currentCnt) + newItem) / (newCnt), newCnt
 }
 
 func imageFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -175,15 +185,13 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = io.Copy(w, bytes.NewReader(cachedImg))
 
-		imgCacheHitRate += 1.0
-		imgCacheHitRate /= 2.0
+		imgCacheHitRate, imgCacheHitRateCount = avgProcess(imgCacheHitRate, imgCacheHitRateCount, 1.0)
 		imgCacheHitRateProm.Set(imgCacheHitRate)
 
 		return
 	}
 
-	imgCacheHitRate += 0.0
-	imgCacheHitRate /= 2.0
+	imgCacheHitRate, imgCacheHitRateCount = avgProcess(imgCacheHitRate, imgCacheHitRateCount, 0.0)
 	imgCacheHitRateProm.Set(imgCacheHitRate)
 
 	// Prepare for raw image reading
@@ -199,15 +207,13 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.Copy(readBuff, bytes.NewReader(cachedImg))
 		contentType = string(cachedImgContentType)
 
-		imgRawCacheHitRate += 1.0
-		imgRawCacheHitRate /= 2.0
+		imgRawCacheHitRate, imgRawCacheHitRateCount = avgProcess(imgRawCacheHitRate, imgRawCacheHitRateCount, 1.0)
 		imgRawCacheHitRateProm.Set(imgRawCacheHitRate)
 	} else {
 		// If there are no raw level cache,
 		// read from disk
 
-		imgRawCacheHitRate += 0.0
-		imgRawCacheHitRate /= 2.0
+		imgRawCacheHitRate, imgRawCacheHitRateCount = avgProcess(imgRawCacheHitRate, imgRawCacheHitRateCount, 0.0)
 		imgRawCacheHitRateProm.Set(imgRawCacheHitRate)
 
 		err = useDb()
@@ -256,8 +262,11 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(err)
 				return
 			}
-			leptonProcessingAverageMilliSeconds += float64(time.Now().Sub(startTime).Milliseconds())
-			leptonProcessingAverageMilliSeconds /= 2.0
+			leptonProcessingAverageMilliSeconds, leptonProcessingAverageMilliSecondsCount = avgProcess(
+				leptonProcessingAverageMilliSeconds,
+				leptonProcessingAverageMilliSecondsCount,
+				float64(time.Now().Sub(startTime).Milliseconds()),
+			)
 			leptonProcessingAverageMilliSecondsProm.Set(leptonProcessingAverageMilliSeconds)
 		default:
 			_, err = io.Copy(readBuff, fp)
@@ -323,8 +332,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			return
 		}
-		resizeProcessingAverageMilliSeconds += float64(time.Now().Sub(startTime).Milliseconds())
-		resizeProcessingAverageMilliSeconds /= 2.0
+		resizeProcessingAverageMilliSeconds, resizeProcessingAverageMilliSecondsCount = avgProcess(
+			resizeProcessingAverageMilliSeconds, resizeProcessingAverageMilliSecondsCount,
+			float64(time.Now().Sub(startTime).Milliseconds()),
+		)
 		resizeProcessingAverageMilliSecondsProm.Set(resizeProcessingAverageMilliSeconds)
 
 		exportParams := vips.NewWebpExportParams()
@@ -336,8 +347,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			return
 		}
-		encodeResizedProcessingAverageMilliSeconds += float64(time.Now().Sub(startTime).Milliseconds())
-		encodeResizedProcessingAverageMilliSeconds /= 2.0
+		encodeResizedProcessingAverageMilliSeconds, encodeResizedProcessingAverageMilliSecondsCount = avgProcess(
+			encodeResizedProcessingAverageMilliSeconds, encodeResizedProcessingAverageMilliSecondsCount,
+			float64(time.Now().Sub(startTime).Milliseconds()),
+		)
 		encodeResizedProcessingAverageMilliSecondsProm.Set(encodeResizedProcessingAverageMilliSeconds)
 
 		_ = byteCacheManager.Set(
