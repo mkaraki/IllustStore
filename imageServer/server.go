@@ -162,21 +162,24 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	variant := r.PathValue("variant")
 
-	var do_resize bool
-	var resize_size int
-	var resize_size_f float64
+	var doResize bool
+	var resizeSize int
+	var resizeSizeF float64
+	var encodeImageQuality int
 
 	switch variant {
 	case "raw":
-		do_resize = false
+		doResize = false
 	case "large":
-		do_resize = true
-		resize_size = 1920
-		resize_size_f = 1920.0
+		doResize = true
+		resizeSize = 1920
+		resizeSizeF = 1920.0
+		encodeImageQuality = 40
 	case "thumb":
-		do_resize = true
-		resize_size = 250
-		resize_size_f = 250.0
+		doResize = true
+		resizeSize = 250
+		resizeSizeF = 250.0
+		encodeImageQuality = 80
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte("Unsupported variant"))
@@ -311,7 +314,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		[]byte(contentType),
 	)
 
-	if do_resize {
+	if doResize {
 		// Resize
 		imgRef, err := vips.NewImageFromReader(readBuff)
 		if err != nil {
@@ -324,7 +327,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		origWidth := imgRef.Width()
 		origHeight := imgRef.Height()
 
-		if origWidth <= resize_size && origHeight <= resize_size {
+		if origWidth <= resizeSize && origHeight <= resizeSize {
 			// No resize return.
 			w.Header().Set("Content-Type", contentType)
 			w.WriteHeader(http.StatusOK)
@@ -337,9 +340,9 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		var scale float64
 
 		if origWidth > origHeight {
-			scale = resize_size_f / float64(origWidth)
+			scale = resizeSizeF / float64(origWidth)
 		} else {
-			scale = resize_size_f / float64(origHeight)
+			scale = resizeSizeF / float64(origHeight)
 		}
 
 		startTime := time.Now()
@@ -356,9 +359,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		resizeProcessingAverageMilliSecondsProm.Set(resizeProcessingAverageMilliSeconds)
 
-		exportParams := vips.NewWebpExportParams()
+		exportParams := vips.NewJpegExportParams()
+		exportParams.Quality = encodeImageQuality
 		startTime = time.Now()
-		webpBytes, _, err := imgRef.ExportWebp(exportParams)
+		webpBytes, _, err := imgRef.ExportJpeg(exportParams)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Failed to write thumb data"))
@@ -379,10 +383,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		_ = byteCacheManager.Set(
 			cacheCtx,
 			fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId),
-			[]byte("image/webp"),
+			[]byte("image/jpeg"),
 		)
 
-		w.Header().Set("Content-Type", "image/webp")
+		w.Header().Set("Content-Type", "image/jpeg")
 		w.WriteHeader(http.StatusOK)
 		_, err = io.Copy(w, bytes.NewBuffer(webpBytes))
 		if err != nil {
