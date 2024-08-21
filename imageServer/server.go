@@ -315,14 +315,38 @@ func main() {
 	vips.Startup(nil)
 	defer vips.Shutdown()
 
+	bigcacheConfig := bigcache.Config{
+		Shards:             1024,
+		LifeWindow:         30 * time.Minute,
+		CleanWindow:        1 * time.Minute,
+		MaxEntriesInWindow: 1000 * 10 * 60,
+		MaxEntrySize:       500,
+		Verbose:            false,
+		HardMaxCacheSize:   4096,
+		OnRemove:           nil,
+		OnRemoveWithReason: nil,
+	}
+
+	strBigcacheConfig := bigcache.Config{
+		Shards:             1024,
+		LifeWindow:         30 * time.Minute,
+		CleanWindow:        1 * time.Minute,
+		MaxEntriesInWindow: 1000 * 10 * 60,
+		MaxEntrySize:       500,
+		Verbose:            false,
+		HardMaxCacheSize:   128,
+		OnRemove:           nil,
+		OnRemoveWithReason: nil,
+	}
+
 	cacheCtx = context.Background()
-	byteBigcacheClient, err := bigcache.New(cacheCtx, bigcache.DefaultConfig(1*time.Hour))
+	byteBigcacheClient, err := bigcache.New(cacheCtx, bigcacheConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 	byteBigcacheStore := bigcache_store.NewBigcache(byteBigcacheClient)
 
-	strBigcacheClient, err := bigcache.New(cacheCtx, bigcache.DefaultConfig(1*time.Hour))
+	strBigcacheClient, err := bigcache.New(cacheCtx, strBigcacheConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
