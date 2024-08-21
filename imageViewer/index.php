@@ -55,8 +55,6 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
 
 require __DIR__ . '/routes/image.php';
 
-require __DIR__ . '/routes/image_file.php';
-
 $klein->respond('/tag/', function ($request, $response, $service, $app) {
     $service->render(__DIR__ . '/views/tags.php');
 });
