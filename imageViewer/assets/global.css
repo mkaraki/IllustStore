@@ -88,3 +88,8 @@ ul.forever-ul>li form input[type="submit"] {
 .padding-left--30px {
     padding-left: 30px;
 }
+
+.monospace {
+    font-family: monospace;
+    font-size: larger;
+}

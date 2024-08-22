@@ -1,4 +1,7 @@
-<?php require_once __DIR__ . '/components/tag_list.php'; ?>
+<?php
+require_once __DIR__ . '/components/tag_list.php';
+require __DIR__ . '/components/image_view.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -33,38 +36,12 @@
             <dd>
                 <?= component_negative_tag_list($this->negativeTags, true, $this->imageId) ?>
             </dd>
-            <?php if ($this->aHash !== null) : ?>
-                <dt>Average Hash</dt>
-                <dd>
-                    <a href="/search/aHash/<?= $this->escape($this->aHash) ?>">
-                        <?= $this->escape($this->aHash) ?>
-                    </a>
-                </dd>
-            <?php endif; ?>
-            <?php if ($this->pHash !== null) : ?>
-                <dt>Perceptual Hash</dt>
-                <dd>
-                    <a href="/search/pHash/<?= $this->escape($this->pHash) ?>">
-                        <?= $this->escape($this->pHash) ?>
-                    </a>
-                </dd>
-            <?php endif; ?>
-            <?php if ($this->dHash !== null) : ?>
-                <dt>Difference Hash</dt>
-                <dd>
-                    <a href="/search/dHash/<?= $this->escape($this->dHash) ?>">
-                        <?= $this->escape($this->dHash) ?>
-                    </a>
-                </dd>
-            <?php endif; ?>
-            <?php if ($this->colorHash !== null) : ?>
-                <dt>Color Hash</dt>
-                <dd>
-                    <a href="/search/colorHash/<?= $this->escape($this->colorHash) ?>">
-                        <?= $this->escape($this->colorHash) ?>
-                    </a>
-                </dd>
-            <?php endif; ?>
+            <?= component_image_hashes(
+                $this->aHash,
+                $this->pHash,
+                $this->dHash,
+                $this->colorHash
+            ) ?>
             <dt>Metadata Provider</dt>
             <dd>
                 <?php if ($this->metadata['metadataProviderName'] !== null) : ?>
