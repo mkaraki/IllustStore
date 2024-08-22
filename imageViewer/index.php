@@ -6,22 +6,6 @@ const IMG_SCALE_SIZE = 250.0;
 
 $klein = new \Klein\Klein();
 
-function fileMTimeMod($file, $serverDirective, $response)
-{
-    $filemtime = filemtime($file);
-    $curFileDt_str = gmdate('D, d M Y H:i:s', $filemtime) . ' GMT';
-    if (isset($serverDirective['HTTP_IF_MODIFIED_SINCE'])) {
-        if ($serverDirective['HTTP_IF_MODIFIED_SINCE'] === $curFileDt_str) {
-            $response->code(304);
-            return true;
-        }
-    } else {
-        header('Last-Modified: ' . $curFileDt_str);
-    }
-
-    return false;
-}
-
 $klein->respond('/image/', function ($request, $response, $service, $app) {
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(id) FROM illusts'
@@ -41,6 +25,7 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
                 i.height
             FROM
                 illusts i
+            ORDER BY i.id DESC
             LIMIT 100
             OFFSET %i',
             $sttIdx
@@ -88,6 +73,7 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
             WHERE
                 tA.tagId = %i AND
                 tA.illustId = i.id
+            ORDER BY tA.illustId DESC
             LIMIT 100
             OFFSET %i',
         $request->tagId,

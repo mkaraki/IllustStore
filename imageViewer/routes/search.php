@@ -73,6 +73,7 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
                 (tagId IN %li)
             GROUP BY i.id
             HAVING COUNT(i.id) = %i
+            ORDER BY id DESC
             LIMIT 100
             OFFSET %i',
         $searchTags,
@@ -173,6 +174,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
                 illusts i
             WHERE
                 i.$hashType = CONV(%s, 16, 10)
+            ORDER BY i.id DESC
             LIMIT 100
             OFFSET %i",
             $request->hash,
@@ -185,13 +187,16 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
             "SELECT
                 i.id,
                 i.width,
-                i.height
+                i.height,
+                BIT_COUNT(i.$hashType ^ CONV(%s, 16, 10)) AS similarity
             FROM
                 illusts i
             WHERE
                 BIT_COUNT(i.$hashType ^ CONV(%s, 16, 10)) < %i
+            ORDER BY similarity
             LIMIT 100
             OFFSET %i",
+            $request->hash,
             $request->hash,
             $threshold,
             $sttIdx
