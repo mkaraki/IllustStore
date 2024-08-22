@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/components/tag_list.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -26,41 +27,11 @@
         <dl>
             <dt>Tags</dt>
             <dd>
-                <ul class="forever-ul">
-                    <?php foreach ($this->tags as $v) : ?>
-                        <li>
-                            <a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a>
-                            <?php if ($v['autoAssigned'] === '1') : ?>
-                                <form action="/image/<?= $this->imageId ?>/tag/<?= $v['id'] ?>/approve" method="post" onsubmit="return confirm('Are you sure to approve tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
-                                    <input type="submit" value="🤖">
-                                </form>
-                            <?php else : ?>
-                                <span>✅</span>
-                            <?php endif; ?>
-                            <form action="/image/<?= $this->imageId ?>/tag/<?= $v['id'] ?>/delete" method="post" onsubmit="return confirm('Are you sure to blacklist tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
-                                <input type="submit" value="🗑️">
-                            </form>
-                        </li>
-                    <?php endforeach; ?>
-                    <li>
-                        <a href="/image/<?= $this->imageId ?>/tag/new" class="text-decoration--none">➕</a>
-                    </li>
-                </ul>
+                <?= component_tag_list($this->tags, true, $this->imageId) ?>
             </dd>
             <dt>Negative Tags</dt>
             <dd>
-                <ul class="forever-ul">
-                    <?php foreach ($this->negativeTags as $v) : ?>
-                        <li>
-                            <a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a>
-                            <form action="/image/<?= $this->imageId ?>/tag/new" method="post" onsubmit="return confirm('Are you sure to approve tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
-                                <input type="hidden" name="newTagId" value="<?= $v['id'] ?>">
-                                <input type="submit" value="➕">
-                            </form>
-                        </li>
-                    <?php endforeach; ?>
-                    <li class="text-decoration--none">*</li>
-                </ul>
+                <?= component_negative_tag_list($this->negativeTags, true, $this->imageId) ?>
             </dd>
             <?php if ($this->aHash !== null) : ?>
                 <dt>Average Hash</dt>

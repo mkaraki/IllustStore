@@ -8,6 +8,9 @@ if (count($this->tags) > 0) {
 } else {
     $selectableTags = DB::query('SELECT id, tagName FROM tags ORDER BY tagName');
 }
+
+require_once __DIR__ . '/components/image_thumbs.php';
+require_once __DIR__ . '/components/tag_list.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,23 +27,12 @@ if (count($this->tags) > 0) {
         <h1 class="query-ind query-h1">Tag Assign: imageId:<?= $this->imageId ?></h1>
     </header>
     <div>
-        <?php if (defined("IMG_SERVER_BASE")) : ?>
-            <img class="viewer-img" src="<?= IMG_SERVER_BASE ?>/image/<?= $this->imageId ?>/thumb" alt="Image">
-        <?php else : ?>
-            <img class="viewer-img" src="/image/<?= $this->imageId ?>/thumb" alt="Image">
-        <?php endif; ?>
+        <?= component_image_thumb_simple($this -> imageId) ?>
         <div>
             <dl>
                 <dt>Current Tags</dt>
                 <dd>
-                    <ul class="forever-ul">
-                        <?php foreach ($this->tags as $v) : ?>
-                            <?php $assignedTags[] = $v['id']; ?>
-                            <li>
-                                <a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <?= component_tag_list($this->tags, false) ?>
                 </dd>
                 <dt>New tag info</dt>
                 <dd>

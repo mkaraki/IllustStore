@@ -1,3 +1,6 @@
+<?php
+require __DIR__ . '/components/tag_list.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -66,44 +69,11 @@
                             <dl>
                                 <dt>Tags</dt>
                                 <dd>
-                                    <ul class="forever-ul">
-                                        <?php foreach ($tags as $v) : ?>
-                                            <li>
-                                                <a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a>
-                                                <?php if ($v['autoAssigned'] === '1') : ?>
-                                                    <form action="/image/<?= $i['imageId'] ?>/tag/<?= $v['id'] ?>/approve" method="post" onsubmit="return confirm('Are you sure to approve tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
-                                                        <input type="hidden" name="pending" value="<?= $this->paginationNow ?>">
-                                                        <input type="submit" value="🤖">
-                                                    </form>
-                                                <?php else : ?>
-                                                    <span>✅</span>
-                                                <?php endif; ?>
-                                                <form action="/image/<?= $i['imageId'] ?>/tag/<?= $v['id'] ?>/delete" method="post" onsubmit="return confirm('Are you sure to blacklist tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
-                                                    <input type="hidden" name="pending" value="<?= $this->paginationNow ?>">
-                                                    <input type="submit" value="🗑️">
-                                                </form>
-                                            </li>
-                                        <?php endforeach; ?>
-                                        <li>
-                                            <a href="/image/<?= $i['imageId'] ?>/tag/new?pending=<?= $this->paginationNow ?>" class="text-decoration--none">➕</a>
-                                        </li>
-                                    </ul>
+                                    <?= component_tag_list($tags, true, $i['imageId'], $this->paginationNow) ?>
                                 </dd>
                                 <dt>Negative Tags</dt>
                                 <dd>
-                                    <ul class="forever-ul">
-                                        <?php foreach ($negativeTags as $v) : ?>
-                                            <li>
-                                                <a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a>
-                                                <form action="/image/<?= $i['imageId'] ?>/tag/new" method="post" onsubmit="return confirm('Are you sure to approve tag: <?= str_replace("'", "\'", $v['tagName']) ?>?')">
-                                                    <input type="hidden" name="newTagId" value="<?= $v['id'] ?>">
-                                                    <input type="hidden" name="pending" value="<?= $this->paginationNow ?>">
-                                                    <input type="submit" value="➕">
-                                                </form>
-                                            </li>
-                                        <?php endforeach; ?>
-                                        <li class="text-decoration--none">*</li>
-                                    </ul>
+                                    <?= component_negative_tag_list($negativeTags, true, $i['imageId'], $this->paginationNow) ?>
                                 </dd>
                             </dl>
                         </td>
