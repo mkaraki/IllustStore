@@ -19,12 +19,14 @@
                 <span class="query-info-item">TagId: <?= $this->tagId ?></span>
                 <?php if ($this->tagDanbooru !== null) : ?>
                     <span class="query-info-item">
-                        Danbooru: <a href="https://danbooru.donmai.us/wiki_pages/<?= urlencode($this->tagDanbooru) ?>"><?= $this->escape($this->tagDanbooru) ?></a>
+                        Danbooru: <a href="https://danbooru.donmai.us/wiki_pages/<?= urlencode($this->tagDanbooru) ?>"
+                            ><?= $this->escape($this->tagDanbooru) ?></a>
                     </span>
                 <?php endif; ?>
                 <?php if ($this->tagPixivJpn !== null) : ?>
                     <span class="query-info-item">
-                        Pixiv: <a href="https://www.pixiv.net/tags/<?= urlencode($this->tagPixivJpn) ?>"><?= $this->escape($this->tagPixivJpn) ?></a>
+                        Pixiv: <a href="https://www.pixiv.net/tags/<?= urlencode($this->tagPixivJpn) ?>"
+                            ><?= $this->escape($this->tagPixivJpn) ?></a>
                         <?php if ($this->tagPixivEng !== null) : ?>
                             [<?= $this->escape($this->tagPixivEng) ?>]
                         <?php endif; ?>
