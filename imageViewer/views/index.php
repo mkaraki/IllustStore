@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/components/image_thumbs.php'
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -71,15 +74,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <?php if (defined("IMG_SERVER_BASE")) : ?>
-                                    <a href="<?= IMG_SERVER_BASE ?>/image/<?= $nonTaggedImageAndTag['imageId'] ?>/raw">
-                                        <img src="<?= IMG_SERVER_BASE ?>/image/<?= $nonTaggedImageAndTag['imageId'] ?>/thumb" alt="img" loading="lazy" />
-                                    </a>
-                                <?php else : ?>
-                                    <a href="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/raw">
-                                        <img src="/image/<?= $nonTaggedImageAndTag['imageId'] ?>/thumb" alt="img" loading="lazy" />
-                                    </a>
-                                <?php endif; ?>
+                                <?= component_image_thumb_simple_go_raw($nonTaggedImageAndTag['imageId']) ?>
                             </td>
                             <td class="padding-left--30px">
                                 Is this image contains
@@ -118,15 +113,7 @@
     <div>
         Random images
         <div>
-            <?php if (defined("IMG_SERVER_BASE")) : ?>
-                <?php foreach ($this->images as $img) : ?>
-                    <a href="/image/<?= $img['id'] ?>"><img src="<?= IMG_SERVER_BASE ?>/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
-                <?php endforeach; ?>
-            <?php else : ?>
-                <?php foreach ($this->images as $img) : ?>
-                    <a href="/image/<?= $img['id'] ?>"><img src="/image/<?= $img['id'] ?>/thumb" alt="img" loading="lazy" /></a>
-                <?php endforeach; ?>
-            <?php endif; ?>
+            <?= component_image_thumbs($this->images) ?>
         </div>
     </div>
     <script>

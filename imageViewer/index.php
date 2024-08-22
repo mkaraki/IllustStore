@@ -101,9 +101,11 @@ $klein->respond('/', function ($request, $response, $service, $app) {
     $service->render(__DIR__ . '/views/index.php', [
         'images' => DB::query(
             'SELECT
-                id
+                i.id,
+                i.width,
+                i.height
             FROM
-                illusts
+                illusts i
             ORDER BY RAND()
             LIMIT 20'
         ),

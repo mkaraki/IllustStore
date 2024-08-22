@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . '/components/image_thumbs.php';
 require __DIR__ . '/components/tag_list.php';
 ?>
 <!DOCTYPE html>
@@ -55,15 +56,7 @@ require __DIR__ . '/components/tag_list.php';
                     ?>
                     <tr>
                         <td>
-                            <?php if (defined("IMG_SERVER_BASE")) : ?>
-                                <a href="<?= IMG_SERVER_BASE ?>/image/<?= $i['imageId'] ?>/raw">
-                                    <img class="viewer-img" src="<?= IMG_SERVER_BASE ?>/image/<?= $i['imageId'] ?>/thumb" alt="Image" loading="lazy">
-                                </a>
-                            <?php else : ?>
-                                <a href="/image/<?= $i['imageId'] ?>/raw">
-                                    <img class="viewer-img" src="/image/<?= $i['imageId'] ?>/thumb" alt="Image" loading="lazy">
-                                </a>
-                            <?php endif; ?>
+                            <?= component_image_thumb_simple_go_raw($i['imageId']) ?>
                         </td>
                         <td>
                             <dl>
