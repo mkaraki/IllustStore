@@ -30,4 +30,5 @@ COPY ImageHash/*.php /var/www/html/ImageHash/
 COPY assets/* /var/www/html/assets/
 COPY *.php /var/www/html/
 COPY views/*.php /var/www/html/views/
+COPY views/components/* /var/www/html/views/components/
 COPY routes/*.php /var/www/html/routes/
