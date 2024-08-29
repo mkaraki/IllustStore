@@ -17,6 +17,7 @@
         <div class="query-info">
             <?php if ($this->pageType === 'tag') : ?>
                 <span class="query-info-item">TagId: <?= $this->tagId ?></span>
+                <span class="query-info-item"><a href="/tag/<?= $this->tagId ?>/edit">Edit</a></span>
                 <?php if ($this->tagDanbooru !== null) : ?>
                     <span class="query-info-item">
                         Danbooru: <a href="https://danbooru.donmai.us/wiki_pages/<?= urlencode($this->tagDanbooru) ?>"

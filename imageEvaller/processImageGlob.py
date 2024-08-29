@@ -17,10 +17,10 @@ parser = argparse.ArgumentParser(
                     prog='IllustStore Image Evaluator',
                     description='Scan image files and tagging/hashing them.')
 
-argparse = parser.add_argument('--migrate-scan', action='store_true', help='Scan and update empty field if exists in DB.')
-argparse = parser.add_argument('--verbose', action='store_true', help='Verbose mode. Shows filenames')
-argparse = parser.add_argument('--force-delete-all-images', action='store_true', help='Delete all images. This will not re-scan')
-argparse = parser.add_argument('--delete-all-tags', action='store_true', help='Delete all tags. This requires --force-delete-all-images option.')
+parser.add_argument('--migrate-scan', action='store_true', help='Scan and update empty field if exists in DB.')
+parser.add_argument('--verbose', action='store_true', help='Verbose mode. Shows filenames')
+parser.add_argument('--force-delete-all-images', action='store_true', help='Delete all images. This will not re-scan')
+parser.add_argument('--delete-all-tags', action='store_true', help='Delete all tags. This requires --force-delete-all-images option.')
 
 args = parser.parse_args()
 

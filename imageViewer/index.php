@@ -271,6 +271,78 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
     $response->redirect('/tag/', 303);
 });
 
+
+$klein->respond('GET', '/tag/[i:tagId]/edit', function ($request, $response, $service, $app) {
+    $tagInfo = DB::queryFirstRow('SELECT 
+        t.id,
+        t.tagName,
+        t.tagDanbooru,
+        t.tagPixivJpn,
+        t.tagPixivEng,
+        t.description,
+        t.taggingNote,
+        t.aliasOf,
+        t.tagGroup,
+        t.selectiveTagGroup
+     FROM tags t WHERE t.id = %i', $request->tagId);
+
+    if ($tagInfo === null) {
+        $response->code(404);
+        return;
+    }
+
+    $service->render(__DIR__ . '/views/newTag.php', [
+        'tagId' => $tagInfo['id'],
+        'tagName' => $tagInfo['tagName'],
+        'tagDanbooru' => $tagInfo['tagDanbooru'],
+        'tagPixivJpn' => $tagInfo['tagPixivJpn'],
+        'tagPixivEng' => $tagInfo['tagPixivEng'],
+        'description' => $tagInfo['description'],
+        'taggingNote' => $tagInfo['taggingNote'],
+        'aliasOf' => $tagInfo['aliasOf'],
+        'tagGroup' => $tagInfo['tagGroup'],
+        'selectiveTagGroup' => $tagInfo['selectiveTagGroup'],
+    ]);
+});
+
+function empty_to_null(string|null $value): string|null {
+    return empty($value) ? null : trim($value);
+}
+
+$klein->respond('POST', '/tag/[i:tagId]/edit', function ($request, $response, $service, $app) {
+    $tagExists = DB::queryFirstField('SELECT t.id FROM tags t WHERE t.id = %i', $request->tagId);
+    if ($tagExists === null) {
+        $response->code(404);
+        return;
+    }
+
+    if (empty($_POST['tagName'])) {
+        $response->code(400);
+        return;
+    }
+
+    $tagNameAlreadyInUse = DB::queryFirstField('SELECT t.id FROM tags t WHERE t.id <> %i AND t.tagName = %s', $request->tagId, $_POST['tagName']);
+    if ($tagNameAlreadyInUse !== null) {
+        $response->code(404);
+        return 'You can not use that tag name.';
+    }
+
+    DB::update('tags', [
+        'tagName' => $_POST['tagName'],
+        'tagDanbooru' => empty_to_null($_POST['tagDanbooru'] ?? null),
+        'tagPixivJpn' => empty_to_null($_POST['tagPixivJpn'] ?? null),
+        'tagPixivEng' => empty_to_null($_POST['tagPixivEng'] ?? null),
+        'tagGroup' => empty_to_null($_POST['tagGroup'] ?? null),
+        'selectiveTagGroup' => empty_to_null($_POST['selectiveTagGroup'] ?? null),
+        'description' => empty_to_null($_POST['description'] ?? null),
+        'taggingNote' => empty_to_null($_POST['taggingNote'] ?? null),
+        'aliasOf' => empty_to_null($_POST['aliasOf'] ?? null),
+    ], ['id' => $request->tagId]);
+
+    $response->redirect('/tag/' . $request->tagId, 303);
+});
+
+
 $klein->respond('GET', '/tag/pending', function ($request, $response, $service, $app) {
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(DISTINCT tA.illustId) FROM tagAssign tA WHERE tA.autoAssigned = TRUE'
@@ -302,6 +374,11 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
         'paginationItemCount' => $imageCnt,
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 30,
+    ]);
+});
+
+$klein->respond('GET', '/tag/assistant', function ($request, $response, $service, $app) {
+    $service->render(__DIR__ . '/views/tagAssistant.php', [
     ]);
 });
 
