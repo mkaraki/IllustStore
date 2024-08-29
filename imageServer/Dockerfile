@@ -8,7 +8,7 @@ WORKDIR lepton_jpeg_rust
 
 RUN cargo build --release
 
-FROM golang:1.22-bookworm AS build
+FROM golang:1.23-bookworm AS build
 
 RUN apt-get update && \
     apt-get install -y \
