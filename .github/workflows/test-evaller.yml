@@ -35,7 +35,7 @@ jobs:
           convert -size 1280x720 canvas:black imageEvaller/images/black.png
 
       - name: Run mariadb
-        run: sudo docker compose -f docker-compose.dev.yaml up -d db
+        run: sudo docker compose -f docker-compose.dev.yaml up -d --wait db
 
       - name: Run test
         env:
