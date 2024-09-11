@@ -11,7 +11,7 @@ WORKDIR /lepton_jpeg_rust
 
 RUN cargo build --release
 
-FROM tensorflow/tensorflow:2.17.0
+FROM python:3-bookworm
 
 WORKDIR /usr/src/app
 
