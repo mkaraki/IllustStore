@@ -14,11 +14,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run required package
+      - name: Install required package
         run: sudo apt-get update && sudo apt-get install -y unzip imagemagick
-
-      - name: Install pip packages
-        run: pip install -r imageEvaller/requirements.embed.txt
 
       - name: Prepare model
         run: |
@@ -46,4 +43,4 @@ jobs:
         run: sudo docker compose -f docker-compose.dev.yaml run --rm runner --verbose
 
       - name: Stop mariadb
-        run: sudo docker compose -f docker-compose.dev.yaml down -d db
+        run: sudo docker compose -f docker-compose.dev.yaml down db
