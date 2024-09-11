@@ -31,6 +31,7 @@ db = mysql.connector.connect(
     host=os.getenv("MYSQL_HOST", "db"),
     db=os.getenv("MYSQL_DATABASE", "illustStore"),
     port=os.getenv("MYSQL_PORT", 3306),
+    collation="utf8mb4_unicode_520_ci"
 )
 dbCursor = db.cursor(dictionary=True, buffered=True)
 
