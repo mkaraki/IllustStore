@@ -24,8 +24,13 @@ parser.add_argument('--delete-all-tags', action='store_true', help='Delete all t
 
 args = parser.parse_args()
 
+
 db = mysql.connector.connect(
-    user="illustStore", passwd="illustStore", host="db", db="illustStore"
+    user=os.getenv("MYSQL_USER", "illustStore"),
+    passwd=os.getenv("MYSQL_PASSWORD", "illustStore"),
+    host=os.getenv("MYSQL_HOST", "db"),
+    db=os.getenv("MYSQL_DATABASE", "illustStore"),
+    port=os.getenv("MYSQL_PORT", 3306),
 )
 dbCursor = db.cursor(dictionary=True, buffered=True)
 

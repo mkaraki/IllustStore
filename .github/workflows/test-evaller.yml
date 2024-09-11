@@ -1,0 +1,52 @@
+name: evaller test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install required package
+        run: sudo apt-get update && sudo apt-get install -y unzip imagemagick
+
+      - name: Prepare model
+        run: |
+          wget -O deepdanbooru.zip https://github.com/KichangKim/DeepDanbooru/releases/download/v3-20211112-sgd-e28/deepdanbooru-v3-20211112-sgd-e28.zip
+          unzip deepdanbooru.zip
+          mkdir -p imageEvaller/models/deepdanbooru
+          mv model-resnet_custom_v3.h5 imageEvaller/models/deepdanbooru/model.h5
+          mv tags.txt imageEvaller/models/deepdanbooru/tags.txt
+
+      - name: Prepare image
+        run: |
+          mkdir -p imageEvaller/images
+          convert -size 720x1280 canvas:white imageEvaller/images/white.png
+          convert -size 1280x720 canvas:black imageEvaller/images/black.png
+
+      - name: Build docker
+        run: sudo docker compose -f docker-compose.dev.yaml build runner
+
+      - name: Run mariadb
+        run: |
+          sudo docker compose -f docker-compose.dev.yaml up -d --wait db
+          sleep 60
+
+      - name: Run test
+        run: sudo docker compose -f docker-compose.dev.yaml run --rm runner --verbose
+
+      - name: Show result
+        run: |
+          echo "SELECT * FROM illusts;" > test.sql
+          echo "SELECT * FROM tagAssign;" >> test.sql
+          sudo docker compose -f docker-compose.dev.yaml exec db mariadb illustStore < test.sql
+
+      - name: Stop mariadb
+        run: sudo docker compose -f docker-compose.dev.yaml down db
