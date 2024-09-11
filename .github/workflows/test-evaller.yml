@@ -42,5 +42,11 @@ jobs:
       - name: Run test
         run: sudo docker compose -f docker-compose.dev.yaml run --rm runner --verbose
 
+      - name: Show result
+        run: |
+          echo "SELECT * FROM illusts;" > test.sql
+          echo "SELECT * FROM tagAssign;" >> test.sql
+          sudo docker compose -f docker-compose.dev.yaml exec db mariadb illustStore < test.sql
+
       - name: Stop mariadb
         run: sudo docker compose -f docker-compose.dev.yaml down db
