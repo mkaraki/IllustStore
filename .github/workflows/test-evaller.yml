@@ -1,0 +1,49 @@
+name: evaller test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run required package
+        run: sudo apt-get update && sudo apt-get install -y default-libmysqlclient-dev python3-pip unzip imagemagick
+
+      - name: Install pip packages
+        run: pip install -r imageEvaller/requirements.embed.txt
+
+      - name: Prepare model
+        run: |
+          wget -O deepdanbooru.zip https://github.com/KichangKim/DeepDanbooru/releases/download/v3-20211112-sgd-e28/deepdanbooru-v3-20211112-sgd-e28.zip
+          unzip deepdanbooru.zip
+          mkdir -p imageEvaller/models/deepdanbooru
+          mv model-resnet_custom_v3.h5 imageEvaller/models/deepdanbooru/model.h5
+          mv tags.txt imageEvaller/models/deepdanbooru/tags.txt
+
+      - name: Prepare image
+        run: |
+          mkdir -p imageEvaller/images
+          convert -size 720x1280 canvas:white imageEvaller/images/white.png
+          convert -size 1280x720 canvas:black imageEvaller/images/black.png
+
+      - name: Run mariadb
+        run: sudo docker compose -f docker-compose.dev.yaml up -d db
+
+      - name: Run test
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: 7091
+        run: |
+          cd imageEvaller
+          python imageEvaller --verbose
+
+      - name: Stop mariadb
+        run: sudo docker compose -f docker-compose.dev.yaml down -d db
