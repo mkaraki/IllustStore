@@ -43,7 +43,7 @@ jobs:
           MYSQL_PORT: 7091
         run: |
           cd imageEvaller
-          python imageEvaller --verbose
+          python processImageGlob.py --verbose
 
       - name: Stop mariadb
         run: sudo docker compose -f docker-compose.dev.yaml down -d db
