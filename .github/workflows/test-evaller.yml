@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run required package
-        run: sudo apt-get update && sudo apt-get install -y default-libmysqlclient-dev python3-pip unzip imagemagick
+        run: sudo apt-get update && sudo apt-get install -y unzip imagemagick
 
       - name: Install pip packages
         run: pip install -r imageEvaller/requirements.embed.txt
@@ -34,18 +34,16 @@ jobs:
           convert -size 720x1280 canvas:white imageEvaller/images/white.png
           convert -size 1280x720 canvas:black imageEvaller/images/black.png
 
+      - name: Build docker
+        run: sudo docker compose -f docker-compose.dev.yaml build runner
+
       - name: Run mariadb
         run: |
           sudo docker compose -f docker-compose.dev.yaml up -d --wait db
           sleep 60
 
       - name: Run test
-        env:
-          MYSQL_HOST: 127.0.0.1
-          MYSQL_PORT: 7091
-        run: |
-          cd imageEvaller
-          python processImageGlob.py --verbose
+        run: sudo docker compose -f docker-compose.dev.yaml run --rm runner --verbose
 
       - name: Stop mariadb
         run: sudo docker compose -f docker-compose.dev.yaml down -d db
