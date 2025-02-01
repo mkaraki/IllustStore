@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6519c297497099d5897d9fb5e256315d",
+    "content-hash": "e3f593b6f0ded7cc886c4733cf793006",
     "packages": [
         {
             "name": "klein/klein",
@@ -75,25 +75,27 @@
         },
         {
             "name": "sergeytsalkov/meekrodb",
-            "version": "v2.5.1",
+            "version": "v3.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SergeyTsalkov/meekrodb.git",
-                "reference": "08b683a274365983aaf033cf9c589dcbe5190028"
+                "reference": "ec430091562e59d08ba67e3f85f5e767a519e215"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SergeyTsalkov/meekrodb/zipball/08b683a274365983aaf033cf9c589dcbe5190028",
-                "reference": "08b683a274365983aaf033cf9c589dcbe5190028",
+                "url": "https://api.github.com/repos/SergeyTsalkov/meekrodb/zipball/ec430091562e59d08ba67e3f85f5e767a519e215",
+                "reference": "ec430091562e59d08ba67e3f85f5e767a519e215",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "ext-pdo": "*",
+                "php": ">=7.0.0"
             },
             "type": "library",
             "autoload": {
                 "classmap": [
-                    "db.class.php"
+                    "db.class.php",
+                    "orm.class.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -117,9 +119,9 @@
             "support": {
                 "email": "support@meekro.com",
                 "issues": "https://github.com/SergeyTsalkov/meekrodb/issues",
-                "source": "https://github.com/SergeyTsalkov/meekrodb/tree/v2.5.1"
+                "source": "https://github.com/SergeyTsalkov/meekrodb/tree/v3.1.3"
             },
-            "time": "2023-10-10T00:28:49+00:00"
+            "time": "2024-12-07T07:17:17+00:00"
         }
     ],
     "packages-dev": [],
@@ -135,5 +137,5 @@
         "ext-zend-opcache": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
