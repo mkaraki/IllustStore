@@ -8,7 +8,7 @@ from pathlib import Path
 # Call sentry sdk
 import sentry_sdk
 
-sentry_dsn = os.getenv("SENTRY_DSN")
+sentry_dsn = os.getenv("SENTRY_DSN_URL")
 
 if sentry_dsn == None or sentry_dsn == "":
     print("Sentry DSN not found. Skip Sentry.")
