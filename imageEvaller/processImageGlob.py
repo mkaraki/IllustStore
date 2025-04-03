@@ -5,17 +5,12 @@ from glob import iglob
 import argparse
 from pathlib import Path
 
-from PIL import Image
-import tensorflow
-import numpy
-import mysql.connector
-import imagehash
+# Call sentry sdk
 import sentry_sdk
-
 
 sentry_dsn = os.getenv("SENTRY_DSN")
 
-if sentry_dsn == None:
+if sentry_dsn == None or sentry_dsn == "":
     print("Sentry DSN not found. Skip Sentry.")
 else:
     sentry_sdk.init(
@@ -24,10 +19,16 @@ else:
         traces_sample_rate=1.0,
         profile_session_sample_rate=1.0,
     )
-    sentry_sdk.set_tag("imageEvaller", "processImageGlob.py")
     sentry_sdk.profiler.start_profiler()
 
+# Call third party library
+from PIL import Image
+import tensorflow
+import numpy
+import mysql.connector
+import imagehash
 
+# Call internal library
 import LibLepton
 
 parser = argparse.ArgumentParser(
