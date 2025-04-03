@@ -3,7 +3,8 @@
         "klein/klein": "dev-master",
         "sergeytsalkov/meekrodb": "^2.4",
         "ext-imagick": "*",
-        "ext-zend-opcache": "*"
+        "ext-zend-opcache": "*",
+        "sentry/sentry": "^4.10"
     },
     "repositories": [
         {

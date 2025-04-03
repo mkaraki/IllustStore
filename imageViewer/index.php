@@ -2,6 +2,11 @@
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/_config.php';
 
+\Sentry\init([
+    'dsn' => SENTRY_DSN,
+    'traces_sample_rate' => 0.3,
+]);
+
 const IMG_SCALE_SIZE = 250.0;
 
 $klein = new \Klein\Klein();

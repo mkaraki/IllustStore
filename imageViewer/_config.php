@@ -8,3 +8,5 @@ DB::$dbName = 'illustStore';
 DB::$encoding = 'utf8';
 
 const IMG_SERVER_BASE = "http://localhost:7092";
+
+const SENTRY_DSN = ""; // Put your actual Sentry DSN

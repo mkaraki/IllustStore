@@ -5,16 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/davidbyttow/govips/v2/vips"
-	"github.com/eko/gocache/lib/v4/cache"
-	"github.com/eko/gocache/lib/v4/store"
-	memcache_store "github.com/eko/gocache/store/memcache/v4"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/mkaraki/IllustStore/imageServer/lepton_jpeg"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io"
 	"log"
 	"net/http"
@@ -22,6 +12,19 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/davidbyttow/govips/v2/vips"
+	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/eko/gocache/lib/v4/store"
+	memcache_store "github.com/eko/gocache/store/memcache/v4"
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/mkaraki/IllustStore/imageServer/lepton_jpeg"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func isSupportedImage(requestExtension string) bool {
@@ -407,6 +410,27 @@ var byteCacheManager *cache.Cache[[]byte]
 var cacheCtx context.Context
 
 func main() {
+	// Get dsn from env
+	sentryDsn := os.Getenv("SENTRY_DSN")
+	if sentryDsn == "" {
+		fmt.Println("Sentry DSN is not set. Exiting.")
+		return
+	}
+
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              sentryDsn,
+		TracesSampleRate: 0.2,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
+	fmt.Printf("Sentry initialized\n")
+	defer sentry.Flush(2 * time.Second)
+
+	sentryHandler := sentryhttp.New(sentryhttp.Options{
+		Repanic: true,
+	})
+
 	vips.Startup(nil)
 	defer vips.Shutdown()
 
@@ -417,8 +441,11 @@ func main() {
 
 	byteCacheManager = cache.New[[]byte](byteMemcacheStore)
 
-	http.HandleFunc("/image/{imageId}/{variant}", imageFileHandler)
+	http.HandleFunc("/image/{imageId}/{variant}", sentryHandler.HandleFunc(imageFileHandler))
+	// Ignore metrics path for sentry
 	http.Handle("/metrics", promhttp.Handler())
+
+	sentry.CaptureMessage("Image Server starting.")
 
 	fmt.Println("Starting server")
 	err := http.ListenAndServe(":8080", nil)
