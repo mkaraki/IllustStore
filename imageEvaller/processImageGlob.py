@@ -8,12 +8,18 @@ from pathlib import Path
 # Call sentry sdk
 import sentry_sdk
 
-sentry_sdk.init(
-    send_default_pii=True,
-    traces_sample_rate=1.0,
-    profile_session_sample_rate=1.0,
-)
-sentry_sdk.profiler.start_profiler()
+sentry_dsn = os.getenv("SENTRY_DSN")
+
+if sentry_dsn == None or sentry_dsn == "":
+    print("Sentry DSN not found. Skip Sentry.")
+else:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        send_default_pii=True,
+        traces_sample_rate=1.0,
+        profile_session_sample_rate=1.0,
+    )
+    sentry_sdk.profiler.start_profiler()
 
 # Call third party library
 from PIL import Image
