@@ -446,8 +446,6 @@ func main() {
 	// Ignore metrics path for sentry
 	http.Handle("/metrics", promhttp.Handler())
 
-	sentry.CaptureMessage("Image Server starting.")
-
 	fmt.Println("Starting server")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
