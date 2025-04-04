@@ -8,18 +8,22 @@ from pathlib import Path
 # Call sentry sdk
 import sentry_sdk
 
-sentry_dsn = os.getenv("SENTRY_DSN_URL")
+try:
+    sentry_dsn = os.getenv("SENTRY_DSN_URL")
 
-if sentry_dsn == None or sentry_dsn == "":
-    print("Sentry DSN not found. Skip Sentry.")
-else:
-    sentry_sdk.init(
-        dsn=sentry_dsn,
-        send_default_pii=True,
-        traces_sample_rate=1.0,
-        profile_session_sample_rate=1.0,
-    )
-    sentry_sdk.profiler.start_profiler()
+    if sentry_dsn == None or sentry_dsn == "":
+        print("Sentry DSN not found. Skip Sentry.")
+    else:
+        print("Using Sentry DSN:", sentry_dsn)
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            send_default_pii=True,
+            traces_sample_rate=1.0,
+            profile_session_sample_rate=1.0,
+        )
+        sentry_sdk.profiler.start_profiler()
+except:
+    print("Sentry configuration failed. Skip Sentry.")
 
 # Call third party library
 from PIL import Image
@@ -203,11 +207,14 @@ def add_image_size(img_id, image):
 
     return True
 
+
+@sentry_sdk.trace
 def add_image_tags(illustId, image):
     tag_items = None
     try:
         tag_items = image_proc(image).items()
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         sys.stderr.write(f"Failed to tagging {i_path}: {e}\n")
         return False
 
@@ -232,6 +239,7 @@ def add_image_tags(illustId, image):
         )
 
 
+@sentry_sdk.trace
 def add_image_hash(img_id, image):
     pilImg = tensorflow.keras.utils.array_to_img(image)
 
@@ -245,10 +253,12 @@ def add_image_hash(img_id, image):
         pHash = str(imagehash.phash(pilImg))
         colorHash = str(imagehash.colorhash(pilImg))
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         sys.stderr.write(f"Failed to hash: {e}\n")
         return False
 
     dbCursor.execute("UPDATE illusts SET aHash = CONV(%s, 16, 10), pHash = CONV(%s, 16, 10), dHash = CONV(%s, 16, 10), colorHash = CONV(%s, 16, 10) WHERE id = %s", (aHash, pHash, dHash, colorHash, img_id,))
+
 
 
 if args.force_delete_all_images:
@@ -275,23 +285,27 @@ for i in iglob("./images/**/*.jpg", recursive=True):
 
     img = None
 
-    try:
-        raw_data = tensorflow.io.read_file(i)
-        img = tensorflow.io.decode_jpeg(raw_data, channels=3)
-    except Exception as e:
-        sys.stderr.write(f"Failed to read {i}: {e}\n")
-        continue
+    with sentry_sdk.start_transaction(op="task", name="processJpgImage"):
+        span = sentry_sdk.start_span(op="loadJpgImage", description="Load Jpg Image")
+        try:
+            raw_data = tensorflow.io.read_file(i)
+            img = tensorflow.io.decode_jpeg(raw_data, channels=3)
+        except Exception as e:
+            sys.stderr.write(f"Failed to read {i}: {e}\n")
+            continue
+        finally:
+            span.finish()
 
-    if img_id != False:
-        if args.verbose:
-            print(f"Exists: {i}")
-        call_try_update_image_info(i, img, img_id)
-        continue
+        if img_id != False:
+            if args.verbose:
+                print(f"Exists: {i}")
+            call_try_update_image_info(i, img, img_id)
+            continue
     
-    if img_id == False:
-        if args.verbose:
-            print(f"Processing: {i}")
-        add_image(i, img)
+        if img_id == False:
+            if args.verbose:
+                print(f"Processing: {i}")
+            add_image(i, img)
 
 
 
@@ -306,23 +320,27 @@ for i in iglob("./images/**/*.png", recursive=True):
 
     img = None
 
-    try:
-        raw_data = tensorflow.io.read_file(i)
-        img = tensorflow.io.decode_png(raw_data, channels=3)
-    except Exception as e:
-        sys.stderr.write(f"Failed to read {i}: {e}\n")
-        continue
+    with sentry_sdk.start_transaction(op="task", name="processPngImage"):
+        span = sentry_sdk.start_span(op="loadPngImage", description="Load Png Image")
+        try:
+            raw_data = tensorflow.io.read_file(i)
+            img = tensorflow.io.decode_png(raw_data, channels=3)
+        except Exception as e:
+            sys.stderr.write(f"Failed to read {i}: {e}\n")
+            continue
+        finally:
+            span.finish()
 
-    if img_id != False:
-        if args.verbose:
-            print(f"Exists: {i}")
-        call_try_update_image_info(i, img, img_id)
-        continue
+        if img_id != False:
+            if args.verbose:
+                print(f"Exists: {i}")
+            call_try_update_image_info(i, img, img_id)
+            continue
     
-    if img_id == False:
-        if args.verbose:
-            print(f"Processing: {i}")
-        add_image(i, img)
+        if img_id == False:
+            if args.verbose:
+                print(f"Processing: {i}")
+            add_image(i, img)
 
 
 
@@ -337,23 +355,27 @@ for i in iglob("./images/**/*.webp", recursive=True):
 
     img = None
 
-    try:
-        img = numpy.array(Image.open(i))
-        img = img[:,:,:3]
-    except Exception as e:
-        sys.stderr.write(f"Failed to read {i}: {e}\n")
-        continue
+    with sentry_sdk.start_transaction(op="task", name="processWebpImage"):
+        span = sentry_sdk.start_span(op="loadWebpImage", description="Load Webp Image")
+        try:
+            img = numpy.array(Image.open(i))
+            img = img[:,:,:3]
+        except Exception as e:
+            sys.stderr.write(f"Failed to read {i}: {e}\n")
+            continue
+        finally:
+            span.finish()
 
-    if img_id != False:
-        if args.verbose:
-            print(f"Exists: {i}")
-        call_try_update_image_info(i, img, img_id)
-        continue
+        if img_id != False:
+            if args.verbose:
+                print(f"Exists: {i}")
+            call_try_update_image_info(i, img, img_id)
+            continue
     
-    if img_id == False:
-        if args.verbose:
-            print(f"Processing: {i}")
-        add_image(i, img)
+        if img_id == False:
+            if args.verbose:
+                print(f"Processing: {i}")
+            add_image(i, img)
 
 
 print("glob: *.lep")
@@ -368,23 +390,27 @@ for i in iglob("./images/**/*.lep", recursive=True):
 
     img = None
 
-    try:
-        jpeg_data = lepton_util.load_lepton_from_path(i)
-        img = tensorflow.io.decode_jpeg(bytes(jpeg_data), channels=3)
-    except Exception as e:
-        sys.stderr.write(f"Failed to read {i}: {e}\n")
-        continue
+    with sentry_sdk.start_transaction(op="task", name="processLeptonImage"):
+        span = sentry_sdk.start_span(op="loadLeptonImage", description="Load Lepton Image")
+        try:
+            jpeg_data = lepton_util.load_lepton_from_path(i)
+            img = tensorflow.io.decode_jpeg(bytes(jpeg_data), channels=3)
+        except Exception as e:
+            sys.stderr.write(f"Failed to read {i}: {e}\n")
+            continue
+        finally:
+            span.finish()
 
-    if img_id != False:
-        if args.verbose:
-            print(f"Exists: {i}")
-        call_try_update_image_info(i, img, img_id)
-        continue
+        if img_id != False:
+            if args.verbose:
+                print(f"Exists: {i}")
+            call_try_update_image_info(i, img, img_id)
+            continue
     
-    if img_id == False:
-        if args.verbose:
-            print(f"Processing: {i}")
-        add_image(i, img)
+        if img_id == False:
+            if args.verbose:
+                print(f"Processing: {i}")
+            add_image(i, img)
 
 
 db.close()
