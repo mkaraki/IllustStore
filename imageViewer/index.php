@@ -390,4 +390,13 @@ $klein->respond('GET', '/tag/assistant', function ($request, $response, $service
 require __DIR__ . '/routes/search.php';
 require __DIR__ . '/routes/metric.php';
 
+// Format like `GET /image/1234`
+$transactionName = $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
+$transactionContext = \Sentry\Tracing\TransactionContext::make()
+    ->setName($transactionName)
+    ->setOp('web.request');
+$transaction = \Sentry\startTransaction($transactionContext);
+
 $klein->dispatch();
+
+$transaction->finish();
