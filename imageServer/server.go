@@ -335,8 +335,11 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	if doResize {
 		// Resize
+		imageBytes := readBuff.Bytes()
+		bytesReader := bytes.NewReader(imageBytes)
+
 		span := sentry.StartSpan(sentryCtx, "image_read")
-		imgRef, err := vips.NewImageFromReader(readBuff)
+		imgRef, err := vips.NewImageFromReader(bytesReader)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Unable to read image"))
@@ -349,11 +352,13 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		origWidth := imgRef.Width()
 		origHeight := imgRef.Height()
 
+		// ToDo: invert this and do encode even if no resize needed
 		if origWidth <= resizeSize && origHeight <= resizeSize {
 			// No resize. Return as is.
 			w.Header().Set("Content-Type", contentType)
 			w.WriteHeader(http.StatusOK)
-			_, err = io.Copy(w, readBuff)
+			bytesReader = bytes.NewReader(imageBytes)
+			_, err = io.Copy(w, bytesReader)
 			if err != nil {
 				span.Finish()
 				sentry.CaptureException(err)
