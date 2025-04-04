@@ -4,7 +4,7 @@ require_once __DIR__ . '/_config.php';
 
 \Sentry\init([
     'dsn' => SENTRY_DSN,
-    'traces_sample_rate' => 1.0,
+    'traces_sample_rate' => 0.2,
 ]);
 
 const IMG_SCALE_SIZE = 250.0;
@@ -392,11 +392,15 @@ require __DIR__ . '/routes/metric.php';
 
 // Format like `GET /image/1234`
 $transactionName = $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
-$transactionContext = \Sentry\Tracing\TransactionContext::make()
-    ->setName($transactionName)
-    ->setOp('web.request');
-$transaction = \Sentry\startTransaction($transactionContext);
+if ($transactionName !== 'GET /metrics') {
+    $transactionContext = \Sentry\Tracing\TransactionContext::make()
+        ->setName($transactionName)
+        ->setOp('web.request');
+    $transaction = \Sentry\startTransaction($transactionContext);
+}
 
 $klein->dispatch();
 
-$transaction->finish();
+if ($transactionName !== 'GET /metrics') {
+    $transaction->finish();
+}
