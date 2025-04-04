@@ -404,6 +404,15 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if len(webpBytes) == 0 {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte("Failed to encode image"))
+			span.Finish()
+			sentry.CaptureMessage("Failed to encode image: encoder returned empty data")
+			fmt.Println("Failed to encode image: encoder returned empty data")
+			return
+		}
+
 		span.Finish()
 
 		encodeResizedProcessingAverageMilliSeconds, encodeResizedProcessingAverageMilliSecondsCount = avgProcess(
