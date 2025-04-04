@@ -154,6 +154,13 @@ func avgProcess(currentAvg float64, currentCnt float64, newItem float64) (float6
 }
 
 func imageFileHandler(w http.ResponseWriter, r *http.Request) {
+	sentryCtx := r.Context()
+	hub := sentry.GetHubFromContext(sentryCtx)
+	if hub == nil {
+		hub = sentry.CurrentHub().Clone()
+		sentryCtx = sentry.SetHubOnContext(sentryCtx, hub)
+	}
+
 	totalStartTime := time.Now()
 	defer func(startTime time.Time) {
 		totalQueryProcessingAverageMilliSeconds, totalQueryProcessingAverageMilliSecondsCount = avgProcess(
@@ -242,6 +249,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Db open fail"))
+			sentry.CaptureException(err)
 			fmt.Println(err)
 			return
 		}
@@ -269,23 +277,30 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		defer func(fp *os.File) {
 			_ = fp.Close()
 		}(fp)
+
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Unable to open file."))
+			sentry.CaptureException(err)
 			fmt.Println(err)
 			return
 		}
 
 		switch imgExt {
 		case "lep":
+			span := sentry.StartSpan(sentryCtx, "lepton_decode")
 			startTime := time.Now()
 			err = lepton_jpeg.DecodeLepton(readBuff, fp)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte("Unable to read/decode file"))
+				sentry.CaptureException(err)
+				span.Finish()
 				fmt.Println(err)
 				return
 			}
+			span.Finish()
+
 			leptonProcessingAverageMilliSeconds, leptonProcessingAverageMilliSecondsCount = avgProcess(
 				leptonProcessingAverageMilliSeconds,
 				leptonProcessingAverageMilliSecondsCount,
@@ -297,6 +312,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte("Unable to read file"))
+				sentry.CaptureException(err)
 				fmt.Println(err)
 				return
 			}
@@ -318,11 +334,14 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if doResize {
+		span := sentry.StartSpan(sentryCtx, "image_resize")
 		// Resize
 		imgRef, err := vips.NewImageFromReader(readBuff)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Unable to read image"))
+			span.Finish()
+			sentry.CaptureException(err)
 			fmt.Println(err)
 			return
 		}
@@ -331,13 +350,18 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		origHeight := imgRef.Height()
 
 		if origWidth <= resizeSize && origHeight <= resizeSize {
-			// No resize return.
+			// No resize. Return as is.
 			w.Header().Set("Content-Type", contentType)
 			w.WriteHeader(http.StatusOK)
 			_, err = io.Copy(w, readBuff)
 			if err != nil {
+				span.Finish()
+				sentry.CaptureException(err)
+				fmt.Println(err)
 				return
 			}
+			span.Finish()
+			return
 		}
 
 		var scale float64
@@ -353,6 +377,8 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Failed to scale"))
+			sentry.CaptureException(err)
+			span.Finish()
 			fmt.Println(err)
 			return
 		}
@@ -362,6 +388,9 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		resizeProcessingAverageMilliSecondsProm.Set(resizeProcessingAverageMilliSeconds)
 
+		span.Finish()
+		span = sentry.StartSpan(sentryCtx, "image_encode")
+
 		exportParams := vips.NewJpegExportParams()
 		exportParams.Quality = encodeImageQuality
 		startTime = time.Now()
@@ -369,9 +398,14 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Failed to write thumb data"))
+			sentry.CaptureException(err)
+			span.Finish()
 			fmt.Println(err)
 			return
 		}
+
+		span.Finish()
+
 		encodeResizedProcessingAverageMilliSeconds, encodeResizedProcessingAverageMilliSecondsCount = avgProcess(
 			encodeResizedProcessingAverageMilliSeconds, encodeResizedProcessingAverageMilliSecondsCount,
 			float64(time.Now().Sub(startTime).Milliseconds()),
@@ -393,6 +427,8 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = io.Copy(w, bytes.NewBuffer(webpBytes))
 		if err != nil {
+			sentry.CaptureException(err)
+			fmt.Println(err)
 			return
 		}
 	} else {
@@ -401,6 +437,8 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err = io.Copy(w, readBuff)
 		if err != nil {
+			sentry.CaptureException(err)
+			fmt.Println(err)
 			return
 		}
 	}
