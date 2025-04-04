@@ -334,8 +334,8 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if doResize {
-		span := sentry.StartSpan(sentryCtx, "image_resize")
 		// Resize
+		span := sentry.StartSpan(sentryCtx, "image_read")
 		imgRef, err := vips.NewImageFromReader(readBuff)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -361,8 +361,11 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			span.Finish()
+			println("No resize needed. Returning original image.")
 			return
 		}
+
+		span.Finish()
 
 		var scale float64
 
@@ -372,6 +375,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			scale = resizeSizeF / float64(origHeight)
 		}
 
+		span = sentry.StartSpan(sentryCtx, "image_resize")
 		startTime := time.Now()
 		err = imgRef.Resize(scale, vips.KernelLanczos2)
 		if err != nil {
