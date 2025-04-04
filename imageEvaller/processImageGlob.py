@@ -1,4 +1,3 @@
-import deepdanbooruEval
 import os
 import sys
 from glob import iglob
@@ -34,6 +33,7 @@ import imagehash
 
 # Call internal library
 import LibLepton
+import deepdanbooruEval
 
 parser = argparse.ArgumentParser(
                     prog='IllustStore Image Evaluator',
