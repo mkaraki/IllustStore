@@ -4,6 +4,7 @@ from glob import iglob
 import argparse
 from pathlib import Path
 import functools
+from concurrent.futures import ThreadPoolExecutor
 
 # Call sentry sdk
 import sentry_sdk
@@ -61,6 +62,7 @@ dbCursor = db.cursor(dictionary=True, buffered=True)
 print("Db connected.")
 
 
+@sentry_sdk.trace
 def image_proc(image):
     res = deepdanbooruEval.evaluateTfImage(image)
     return {k: float(v) for k, v in res}
@@ -143,6 +145,7 @@ def create_tag_or_get_tag_id(tag):
     return tagId
 
 
+@functools.cache
 def is_need_scan_even_exists():
     if args.migrate_scan == False:
         return False
@@ -182,6 +185,7 @@ def call_try_update_image_info(i_path, image, img_id):
         return True
 
 
+@sentry_sdk.trace
 def try_update_image_info(i_path, image, img_id):
     # Check is aHash, pHash, dHash, colorHash exists
     dbCursor.execute("SELECT id FROM illusts WHERE id = %s AND aHash IS NULL OR pHash IS NULL OR dHash IS NULL OR colorHash IS NULL", (img_id,))
@@ -210,6 +214,7 @@ def try_update_image_info(i_path, image, img_id):
     return True
 
 
+@sentry_sdk.trace
 def add_image_size(img_id, image):
     pilImg = tensorflow.keras.utils.array_to_img(image)
 
@@ -247,6 +252,77 @@ def add_image_tags(illustId, image):
 
 
 @sentry_sdk.trace
+def calc_image_hash_average_hash(image):
+    try:
+        v = str(imagehash.average_hash(image))
+        return { 'average_hash': v }
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        sys.stderr.write(f"Failed to hash: {e}\n")
+        return None
+
+
+@sentry_sdk.trace
+def calc_image_hash_d_hash(image):
+    try:
+        v = str(imagehash.dhash(image))
+        return { 'd_hash': v }
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        sys.stderr.write(f"Failed to hash: {e}\n")
+        return None
+    
+
+@sentry_sdk.trace
+def calc_image_hash_p_hash(image):
+    try:
+        v = str(imagehash.phash(image))
+        return { 'p_hash': v }
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        sys.stderr.write(f"Failed to hash: {e}\n")
+        return None
+    
+
+@sentry_sdk.trace
+def calc_image_hash_color_hash(image):
+    try:
+        v = str(imagehash.colorhash(image))
+        return { 'color_hash': v }
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        sys.stderr.write(f"Failed to hash: {e}\n")
+        return None
+
+
+@sentry_sdk.trace
+def calc_hashes(image):
+    hashes = {}
+
+    with ThreadPoolExecutor(max_workers=4, thread_name_prefix="im_hash_thread") as executor:
+        futures = []
+        
+        futures.append(executor.submit(calc_image_hash_average_hash, image))
+        futures.append(executor.submit(calc_image_hash_d_hash, image))
+        futures.append(executor.submit(calc_image_hash_p_hash, image))
+        futures.append(executor.submit(calc_image_hash_color_hash, image))
+
+        for future in futures:
+            res = future.result()
+
+            if 'average_hash' in res:
+                hashes['average_hash'] = res['average_hash']
+            if 'd_hash' in res:
+                hashes['d_hash'] = res['d_hash']
+            if 'p_hash' in res:
+                hashes['p_hash'] = res['p_hash']
+            if 'color_hash' in res:
+                hashes['color_hash'] = res['color_hash']
+
+    return hashes
+
+
+@sentry_sdk.trace
 def add_image_hash(img_id, image):
     pilImg = tensorflow.keras.utils.array_to_img(image)
 
@@ -255,10 +331,12 @@ def add_image_hash(img_id, image):
     pHash = None
     colorHash = None
     try:
-        aHash = str(imagehash.average_hash(pilImg))
-        dHash = str(imagehash.dhash(pilImg))
-        pHash = str(imagehash.phash(pilImg))
-        colorHash = str(imagehash.colorhash(pilImg))
+        hashes = calc_hashes(pilImg)
+
+        aHash = hashes['average_hash']
+        dHash = hashes['d_hash']
+        pHash = hashes['p_hash']
+        colorHash = hashes['color_hash']
     except Exception as e:
         sentry_sdk.capture_exception(e)
         sys.stderr.write(f"Failed to hash: {e}\n")
@@ -266,6 +344,10 @@ def add_image_hash(img_id, image):
 
     dbCursor.execute("UPDATE illusts SET aHash = CONV(%s, 16, 10), pHash = CONV(%s, 16, 10), dHash = CONV(%s, 16, 10), colorHash = CONV(%s, 16, 10) WHERE id = %s", (aHash, pHash, dHash, colorHash, img_id,))
 
+
+# ----------------------------------------------------
+# Main
+# ----------------------------------------------------
 
 
 if args.force_delete_all_images:
