@@ -29,8 +29,8 @@ jobs:
           mkdir -p imageEvaller/images
           convert -size 720x1280 canvas:white imageEvaller/images/white.png
           convert -size 1280x720 canvas:black imageEvaller/images/black.png
-          convert -size 1280x720 xc: +noise Random -virtual-pixel tile -blur 0x1 -resize 1280x720 random.png
-          convert -size 500x500 gradient: -evaluate Pow 0.5 gradient.png
+          convert -size 1280x720 xc: +noise Random -virtual-pixel tile -blur 0x1 -resize 1280x720 imageEvaller/images/random.png
+          convert -size 500x500 gradient: -evaluate Pow 0.5 imageEvaller/images/gradient.png
 
       - name: Build docker
         run: sudo docker compose -f docker-compose.dev.yaml build runner
