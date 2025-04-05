@@ -137,7 +137,7 @@ def create_tag_or_get_tag_id(tag):
     tagId = is_tag_danbooru_exists(tag)
     if tagId == False:
         dbCursor.execute(
-            "INSERT INTO tags(tagName, tagDanbooru) VALUES (%s, %s)", (t, t)
+            "INSERT INTO tags(tagName, tagDanbooru) VALUES (%s, %s)", (tag, tag)
         )
         tagId = dbCursor.lastrowid
     return tagId
