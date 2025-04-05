@@ -3,6 +3,7 @@ import sys
 from glob import iglob
 import argparse
 from pathlib import Path
+import functools
 
 # Call sentry sdk
 import sentry_sdk
@@ -131,6 +132,17 @@ def is_tag_danbooru_exists(tag):
     return dbCursor.fetchone()["id"]
 
 
+@functools.cache
+def create_tag_or_get_tag_id(tag):
+    tagId = is_tag_danbooru_exists(tag)
+    if tagId == False:
+        dbCursor.execute(
+            "INSERT INTO tags(tagName, tagDanbooru) VALUES (%s, %s)", (t, t)
+        )
+        tagId = dbCursor.lastrowid
+    return tagId
+
+
 def is_need_scan_even_exists():
     if args.migrate_scan == False:
         return False
@@ -219,12 +231,7 @@ def add_image_tags(illustId, image):
         return False
 
     for t, a in tag_items:
-        tagId = is_tag_danbooru_exists(t)
-        if tagId == False:
-            dbCursor.execute(
-                "INSERT INTO tags(tagName, tagDanbooru) VALUES (%s, %s)", (t, t)
-            )
-            tagId = dbCursor.lastrowid
+        tagId = create_tag_or_get_tag_id(t)
 
         # Skip if detected tag is blacklisted in illust.
         # This may won't work as user expected. Because this method only runs when program didn't detected any tags registered in DB.
