@@ -104,7 +104,21 @@ $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $resp
     $exact_size = !empty($_GET['exact_size']);
     $duplicates = [];
 
-    if ($exact_size) {}
+    if ($exact_size) {
+        $duplicates = DB::query(
+            'SELECT
+                i.id AS id,
+                i.width AS width,
+                i.height AS height
+             FROM illusts i
+             WHERE
+                i.id != %i AND
+                (aHash = %s OR dHash = %s OR pHash = %s OR colorHash = %s) AND
+                (width = %i AND height = %i)',
+            $request->imageId, $img['aHash'], $img['dHash'], $img['pHash'], $img['colorHash'],
+            $img['width'], $img['height']
+        );
+    }
     else {
         $duplicates = DB::query(
             'SELECT
@@ -119,8 +133,10 @@ $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $resp
         );
     }
 
+    $exact_query_string = $exact_size ? ' && exact_size' : '';
+
     $service->render(__DIR__ . '/../views/images.php', [
-        'searchParam' => 'duplicate_hash:' . $request->imageId . (' && exact_size:' . $request->imageId),
+        'searchParam' => 'duplicate_hash:' . $request->imageId . $exact_query_string,
         'pageType' => 'duplicate',
         'images' => $duplicates,
     ]);
