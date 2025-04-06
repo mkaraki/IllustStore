@@ -113,7 +113,7 @@ $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $resp
              FROM illusts i
              WHERE
                 i.id != %i AND
-                (i.aHash = CONV(%s, 16, 10) OR i.dash = CONV(%s, 16, 10) OR i.pHash = CONV(%s, 16, 10) OR i.colorHash = CONV(%s, 16, 10)) AND
+                (i.aHash = CONV(%s, 16, 10) OR i.dHash = CONV(%s, 16, 10) OR i.pHash = CONV(%s, 16, 10) OR i.colorHash = CONV(%s, 16, 10)) AND
                 (i.width = %i AND i.height = %i)',
             $request->imageId, $img['aHash'], $img['dHash'], $img['pHash'], $img['colorHash'],
             $img['width'], $img['height']
@@ -128,7 +128,7 @@ $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $resp
              FROM illusts i
              WHERE
                 i.id != %i AND
-                (i.aHash = CONV(%s, 16, 10) OR i.dash = CONV(%s, 16, 10) OR i.pHash = CONV(%s, 16, 10) OR i.colorHash = CONV(%s, 16, 10))',
+                (i.aHash = CONV(%s, 16, 10) OR i.dHash = CONV(%s, 16, 10) OR i.pHash = CONV(%s, 16, 10) OR i.colorHash = CONV(%s, 16, 10))',
             $request->imageId, $img['aHash'], $img['dHash'], $img['pHash'], $img['colorHash']
         );
     }
