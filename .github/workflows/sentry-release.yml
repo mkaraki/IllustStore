@@ -1,0 +1,23 @@
+name: Sentry Release
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set Sentry release
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      run: |
+        sentry-cli releases new -p illust-store-viewer -p illust-store-evaller -p illust-store-img-server $VERSION
+        sentry-cli releases set-commits --auto $VERSION
