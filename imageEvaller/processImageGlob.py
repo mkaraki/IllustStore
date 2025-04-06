@@ -32,6 +32,7 @@ import tensorflow
 import numpy
 import mysql.connector
 import imagehash
+import numpy as np
 
 # Call internal library
 import LibLepton
@@ -187,11 +188,13 @@ def call_try_update_image_info(i_path, image, img_id):
 
 @sentry_sdk.trace
 def try_update_image_info(i_path, image, img_id):
+    pilImg = tensorflow.keras.utils.array_to_img(image)
+
     # Check is aHash, pHash, dHash, colorHash exists
     dbCursor.execute("SELECT id FROM illusts WHERE id = %s AND aHash IS NULL OR pHash IS NULL OR dHash IS NULL OR colorHash IS NULL", (img_id,))
     if dbCursor.rowcount > 0:
         # If there are empty hash field
-        res = add_image_hash(img_id, image)
+        res = add_image_hash(img_id, pilImg)
         if res == False:
             return False
 
@@ -207,7 +210,7 @@ def try_update_image_info(i_path, image, img_id):
     dbCursor.execute("SELECT id FROM illusts WHERE id = %s AND width IS NULL OR height IS NULL", (img_id,))
     if dbCursor.rowcount > 0:
         # If there are empty img size field
-        res = add_image_size(img_id, image)
+        res = add_image_size(img_id, pilImg)
         if res == False:
             return False
 
@@ -215,9 +218,7 @@ def try_update_image_info(i_path, image, img_id):
 
 
 @sentry_sdk.trace
-def add_image_size(img_id, image):
-    pilImg = tensorflow.keras.utils.array_to_img(image)
-
+def add_image_size(img_id, pilImg):
     width, height = pilImg.size
 
     dbCursor.execute("UPDATE illusts SET width = %s, height = %s WHERE id = %s", (width, height, img_id,))
@@ -226,13 +227,23 @@ def add_image_size(img_id, image):
 
 
 @sentry_sdk.trace
+def get_negative_tags(illustId):
+    dbCursor.execute("SELECT tagId FROM tagNegativeAssign WHERE illustId = %s", (illustId,))
+    lst = np.array(dbCursor.fetchall()).flatten()
+    return lst.tolist()
+
+
+@sentry_sdk.trace
 def add_image_tags(illustId, image):
+    negative_tags = get_negative_tags(illustId)
+    insert_data = []
+
     tag_items = None
     try:
         tag_items = image_proc(image).items()
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        sys.stderr.write(f"Failed to tagging {i_path}: {e}\n")
+        sys.stderr.write(f"Failed to tagging {illustId}: {e}\n")
         return False
 
     for t, a in tag_items:
@@ -241,20 +252,22 @@ def add_image_tags(illustId, image):
         # Skip if detected tag is blacklisted in illust.
         # This may won't work as user expected. Because this method only runs when program didn't detected any tags registered in DB.
         # ToDo: Re-scan tag for each image to register new detected tags (by model changes). #12
-        dbCursor.execute("SELECT tagId FROM tagNegativeAssign WHERE illustId = %s AND tagId = %s", (illustId, tagId,))
-        if dbCursor.rowcount > 0:
+        if tagId in negative_tags:
+            # Skip if detected tag is blacklisted in illust.
             continue
 
-        dbCursor.execute(
-            "INSERT INTO tagAssign(illustId, tagId, autoAssigned, accuracy) VALUES (%s, %s, TRUE, %s)",
-            (illustId, tagId, a,),
-        )
+        insert_data.append((illustId, tagId, a))
+
+    dbCursor.executemany(
+        "INSERT INTO tagAssign(illustId, tagId, autoAssigned, accuracy) VALUES (%s, %s, TRUE, %s)",
+        insert_data,
+    )
 
 
 @sentry_sdk.trace
-def calc_image_hash_average_hash(image):
+def calc_image_hash_average_hash(pilImage):
     try:
-        v = str(imagehash.average_hash(image))
+        v = str(imagehash.average_hash(pilImage))
         return { 'average_hash': v }
     except Exception as e:
         sentry_sdk.capture_exception(e)
@@ -263,9 +276,9 @@ def calc_image_hash_average_hash(image):
 
 
 @sentry_sdk.trace
-def calc_image_hash_d_hash(image):
+def calc_image_hash_d_hash(pilImage):
     try:
-        v = str(imagehash.dhash(image))
+        v = str(imagehash.dhash(pilImage))
         return { 'd_hash': v }
     except Exception as e:
         sentry_sdk.capture_exception(e)
@@ -274,9 +287,9 @@ def calc_image_hash_d_hash(image):
     
 
 @sentry_sdk.trace
-def calc_image_hash_p_hash(image):
+def calc_image_hash_p_hash(pilImage):
     try:
-        v = str(imagehash.phash(image))
+        v = str(imagehash.phash(pilImage))
         return { 'p_hash': v }
     except Exception as e:
         sentry_sdk.capture_exception(e)
@@ -285,9 +298,9 @@ def calc_image_hash_p_hash(image):
     
 
 @sentry_sdk.trace
-def calc_image_hash_color_hash(image):
+def calc_image_hash_color_hash(pilImage):
     try:
-        v = str(imagehash.colorhash(image))
+        v = str(imagehash.colorhash(pilImage))
         return { 'color_hash': v }
     except Exception as e:
         sentry_sdk.capture_exception(e)
@@ -296,16 +309,16 @@ def calc_image_hash_color_hash(image):
 
 
 @sentry_sdk.trace
-def calc_hashes(image):
+def calc_hashes(pilImage):
     hashes = {}
 
     with ThreadPoolExecutor(max_workers=4, thread_name_prefix="im_hash_thread") as executor:
         futures = []
         
-        futures.append(executor.submit(calc_image_hash_average_hash, image))
-        futures.append(executor.submit(calc_image_hash_d_hash, image))
-        futures.append(executor.submit(calc_image_hash_p_hash, image))
-        futures.append(executor.submit(calc_image_hash_color_hash, image))
+        futures.append(executor.submit(calc_image_hash_average_hash, pilImage))
+        futures.append(executor.submit(calc_image_hash_d_hash, pilImage))
+        futures.append(executor.submit(calc_image_hash_p_hash, pilImage))
+        futures.append(executor.submit(calc_image_hash_color_hash, pilImage))
 
         for future in futures:
             res = future.result()
@@ -323,9 +336,7 @@ def calc_hashes(image):
 
 
 @sentry_sdk.trace
-def add_image_hash(img_id, image):
-    pilImg = tensorflow.keras.utils.array_to_img(image)
-
+def add_image_hash(img_id, pilImg):
     aHash = None
     dHash = None
     pHash = None
