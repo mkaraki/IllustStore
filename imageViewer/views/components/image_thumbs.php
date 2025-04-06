@@ -2,7 +2,7 @@
 
 function component_image_thumb_simple_go_raw(int $imageId): string {
     ob_start(); ?>
-    <a href="/image/<?= $imageId ?>/raw">
+    <a href="<?= IMG_SERVER_BASE ?>/image/<?= $imageId ?>/raw">
         <img src="<?= IMG_SERVER_BASE ?>/image/<?= $imageId ?>/thumb" alt="img" loading="lazy" />
     </a>
     <?php

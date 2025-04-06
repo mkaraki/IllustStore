@@ -74,7 +74,7 @@ require_once __DIR__ . '/components/image_thumbs.php'
                     <tbody>
                         <tr>
                             <td>
-                                <?= component_image_thumb_simple_go_raw($nonTaggedImageAndTag['imageId']) ?>
+                                <?= component_image_thumb_simple($nonTaggedImageAndTag['imageId']) ?>
                             </td>
                             <td class="padding-left--30px">
                                 Is this image contains
