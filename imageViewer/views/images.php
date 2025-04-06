@@ -39,7 +39,7 @@
     <?= component_image_thumbs($this->images) ?>
     <?php if (isset($this->paginationTotal) && $this->paginationTotal > 1) : ?>
         <div>
-            <?php if ($this->paginationNow > 0) : ?>
+            <?php if ($this->paginationNow > 1) : ?>
                 <?php if (isset($this->pageType) && $this->pageType === 'search') : ?>
                     <a href="?q=<?= urlencode($this->searchQuery) ?>&p=<?= $this->paginationNow - 1 ?>">Prev</a>
                 <?php else : ?>
