@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Install Sentry CLI
+      run: curl -sL https://sentry.io/get-cli/ | sh
     - name: Set Sentry release
       env:
         SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
