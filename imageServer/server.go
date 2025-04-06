@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -279,6 +280,13 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}(fp)
 
 		if err != nil {
+			if errors.As(err, &os.PathError{}) {
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte("File not found or path error."))
+				fmt.Println(err)
+				return
+			}
+
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Unable to open file."))
 			sentry.CaptureException(err)
