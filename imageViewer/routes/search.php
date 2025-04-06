@@ -239,12 +239,26 @@ $klein->respond('POST', '/search/image', function($request, $response, $service,
 
     $hasher = new ImageHasher();
 
-    $thumb_img = clone $im;
-    $thumb_img->scaleImage(300, 300, true);
-    $thumb_img->setCompressionQuality(50);
-    $thumb_img->setCompression(imagick::COMPRESSION_JPEG);
-    $thumb_img->setImageFormat('jpg');
-    $thumb_b64 = base64_encode($thumb_img->getImageBlob());
+    $spanContext = \Sentry\Tracing\SpanContext::make()
+        ->setOp('img.thumb.gen')
+        ->setDescription('Generate thumbnail');
+    
+    $thumb_img = \Sentry\trace(function() use ($im) {
+        $thumb_img = clone $im;
+        $thumb_img->scaleImage(300, 300, true);
+        return $thumb_img;
+    }, $spanContext);
+
+    $spanContext = \Sentry\Tracing\SpanContext::make()
+        ->setOp('img.thumb.b64')
+        ->setDescription('Convert thumbnail to base64');
+
+    $thumb_b64 = \Sentry\trace(function() use ($thumb_img) {
+        $thumb_img->setCompressionQuality(50);
+        $thumb_img->setCompression(imagick::COMPRESSION_JPEG);
+        $thumb_img->setImageFormat('jpg');
+        return base64_encode($thumb_img->getImageBlob());
+    }, $spanContext);
 
     $aHash = $hasher->average_hash($im)->hex();
     $dHash = $hasher->difference_hash($im)->hex();

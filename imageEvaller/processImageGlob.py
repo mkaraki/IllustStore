@@ -69,6 +69,7 @@ def image_proc(image):
     return {k: float(v) for k, v in res}
 
 
+@sentry_sdk.trace
 def get_image_id(img_path):
     """
     Return Image ID if exists in DB.

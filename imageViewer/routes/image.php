@@ -87,3 +87,38 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         'metadata' => $metadata,
     ]);
 });
+
+$klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $response, $service, $app) {
+    $img = DB::queryFirstRow('SELECT 
+        i.path,
+        CONVERT(CONV(i.aHash, 10, 16)    , CHAR) as aHash,
+        CONVERT(CONV(i.dHash, 10, 16)    , CHAR) as dHash,
+        CONVERT(CONV(i.pHash, 10, 16)    , CHAR) as pHash,
+        CONVERT(CONV(i.colorHash, 10, 16), CHAR) as colorHash
+     FROM illusts i WHERE id = %i', $request->imageId);
+    if ($img === null) {
+        $response->code(404);
+        return;
+    }
+
+    $exact_size = !empty($_GET['exact_size']);
+    $duplicates = [];
+
+    if ($exact_size) {}
+    else {
+        $duplicates = DB::query(
+            'SELECT
+                i.id AS id,
+                i.width AS width,
+                i.height AS height
+             FROM illusts i WHERE %s',
+            DB::raw('i.id != %i AND (aHash = %s OR dHash = %s OR pHash = %s OR colorHash = %s)', $request->imageId, $img['aHash'], $img['dHash'], $img['pHash'], $img['colorHash'])
+        );
+    }
+
+    $service->render(__DIR__ . '/../views/images.php', [
+        'searchParam' => 'duplicate_hash:' . $request->imageId . (' && exact_size:' . $request->imageId),
+        'pageType' => 'duplicate',
+        'images' => $duplicates,
+    ]);
+});

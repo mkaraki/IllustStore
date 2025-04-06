@@ -46,16 +46,43 @@ class ImageHasher
         return (float)array_sum($ary) / (float)count($ary);
     }
 
-    public function average_hash(
+    private function _resize_image(
+        \Imagick $image,
+        int $width,
+        int $height,
+        int $image_resample_filter = \imagick::FILTER_LANCZOS,
+        float $image_resample_blur = 1.0,
+        int $image_colorspace = \imagick::COLORSPACE_GRAY
+    ): \Imagick
+    {
+        $spanContext = \Sentry\Tracing\SpanContext::make()
+            ->setOp('im.hash.resize')
+            ->setDescription('Resize and convert colorspace of image');
+
+        return \Sentry\trace(function() use ($image, $width, $height, $image_resample_filter, $image_resample_blur, $image_colorspace) {
+            $proc_img = clone $image;
+            $proc_img->transformImageColorspace($image_colorspace);
+            $proc_img->resizeImage($width, $height, $image_resample_filter, $image_resample_blur);
+
+            return $proc_img;
+        }, $spanContext);
+    }
+
+    private function _average_hash(
         \Imagick $image,
         int $hash_size = 8,
         int $image_resample_filter = \imagick::FILTER_LANCZOS,
         float $image_resample_blur = 1.0
     ): ImageHash
     {
-        $proc_img = clone $image;
-        $proc_img->transformImageColorspace(\imagick::COLORSPACE_GRAY);
-        $proc_img->resizeImage($hash_size, $hash_size, $image_resample_filter, $image_resample_blur);
+        $proc_img = $this->_resize_image(
+            $image,
+            $hash_size,
+            $hash_size,
+            $image_resample_filter,
+            $image_resample_blur,
+            \imagick::COLORSPACE_GRAY
+        );
 
         $img_ary = $proc_img->exportImagePixels(
             0, 0,
@@ -73,7 +100,23 @@ class ImageHasher
         return new ImageHash($hash_bits);
     }
 
-    public function difference_hash(
+    public function average_hash(
+        \Imagick $image,
+        int $hash_size = 8,
+        int $image_resample_filter = \imagick::FILTER_LANCZOS,
+        float $image_resample_blur = 1.0
+    ): ImageHash
+    {
+        $spanContext = \Sentry\Tracing\SpanContext::make()
+            ->setOp('im.hash.average')
+            ->setDescription('Average hash');
+
+        return \Sentry\trace(function() use ($image, $hash_size, $image_resample_filter, $image_resample_blur) {
+            return $this->_average_hash($image, $hash_size, $image_resample_filter, $image_resample_blur);
+        }, $spanContext);
+    }
+
+    private function _difference_hash(
         \Imagick $image,
         int $hash_size = 8,
         int $image_resample_filter = \imagick::FILTER_LANCZOS,
@@ -83,9 +126,14 @@ class ImageHasher
         $width = $hash_size + 1;
         $height = $hash_size;
 
-        $proc_img = clone $image;
-        $proc_img->transformImageColorspace(\imagick::COLORSPACE_GRAY);
-        $proc_img->resizeImage($width, $height, $image_resample_filter, $image_resample_blur);
+        $proc_img = $this->_resize_image(
+            $image,
+            $hash_size,
+            $hash_size,
+            $image_resample_filter,
+            $image_resample_blur,
+            \imagick::COLORSPACE_GRAY
+        );
 
         $img_ary = $proc_img->exportImagePixels(
             0, 0,
@@ -109,28 +157,50 @@ class ImageHasher
         return new ImageHash($hash_bits);
     }
 
+    public function difference_hash(
+        \Imagick $image,
+        int $hash_size = 8,
+        int $image_resample_filter = \imagick::FILTER_LANCZOS,
+        float $image_resample_blur = 1.0
+    ): ImageHash
+    {
+        $spanContext = \Sentry\Tracing\SpanContext::make()
+            ->setOp('im.hash.difference')
+            ->setDescription('Difference hash');
+
+        return \Sentry\trace(function() use ($image, $hash_size, $image_resample_filter, $image_resample_blur) {
+            return $this->_difference_hash($image, $hash_size, $image_resample_filter, $image_resample_blur);
+        }, $spanContext);
+    }
+
     // Impl of type II of https://docs.scipy.org/doc/scipy/reference/generated/scipy.fftpack.dct.html
     protected function calculateDCT(array $x): array
     {
-        $N = count($x);
+        $spanContext = \Sentry\Tracing\SpanContext::make()
+            ->setOp('im.hash.dct')
+            ->setDescription('Discrete Cosine Transform');
 
-        $y = [];
+        return \Sentry\trace(function() use ($x) {
+            $N = count($x);
 
-        for ($k = 0.0; $k < $N; $k++) {
-            $sum = 0;
-            for ($n = 0.0; $n < $N; $n++) {
-                $sum +=
-                    ((float)$x[$n]) *
-                    cos(
-                        (pi() * $k * ((2.0 * $n) + 1.0))
-                            /
-                        (2.0 * $N)
-                    );
+            $y = [];
+
+            for ($k = 0.0; $k < $N; $k++) {
+                $sum = 0;
+                for ($n = 0.0; $n < $N; $n++) {
+                    $sum +=
+                        ((float)$x[$n]) *
+                        cos(
+                            (pi() * $k * ((2.0 * $n) + 1.0))
+                                /
+                            (2.0 * $N)
+                        );
+                }
+                $y[$k] = 2 * $sum;
             }
-            $y[$k] = 2 * $sum;
-        }
 
-        return $y;
+            return $y;
+        }, $spanContext);
     }
 
     protected function median(array $pixels): float
@@ -148,7 +218,7 @@ class ImageHasher
         return $pixels[count($pixels) / 2];
     }
 
-    public function perceptual_hash(
+    private function _perceptual_hash(
         \Imagick $image,
         int $hash_size = 8,
         int $highfreq_factor = 4,
@@ -158,9 +228,14 @@ class ImageHasher
     {
         $img_size = $hash_size * $highfreq_factor;
 
-        $proc_img = clone $image;
-        $proc_img->transformImageColorspace(\imagick::COLORSPACE_GRAY);
-        $proc_img->resizeImage($img_size, $img_size, $image_resample_filter, $image_resample_blur);
+        $proc_img = $this->_resize_image(
+            $image,
+            $hash_size,
+            $hash_size,
+            $image_resample_filter,
+            $image_resample_blur,
+            \imagick::COLORSPACE_GRAY
+        );
 
         $img_ary = $proc_img->exportImagePixels(
             0, 0,
@@ -204,5 +279,22 @@ class ImageHasher
         }
 
         return new ImageHash($bits);
+    }
+
+    public function perceptual_hash(
+        \Imagick $image,
+        int $hash_size = 8,
+        int $highfreq_factor = 4,
+        int $image_resample_filter = \imagick::FILTER_LANCZOS, // Should FILTER_LANCZOS but that takes too much time.
+        float $image_resample_blur = 1.0
+    ): ImageHash
+    {
+        $spanContext = \Sentry\Tracing\SpanContext::make()
+            ->setOp('im.hash.perceptual')
+            ->setDescription('Perceptual hash');
+
+        return \Sentry\trace(function() use ($image, $hash_size, $highfreq_factor, $image_resample_filter, $image_resample_blur) {
+            return $this->_perceptual_hash($image, $hash_size, $highfreq_factor, $image_resample_filter, $image_resample_blur);
+        }, $spanContext);
     }
 }
