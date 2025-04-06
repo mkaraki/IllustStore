@@ -111,8 +111,11 @@ $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $resp
                 i.id AS id,
                 i.width AS width,
                 i.height AS height
-             FROM illusts i WHERE %s',
-            DB::raw('i.id != %i AND (aHash = %s OR dHash = %s OR pHash = %s OR colorHash = %s)', $request->imageId, $img['aHash'], $img['dHash'], $img['pHash'], $img['colorHash'])
+             FROM illusts i
+             WHERE
+                i.id != %i AND
+                (aHash = %s OR dHash = %s OR pHash = %s OR colorHash = %s)',
+            $request->imageId, $img['aHash'], $img['dHash'], $img['pHash'], $img['colorHash']
         );
     }
 
