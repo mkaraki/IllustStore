@@ -43,7 +43,7 @@ jobs:
       - name: Run test
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EVALLER }}
-        run: sudo docker compose -f docker-compose.dev.yaml run -e SENTRY_ENVIRONMENT=e2e-test -e SENTRY_DSN=$SENTRY_DSN --rm runner --verbose
+        run: sudo docker compose -f docker-compose.dev.yaml run -e SENTRY_ENVIRONMENT=e2e-test -e SENTRY_DSN_URL=$SENTRY_DSN --rm runner --verbose
 
       - name: Show result
         run: |
