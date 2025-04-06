@@ -39,6 +39,22 @@
     <?= component_image_thumbs($this->images) ?>
     <?php if (isset($this->paginationTotal) && $this->paginationTotal > 1) : ?>
         <div>
+            <?php if ($this->paginationNow > 0) : ?>
+                <?php if (isset($this->pageType) && $this->pageType === 'search') : ?>
+                    <a href="?q=<?= urlencode($this->searchQuery) ?>&p=<?= $this->paginationNow - 1 ?>">Prev</a>
+                <?php else : ?>
+                    <a href="?p=<?= $this->paginationNow - 1 ?>">Prev</a>
+                <?php endif; ?>
+            <?php endif; ?>
+            <?php if ($this->paginationNow < $this->paginationTotal) : ?>
+                <?php if (isset($this->pageType) && $this->pageType === 'search') : ?>
+                    <a href="?q=<?= urlencode($this->searchQuery) ?>&p=<?= $this->paginationNow + 1 ?>">Next</a>
+                <?php else : ?>
+                    <a href="?p=<?= $this->paginationNow + 1 ?>">Next</a>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+        <div>
             <?php for ($i = 1; $i <= $this->paginationTotal; $i++) : ?>
                 <?php if ($this->paginationNow === $i) : ?>
                     <?= $i ?>

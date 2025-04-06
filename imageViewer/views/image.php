@@ -28,6 +28,10 @@ require __DIR__ . '/components/image_view.php';
     <?php endif; ?>
     <div>
         <dl>
+            <dt>Tools</dt>
+            <dd>
+                <a href="/image/<?= $this->imageId ?>/duplicate">dup check</a>
+            </dd>
             <dt>Tags</dt>
             <dd>
                 <?= component_tag_list($this->tags, true, $this->imageId) ?>

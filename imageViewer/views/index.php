@@ -116,6 +116,16 @@ require_once __DIR__ . '/components/image_thumbs.php'
             <?= component_image_thumbs($this->images) ?>
         </div>
     </div>
+    <div>
+        <?php
+        $im_count = DB::queryFirstField(
+            'SELECT COUNT(*) FROM illusts'
+        );
+        $im_count = number_format($im_count);
+        ?>
+        - or -<br />
+        <a href="/image/">See all <?= htmlspecialchars($im_count) ?> images</a>
+    </div>
     <script>
         const sQ = document.getElementById('searchQuery');
         const searchTagAutoComplete = document.getElementById('search-tag-auto-complete');
