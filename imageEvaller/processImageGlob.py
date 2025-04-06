@@ -385,7 +385,7 @@ for i in iglob("./images/**/*.jpg", recursive=True):
 
     img = None
 
-    with sentry_sdk.start_transaction(op="task", name="processJpgImage"):
+    with sentry_sdk.start_transaction(op="task", name="processJpgImage", description="Load " + i):
         span = sentry_sdk.start_span(op="loadJpgImage", description="Load Jpg Image")
         try:
             raw_data = tensorflow.io.read_file(i)
@@ -420,7 +420,7 @@ for i in iglob("./images/**/*.png", recursive=True):
 
     img = None
 
-    with sentry_sdk.start_transaction(op="task", name="processPngImage"):
+    with sentry_sdk.start_transaction(op="task", name="processPngImage", description="Load " + i):
         span = sentry_sdk.start_span(op="loadPngImage", description="Load Png Image")
         try:
             raw_data = tensorflow.io.read_file(i)
@@ -455,7 +455,7 @@ for i in iglob("./images/**/*.webp", recursive=True):
 
     img = None
 
-    with sentry_sdk.start_transaction(op="task", name="processWebpImage"):
+    with sentry_sdk.start_transaction(op="task", name="processWebpImage", description="Load " + i):
         span = sentry_sdk.start_span(op="loadWebpImage", description="Load Webp Image")
         try:
             img = numpy.array(Image.open(i))
@@ -490,7 +490,7 @@ for i in iglob("./images/**/*.lep", recursive=True):
 
     img = None
 
-    with sentry_sdk.start_transaction(op="task", name="processLeptonImage"):
+    with sentry_sdk.start_transaction(op="task", name="processLeptonImage", description="Load " + i):
         span = sentry_sdk.start_span(op="loadLeptonImage", description="Load Lepton Image")
         try:
             jpeg_data = lepton_util.load_lepton_from_path(i)
