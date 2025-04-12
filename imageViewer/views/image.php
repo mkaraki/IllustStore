@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/components/tag_list.php';
+require __DIR__ . '/components/image_thumbs.php';
 require __DIR__ . '/components/image_view.php';
 ?>
 <!DOCTYPE html>
@@ -30,7 +31,8 @@ require __DIR__ . '/components/image_view.php';
         <dl>
             <dt>Tools</dt>
             <dd>
-                <a href="/image/<?= $this->imageId ?>/duplicate">dup check</a>
+                <a href="/image/<?= $this->imageId ?>/duplicate">dup check</a> |
+                <a href="/image/<?= $this->imageId ?>/neighbor">similar images</a>
             </dd>
             <dt>Tags</dt>
             <dd>

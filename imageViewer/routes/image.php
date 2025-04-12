@@ -141,3 +141,42 @@ $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $resp
         'images' => $duplicates,
     ]);
 });
+
+$klein->respond('GET', '/image/[i:imageId]/neighbor', function ($request, $response, $service, $app) {
+    $neighbor_image = DB::query('WITH TargetTags AS (
+            SELECT tagId
+            FROM tagAssign
+            WHERE illustId = %i
+        )
+        SELECT 
+            tA2.illustId AS id,
+            i.width,
+            i.height,
+            COUNT(*) AS tag_match_count
+        FROM 
+            targetTags tt
+        JOIN 
+            tagAssign tA2
+        ON
+            tt.tagId = tA2.tagId
+        JOIN
+            illusts i
+        ON
+            tA2.illustId = i.id
+        WHERE 
+            tA2.illustId != %i
+        GROUP BY 
+            tA2.illustId
+        ORDER BY 
+            tag_match_count DESC
+        LIMIT 100',
+        $request->imageId,
+        $request->imageId
+    );
+
+    $service->render(__DIR__ . '/../views/images.php', [
+        'searchParam' => 'similar_by_tag:' . $request->imageId,
+        'pageType' => 'neighbor',
+        'images' => $neighbor_image,
+    ]);
+});
