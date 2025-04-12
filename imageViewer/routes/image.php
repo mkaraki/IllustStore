@@ -51,29 +51,33 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
     }
 
-    $neighbor_image = DB::query('SELECT 
+    $neighbor_image = DB::query('WITH TargetTags AS (
+            SELECT tagId
+            FROM tagAssign
+            WHERE illustId = %i
+        )
+        SELECT 
             tA2.illustId AS id,
             i.width,
             i.height,
             COUNT(*) AS tag_match_count
         FROM 
-            tagAssign tA1
+            targetTags tt
         JOIN 
             tagAssign tA2
         ON
-            tA1.tagId = tA2.tagId
+            tt.tagId = tA2.tagId
         JOIN
             illusts i
         ON
             tA2.illustId = i.id
         WHERE 
-            tA1.illustId = %i
-            AND tA2.illustId != %i
+            tA2.illustId != %i
         GROUP BY 
             tA2.illustId
         ORDER BY 
             tag_match_count DESC
-        LIMIT 10',
+        LIMIT 50',
         $request->imageId,
         $request->imageId
     );
