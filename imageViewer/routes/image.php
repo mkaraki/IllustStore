@@ -168,7 +168,8 @@ $klein->respond('GET', '/image/[i:imageId]/neighbor', function ($request, $respo
         GROUP BY 
             tA2.illustId
         ORDER BY 
-            tag_match_count DESC',
+            tag_match_count DESC
+        LIMIT 100',
         $request->imageId,
         $request->imageId
     );
