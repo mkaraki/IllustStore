@@ -31,7 +31,8 @@ require __DIR__ . '/components/image_view.php';
         <dl>
             <dt>Tools</dt>
             <dd>
-                <a href="/image/<?= $this->imageId ?>/duplicate">dup check</a>
+                <a href="/image/<?= $this->imageId ?>/duplicate">dup check</a> |
+                <a href="/image/<?= $this->imageId ?>/neighbor">similar images</a>
             </dd>
             <dt>Tags</dt>
             <dd>
@@ -80,10 +81,6 @@ require __DIR__ . '/components/image_view.php';
             <dt>Server Path</dt>
             <dd><?= $this->escape($this->srvPath) ?></dd>
         </dl>
-    </div>
-    <div>
-        <h2>Neighbor Images</h2>
-        <?= component_image_thumbs($this->neighbor_image) ?>
     </div>
 </div>
 </body>
