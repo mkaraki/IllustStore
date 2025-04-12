@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/components/tag_list.php';
+require __DIR__ . '/components/image_thumbs.php';
 require __DIR__ . '/components/image_view.php';
 ?>
 <!DOCTYPE html>
@@ -79,6 +80,10 @@ require __DIR__ . '/components/image_view.php';
             <dt>Server Path</dt>
             <dd><?= $this->escape($this->srvPath) ?></dd>
         </dl>
+    </div>
+    <div>
+        <h2>Neighbor Images</h2>
+        <?= component_image_thumbs($this->neighbor_image) ?>
     </div>
 </div>
 </body>

@@ -51,6 +51,31 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
     }
 
+    $neighbor_image = DB::query('SELECT 
+            tA2.illustId AS id,
+            i.width AS width,
+            i.height AS height,
+            COUNT(*) AS tag_match_count
+        FROM 
+            tagAssign tA1
+            illusts i
+        JOIN 
+            tagAssign tA2
+        ON
+            tA1.tagId = tA2.tagId
+        WHERE 
+            tA1.illustId = %i
+            AND tA2.illustId != %i
+            AND tA2.illustId = i.id
+        GROUP BY 
+            tA2.illustId
+        ORDER BY 
+            tag_match_count DESC
+        LIMIT 10;',
+        $request->imageId,
+        $request->imageId
+    );
+
     $service->render(__DIR__ . '/../views/image.php', [
         'imageId' => $request->imageId,
         'srvPath' => $img['path'],
@@ -85,6 +110,7 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         'pHash' => $img['pHash'] ?? null,
         'colorHash' => $img['colorHash'],
         'metadata' => $metadata,
+        'neighbor_image' => $neighbor_image,
     ]);
 });
 
