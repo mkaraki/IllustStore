@@ -477,8 +477,7 @@ func main() {
 	// Get dsn from env
 	sentryDsn := os.Getenv("SENTRY_DSN")
 	if sentryDsn == "" {
-		fmt.Println("Sentry DSN is not set. Exiting.")
-		return
+		fmt.Println("Sentry DSN is not set.")
 	}
 
 	if err := sentry.Init(sentry.ClientOptions{
