@@ -280,7 +280,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}(fp)
 
 		if err != nil {
-			if errors.As(err, &os.PathError{}) {
+			if os.IsNotExist(err) {
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte("File not found or path error."))
 				fmt.Println(err)
