@@ -7,7 +7,7 @@ require (
 	github.com/davidbyttow/govips/v2 v2.15.0
 	github.com/eko/gocache/lib/v4 v4.1.6
 	github.com/eko/gocache/store/memcache/v4 v4.2.2
-	github.com/getsentry/sentry-go v0.31.1
+	github.com/getsentry/sentry-go v0.33.0
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/prometheus/client_golang v1.20.1
 )
