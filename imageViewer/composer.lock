@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "612efabda20dd3f450a16503a77b2b0f",
+    "content-hash": "26e40f790f3827226c8811df5bb3ad75",
     "packages": [
         {
             "name": "guzzlehttp/psr7",
@@ -542,25 +542,27 @@
         },
         {
             "name": "sergeytsalkov/meekrodb",
-            "version": "v2.5.1",
+            "version": "v3.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SergeyTsalkov/meekrodb.git",
-                "reference": "08b683a274365983aaf033cf9c589dcbe5190028"
+                "reference": "beb054110cd945ff67568baef6984552344e6bd8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SergeyTsalkov/meekrodb/zipball/08b683a274365983aaf033cf9c589dcbe5190028",
-                "reference": "08b683a274365983aaf033cf9c589dcbe5190028",
+                "url": "https://api.github.com/repos/SergeyTsalkov/meekrodb/zipball/beb054110cd945ff67568baef6984552344e6bd8",
+                "reference": "beb054110cd945ff67568baef6984552344e6bd8",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "ext-pdo": "*",
+                "php": ">=7.1.0"
             },
             "type": "library",
             "autoload": {
                 "classmap": [
-                    "db.class.php"
+                    "db.class.php",
+                    "orm.class.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -584,9 +586,9 @@
             "support": {
                 "email": "support@meekro.com",
                 "issues": "https://github.com/SergeyTsalkov/meekrodb/issues",
-                "source": "https://github.com/SergeyTsalkov/meekrodb/tree/v2.5.1"
+                "source": "https://github.com/SergeyTsalkov/meekrodb/tree/v3.1.4"
             },
-            "time": "2023-10-10T00:28:49+00:00"
+            "time": "2025-06-26T04:17:05+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
