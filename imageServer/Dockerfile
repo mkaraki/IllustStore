@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y git
 
 WORKDIR /
 RUN git clone --depth 1 https://github.com/microsoft/lepton_jpeg_rust.git
-WORKDIR lepton_jpeg_rust
+WORKDIR lepton_jpeg_rust/dll
 
 RUN cargo build --release
 
@@ -28,7 +28,7 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=lepton_jpeg_build /lepton_jpeg_rust/target/release/liblepton_jpeg.so /usr/lib/
+COPY --from=lepton_jpeg_build /lepton_jpeg_rust/target/release/liblepton_jpeg_dll.so /usr/lib/liblepton_jpeg.so
 RUN ldconfig
 
 WORKDIR /app
