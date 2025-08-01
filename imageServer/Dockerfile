@@ -15,7 +15,7 @@ RUN apt-get update && \
     libvips-dev
 
 WORKDIR /app
-COPY --from=lepton_jpeg_build /lepton_jpeg_rust/target/release/liblepton_jpeg.so /app/
+COPY --from=lepton_jpeg_build /lepton_jpeg_rust/target/release/liblepton_jpeg_dll.so /app/liblepton_jpeg.so
 COPY . /app/
 
 RUN go build -ldflags '-linkmode external -extldflags=-L=.'
