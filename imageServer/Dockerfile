@@ -6,7 +6,7 @@ WORKDIR /
 RUN git clone --branch v0.5.3 --depth 1 https://github.com/microsoft/lepton_jpeg_rust.git
 WORKDIR lepton_jpeg_rust/dll
 
-RUN cargo build --release --workspace -locked
+RUN cargo build --release --workspace --locked
 
 FROM golang:1.23-bookworm AS build
 
