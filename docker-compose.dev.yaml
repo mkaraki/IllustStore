@@ -10,14 +10,6 @@ services:
     depends_on:
       - db
 
-  compressor:
-    build: utils/imageCompress
-    volumes:
-      - ./utils/imageCompress:/usr/src/app/
-      - ./imageEvaller/images:/usr/src/app/images
-    depends_on:
-      - db
-
   viewer:
     build: imageViewer
     volumes:

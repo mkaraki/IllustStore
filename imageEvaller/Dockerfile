@@ -6,10 +6,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 https://github.com/microsoft/lepton_jpeg_rust.git /lepton_jpeg_rust
+RUN git clone --branch v0.5.3 --depth 1 https://github.com/microsoft/lepton_jpeg_rust.git /lepton_jpeg_rust
 WORKDIR /lepton_jpeg_rust/dll
 
-RUN cargo build --release
+RUN cargo build --release --workspace --locked
 
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
