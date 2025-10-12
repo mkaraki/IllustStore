@@ -399,6 +399,7 @@ if ($transactionName !== 'GET /metrics') {
     $transaction = \Sentry\startTransaction($transactionContext);
 }
 
+header('Document-Policy: js-profiling');
 $klein->dispatch();
 
 if ($transactionName !== 'GET /metrics') {

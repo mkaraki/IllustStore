@@ -7,6 +7,8 @@ if (!empty(SENTRY_DSN)) : ?>
   crossorigin="anonymous"
 ></script>
 <script>
+window.sentryOnLoad = function () {
+  console.trace('window.sentryOnLoad called');
 Sentry.init({
   dsn: "<?= trim(SENTRY_DSN) ?>",
   sendDefaultPii: true,
@@ -14,10 +16,18 @@ Sentry.init({
     Sentry.replayIntegration({
       maskAllText: false,
       blockAllMedia: false,
-    })
+    }),
+    Sentry.browserTracingIntegration(),
+    Sentry.browserProfilingIntegration(),
+    Sentry.consoleLoggingIntegration(),
   ],
+  tracesSampleRate: 0.3,
   replaysSessionSampleRate: 0.5,
-  replaysOnErrorSampleRate: 1.0
+  replaysOnErrorSampleRate: 1.0,
+  profilesSampleRate: 0.3,
+  enableLogs: true,
 });
+  console.trace('end of window.sentryOnLoad');
+}
 </script>
 <?php endif; ?>
