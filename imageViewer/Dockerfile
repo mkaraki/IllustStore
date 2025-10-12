@@ -11,8 +11,8 @@ FROM php:8.4-apache
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 ENV IPE_GD_WITHOUTAVIF=1
-RUN install-php-extensions imagick mysqli
-RUN docker-php-ext-install opcache
+RUN install-php-extensions imagick mysqli excimer && \
+    docker-php-ext-install opcache
 
 RUN <<EOF cat >> $PHP_INI_DIR/conf.d/more-upload-size.ini
 upload_max_filesize = 150M
