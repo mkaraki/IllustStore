@@ -4,7 +4,8 @@
         "sergeytsalkov/meekrodb": "^2.4",
         "ext-imagick": "*",
         "ext-zend-opcache": "*",
-        "sentry/sentry": "^4.10"
+        "sentry/sentry": "^4.10",
+        "ext-json": "*"
     },
     "repositories": [
         {

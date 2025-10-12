@@ -21,6 +21,7 @@ Sentry.init({
     // Sentry.consoleLoggingIntegration(),
   ],
   tracesSampleRate: 0.5,
+  tracePropagationTargets: <?= json_encode([$_SERVER['SERVER_NAME'], IMG_SERVER_BASE]); ?>,
   replaysSessionSampleRate: 1.0,
   replaysOnErrorSampleRate: 1.0,
   // profilesSampleRate: 0.3,
