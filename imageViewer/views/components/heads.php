@@ -16,7 +16,7 @@ Sentry.init({
       blockAllMedia: false,
     })
   ],
-  replaysSessionSampleRate: 0.1,
+  replaysSessionSampleRate: 0.5,
   replaysOnErrorSampleRate: 1.0
 });
 </script>
