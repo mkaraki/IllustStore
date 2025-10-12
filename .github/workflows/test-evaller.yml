@@ -1,4 +1,6 @@
 name: evaller test
+permissions:
+  contents: read
 
 on:
   push:
