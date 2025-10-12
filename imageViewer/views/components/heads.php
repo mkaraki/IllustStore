@@ -1,11 +1,6 @@
 <?php
 require_once __DIR__ . '/../../_config.php';
 if (!empty(SENTRY_DSN)) : ?>
-<script
-  src="https://browser.sentry-cdn.com/10.19.0/bundle.tracing.replay.min.js"
-  integrity="sha384-9jBRZL7VtE2wKJdi3L8yhjcqeXGUASfuWtw7t6fTPhWBrF8Gcom99en+s9OiqBUA"
-  crossorigin="anonymous"
-></script>
 <script>
 window.sentryOnLoad = function () {
   console.trace('window.sentryOnLoad called');
@@ -18,16 +13,21 @@ Sentry.init({
       blockAllMedia: false,
     }),
     Sentry.browserTracingIntegration(),
-    Sentry.browserProfilingIntegration(),
-    Sentry.consoleLoggingIntegration(),
+    // Sentry.browserProfilingIntegration(),
+    // Sentry.consoleLoggingIntegration(),
   ],
   tracesSampleRate: 0.3,
   replaysSessionSampleRate: 0.5,
   replaysOnErrorSampleRate: 1.0,
-  profilesSampleRate: 0.3,
-  enableLogs: true,
+  // profilesSampleRate: 0.3,
+  // enableLogs: true,
 });
   console.trace('end of window.sentryOnLoad');
 }
 </script>
+<script
+  src="https://browser.sentry-cdn.com/10.19.0/bundle.tracing.replay.feedback.min.js"
+  integrity="sha384-92N5u8Kf3n6PjH0F76yRkyEvEF5R0At4k2Ptj7eLJQqdHD3nhhFAezd3HbpbSNo8"
+  crossorigin="anonymous"
+></script>
 <?php endif; ?>
