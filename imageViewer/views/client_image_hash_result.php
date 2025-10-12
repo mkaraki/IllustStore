@@ -9,6 +9,7 @@ require __DIR__ . '/components/image_view.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/assets/global.css">
     <title>Image Hash Search</title>
+    <?php require __DIR__ . '/components/heads.php' ?>
 </head>
 
 <body>
