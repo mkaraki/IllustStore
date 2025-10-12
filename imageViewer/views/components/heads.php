@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/../../_config.php';
 if (!empty(SENTRY_DSN)) : ?>
+<script
+  src="https://browser.sentry-cdn.com/10.19.0/bundle.tracing.replay.feedback.min.js"
+  integrity="sha384-92N5u8Kf3n6PjH0F76yRkyEvEF5R0At4k2Ptj7eLJQqdHD3nhhFAezd3HbpbSNo8"
+  crossorigin="anonymous"
+></script>
 <script>
 console.debug('Sentry enabled');
 Sentry.init({
@@ -22,9 +27,4 @@ Sentry.init({
   // enableLogs: true,
 });
 </script>
-<script
-  src="https://browser.sentry-cdn.com/10.19.0/bundle.tracing.replay.feedback.min.js"
-  integrity="sha384-92N5u8Kf3n6PjH0F76yRkyEvEF5R0At4k2Ptj7eLJQqdHD3nhhFAezd3HbpbSNo8"
-  crossorigin="anonymous"
-></script>
 <?php endif; ?>
