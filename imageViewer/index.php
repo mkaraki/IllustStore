@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/_config.php';
+require_once __DIR__ . '/shared.php';
 
 \Sentry\init([
     'dsn' => SENTRY_DSN,
@@ -12,7 +13,9 @@ const IMG_SCALE_SIZE = 250.0;
 
 $klein = new \Klein\Klein();
 
-$klein->respond('/image/', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/image/', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /image/');
+
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(id) FROM illusts'
     );
@@ -42,19 +45,25 @@ $klein->respond('/image/', function ($request, $response, $service, $app) {
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 100,
     ]);
+    $transaction->finish();
 });
 
 require __DIR__ . '/routes/image.php';
 
-$klein->respond('/tag/', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/tag/', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /tag/');
     $service->render(__DIR__ . '/views/tags.php');
+    $transaction->finish();
 });
 
-$klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/tag/[i:tagId]', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /tag/[i:tagId]');
+
     $tagData = DB::queryFirstRow('SELECT * FROM tags WHERE id = %i', $request->tagId);
 
     if ($tagData === null) {
         $response->code(404);
+        $transaction->finish();
         return;
     }
 
@@ -101,9 +110,11 @@ $klein->respond('/tag/[i:tagId]', function ($request, $response, $service, $app)
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 100,
     ]);
+    $transaction->finish();
 });
 
-$klein->respond('/', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /');
     $service->render(__DIR__ . '/views/index.php', [
         'images' => DB::query(
             'SELECT
@@ -116,19 +127,24 @@ $klein->respond('/', function ($request, $response, $service, $app) {
             LIMIT 20'
         ),
     ]);
+    $transaction->finish();
 });
 
 $klein->respond('POST', '/util/tag/complete', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('POST /util/tag/complete');
     $queryObj = json_decode($request->body(), true);
     if (!isset($queryObj['w'])) {
         $response->code(400);
+        $transaction->finish();
         return;
     }
     $res = DB::queryFirstColumn("SELECT tagName FROM tags WHERE tagName LIKE %ss", $queryObj['w']);
     $response->json(['sw' => $res]);
+    $transaction->finish();
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('POST /image/[i:illustId]/tag/[i:tagId]/delete');
     $isNegativeExists = DB::queryFirstRow('SELECT * FROM tagNegativeAssign WHERE illustId = %i AND tagId = %i', $request->illustId, $request->tagId);
     if ($isNegativeExists === null) {
         DB::insert('tagNegativeAssign', [
@@ -148,9 +164,11 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($r
     } else {
         $response->redirect('/image/' . $request->illustId, 303);
     }
+    $transaction->finish();
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('POST /image/[i:illustId]/tag/[i:tagId]/approve');
     DB::update('tagAssign', ['autoAssigned' => false], [
         'illustId' => $request->illustId,
         'tagId' => $request->tagId,
@@ -162,12 +180,15 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($
     } else {
         $response->redirect('/image/' . $request->illustId, 303);
     }
+    $transaction->finish();
 });
 
 $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /image/[i:illustId]/tag/new');
     $img = DB::queryFirstRow('SELECT path FROM illusts WHERE id = %i', $request->illustId);
     if ($img === null) {
         $response->code(404);
+        $transaction->finish();
         return;
     }
 
@@ -190,24 +211,29 @@ $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $respo
         ),
         'pending' => intval($_GET['pending'] ?? '0'),
     ]);
+    $transaction->finish();
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('POST /image/[i:illustId]/tag/new');
     $newTag = trim($_POST['newTagId'] ?? '', " \n\r\t\v\x00　");
     if ($newTag === '') {
         $response->code(400);
+        $transaction->finish();
         return;
     }
 
     $img = DB::queryFirstRow('SELECT i.id, i.path FROM illusts i WHERE id = %i', $request->illustId);
     if ($img === null) {
         $response->code(404);
+        $transaction->finish();
         return;
     }
 
     $tagData = DB::queryFirstRow('SELECT t.id FROM tags t WHERE t.tagName = %s', $newTag);
     if ($tagData === null) {
         $response->code(404);
+        $transaction->finish();
         return;
     }
 
@@ -235,26 +261,33 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
     } else {
         $response->redirect('/image/' . $img['id'], 303);
     }
+    $transaction->finish();
 });
 
 $klein->respond('GET', '/tag/new', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /tag/new');
     $service->render(__DIR__ . '/views/newTag.php');
+    $transaction->finish();
 });
 
 $klein->respond('POST', '/tag/new', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('POST /tag/new');
     $tagName = trim($_POST['tagName'] ?? '');
     if (empty($tagName)) {
         $response->code(400);
+        $transaction->finish();
         return;
     }
     if (str_contains($tagName, ' ') || str_contains($tagName, '　')) {
         $response->code(400);
+        $transaction->finish();
         return 'Tag Name must not contains white space';
     }
 
     $searchTag = DB::queryFirstRow('SELECT id FROM tags WHERE tagName = %s', $tagName);
     if ($searchTag !== null) {
         $response->code(400);
+        $transaction->finish();
         return 'Already exists';
     }
 
@@ -275,10 +308,12 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
     ]);
 
     $response->redirect('/tag/', 303);
+    $transaction->finish();
 });
 
 
 $klein->respond('GET', '/tag/[i:tagId]/edit', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /tag/[i:tagId]/edit');
     $tagInfo = DB::queryFirstRow('SELECT 
         t.id,
         t.tagName,
@@ -294,6 +329,7 @@ $klein->respond('GET', '/tag/[i:tagId]/edit', function ($request, $response, $se
 
     if ($tagInfo === null) {
         $response->code(404);
+        $transaction->finish();
         return;
     }
 
@@ -309,6 +345,7 @@ $klein->respond('GET', '/tag/[i:tagId]/edit', function ($request, $response, $se
         'tagGroup' => $tagInfo['tagGroup'],
         'selectiveTagGroup' => $tagInfo['selectiveTagGroup'],
     ]);
+    $transaction->finish();
 });
 
 function empty_to_null(string|null $value): string|null {
@@ -316,20 +353,24 @@ function empty_to_null(string|null $value): string|null {
 }
 
 $klein->respond('POST', '/tag/[i:tagId]/edit', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('POST /tag/[i:tagId]/edit');
     $tagExists = DB::queryFirstField('SELECT t.id FROM tags t WHERE t.id = %i', $request->tagId);
     if ($tagExists === null) {
         $response->code(404);
+        $transaction->finish();
         return;
     }
 
     if (empty($_POST['tagName'])) {
         $response->code(400);
+        $transaction->finish();
         return;
     }
 
     $tagNameAlreadyInUse = DB::queryFirstField('SELECT t.id FROM tags t WHERE t.id <> %i AND t.tagName = %s', $request->tagId, $_POST['tagName']);
     if ($tagNameAlreadyInUse !== null) {
         $response->code(404);
+        $transaction->finish();
         return 'You can not use that tag name.';
     }
 
@@ -346,10 +387,12 @@ $klein->respond('POST', '/tag/[i:tagId]/edit', function ($request, $response, $s
     ], ['id' => $request->tagId]);
 
     $response->redirect('/tag/' . $request->tagId, 303);
+    $transaction->finish();
 });
 
 
 $klein->respond('GET', '/tag/pending', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /tag/pending');
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(DISTINCT tA.illustId) FROM tagAssign tA WHERE tA.autoAssigned = TRUE'
     );
@@ -381,28 +424,18 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 30,
     ]);
+    $transaction->finish();
 });
 
 $klein->respond('GET', '/tag/assistant', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /tag/assistant');
     $service->render(__DIR__ . '/views/tagAssistant.php', [
     ]);
+    $transaction->finish();
 });
 
 require __DIR__ . '/routes/search.php';
 require __DIR__ . '/routes/metric.php';
 
-// Format like `GET /image/1234`
-$transactionName = $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'];
-if ($transactionName !== 'GET /metrics') {
-    $transactionContext = \Sentry\Tracing\TransactionContext::make()
-        ->setName($transactionName)
-        ->setOp('web.request');
-    $transaction = \Sentry\startTransaction($transactionContext);
-}
-
 header('Document-Policy: js-profiling');
 $klein->dispatch();
-
-if ($transactionName !== 'GET /metrics') {
-    $transaction->finish();
-}

@@ -1,10 +1,13 @@
 <?php
+require_once __DIR__ . '/../shared.php';
 global $klein;
 
-$klein->respond('/search', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/search', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /search');
     $searchQuery = trim($_GET['q'] ?? '');
     if ($searchQuery === '') {
         $response->redirect('/', 302);
+        $transaction->finish();
         return;
     }
 
@@ -14,6 +17,15 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
     $searchQuerySplitted = explode(' ', $searchQuery);
 
     foreach ($searchQuerySplitted as $query) {
+        $span = createAndStartDbSpan($transaction, 'SELECT
+                t.id
+            FROM
+                tags t
+            WHERE
+                LOWER(t.tagName) = LOWER(%s) OR
+                LOWER(t.tagDanbooru) = LOWER(%s) OR
+                LOWER(t.tagPixivJpn) = LOWER(%s) OR
+                LOWER(t.tagPixivEng) = LOWER(%s)');
         $tagId = DB::queryFirstField(
             'SELECT
                 t.id
@@ -29,12 +41,26 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
             $query,
             $query
         );
+        finishSpanAndReturn($transaction, $span);
 
         if ($tagId === null) continue;
 
         $searchTags[] = $tagId;
     }
 
+    $span = createAndStartDbSpan($transaction, 'SELECT
+                COUNT(i.id) OVER()
+            FROM
+                tagAssign tA,
+                tags t,
+                illusts i
+            WHERE
+                tA.tagId = t.id AND
+                tA.illustId = i.id AND
+                tagId IN ?
+            GROUP BY i.id
+            HAVING COUNT(i.id) = ?
+            LIMIT 1');
     $imageCnt = DB::queryFirstField(
         'SELECT
                 COUNT(i.id) OVER()
@@ -52,12 +78,32 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
         $searchTags,
         count($searchTags),
     );
+    finishSpanAndReturn($transaction, $span);
 
     $p = $_GET['p'] ?? '1';
     $p = intval($p);
     $sttIdx = ($p - 1) * 100;
     $maxPage = ceil(doubleval($imageCnt) / 100.0);
 
+    $span = createAndStartDbSpan($transaction, 
+        'SELECT
+                i.id AS id,
+                i.width AS width,
+                i.height AS height
+            FROM
+                tagAssign tA,
+                tags t,
+                illusts i
+            WHERE
+                tA.tagId = t.id AND
+                tA.illustId = i.id AND
+                (tagId IN ?)
+            GROUP BY i.id
+            HAVING COUNT(i.id) = ?
+            ORDER BY id DESC
+            LIMIT 100
+            OFFSET ?'
+    );
     $images = DB::query(
         'SELECT
                 i.id AS id,
@@ -80,7 +126,9 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
         count($searchTags),
         $sttIdx
     );
+    finishSpanAndReturn($transaction, $span);
 
+    $span = createAndStartRenderSpan($transaction);
     $service->render(__DIR__ . '/../views/images.php', [
         'searchParam' => $searchQuery,
         'pageType' => 'search',
@@ -92,9 +140,12 @@ $klein->respond('/search', function ($request, $response, $service, $app) {
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 100,
     ]);
+    $transaction->finish();
+    finishSpanAndReturn($transaction, $span);
 });
 
-$klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $service, $app) {
+$klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('GET /search/[s:type]/[s:hash]');
     $hashType = null;
     switch ($request->type) {
         case 'aHash':
@@ -115,6 +166,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
             break;
         default:
             $response->code(404);
+            $transaction->finish();
             return;
     }
 
@@ -213,6 +265,7 @@ $klein->respond('/search/[s:type]/[s:hash]', function ($request, $response, $ser
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 100,
     ]);
+    $transaction->finish();
 });
 
 require_once __DIR__ . '/../ImageHash/ImageHash.php';
@@ -220,10 +273,12 @@ require_once __DIR__ . '/../ImageHash/ImageHasher.php';
 use \mkaraki\ImageHash\ImageHasher;
 
 $klein->respond('POST', '/search/image', function($request, $response, $service, $app) {
+    $transaction = createAndStartWebTransaction('POST /search/image');
     $files = $request->files();
 
     if (!isset($files['img'])) {
         $response->code(400);
+        $transaction->finish();
         return 'Something went wrong';
     }
 
@@ -234,6 +289,7 @@ $klein->respond('POST', '/search/image', function($request, $response, $service,
     }
     catch (\ImagickException $e) {
         $response->code(400);
+        $transaction->finish();
         return "Unsupported file submitted or reload detected.";
     }
 
@@ -270,4 +326,5 @@ $klein->respond('POST', '/search/image', function($request, $response, $service,
         'dHash' => $dHash,
         'pHash' => $pHash,
     ]);
+    $transaction->finish();
 });
