@@ -197,6 +197,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check cache (variant level cache)
 	span := sentry.StartSpan(sentryCtx, "cache.get")
+	span.Description = "Get variant level cache"
 	cachedImgKey := fmt.Sprintf("data/img/%s/%d", variant, imId)
 	span.SetData("cache.key", cachedImgKey)
 	cachedImg, cErr1 := byteCacheManager.Get(cacheCtx, cachedImgKey)
@@ -205,6 +206,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		span.Finish()
 
 		span = sentry.StartSpan(sentryCtx, "cache.get")
+		span.Description = "Get variant level content-type cache"
 		cachedImgContentTypeKey := fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId)
 		span.SetData("cache.key", cachedImgContentTypeKey)
 		cachedImgContentType, cErr2 := byteCacheManager.Get(cacheCtx, cachedImgContentTypeKey)
@@ -232,6 +234,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	// Check cache (raw level cache)
 	isRawCached := false
 	span = sentry.StartSpan(sentryCtx, "cache.get")
+	span.Description = "Get raw level cache"
 	cachedImgKey = fmt.Sprintf("data/img/raw/%d", imId)
 	span.SetData("cache.key", cachedImgKey)
 	cachedImg, cErr1 = byteCacheManager.Get(cacheCtx, cachedImgKey)
@@ -240,6 +243,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		span.Finish()
 
 		span = sentry.StartSpan(sentryCtx, "cache.get")
+		span.Description = "Get raw level content-type cache"
 		cachedImgContentTypeKey := fmt.Sprintf("meta/img/raw/%d/Content-Type", imId)
 		span.SetData("cache.key", cachedImgContentTypeKey)
 		cachedImgContentType, cErr2 := byteCacheManager.Get(cacheCtx, cachedImgContentTypeKey)
@@ -299,6 +303,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		transaction.SetTag("imgContentType", contentType)
 
 		span = sentry.StartSpan(sentryCtx, "file.open")
+		span.Description = "Open original file"
 		span.SetData("file.path", path)
 		fp, err := os.OpenFile(path, os.O_RDONLY, 0666)
 		span.Finish()
@@ -324,6 +329,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		switch imgExt {
 		case "lep":
 			span := sentry.StartSpan(sentryCtx, "lepton_decode")
+			span.Description = "Read and decode lepton file"
 			startTime := time.Now()
 			err = lepton_jpeg.DecodeLepton(readBuff, fp)
 			if err != nil {
@@ -344,6 +350,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			leptonProcessingAverageMilliSecondsProm.Set(leptonProcessingAverageMilliSeconds)
 		default:
 			span = sentry.StartSpan(sentryCtx, "file.read")
+			span.Description = "Read raw file"
 			span.SetData("file.path", path)
 			_, err = io.Copy(readBuff, fp)
 			span.Finish()
@@ -361,6 +368,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// cache read image
 	span = sentry.StartSpan(sentryCtx, "cache.put")
+	span.Description = "Put raw cache"
 	cachedImgKey = fmt.Sprintf("data/img/raw/%d", imId)
 	span.SetData("cache.key", cachedImgKey)
 	span.SetData("cache.item_size", readBuff.Len())
@@ -372,6 +380,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	span.Finish()
 
 	span = sentry.StartSpan(sentryCtx, "cache.put")
+	span.Description = "Put raw content-type cache"
 	cachedImgContentTypeKey := fmt.Sprintf("data/img/raw/%d/Content-Type", imId)
 	span.SetData("cache.key", cachedImgContentTypeKey)
 	span.SetData("cache.item_size", len(contentType))
@@ -388,6 +397,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		bytesReader := bytes.NewReader(imageBytes)
 
 		span := sentry.StartSpan(sentryCtx, "image_read")
+		span.Description = "Read raw image to img object"
 		imgRef, err := vips.NewImageFromReader(bytesReader)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -430,6 +440,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		span = sentry.StartSpan(sentryCtx, "image_resize")
+		span.Description = "Resize img"
 		startTime := time.Now()
 		err = imgRef.Resize(scale, vips.KernelLanczos2)
 		if err != nil {
@@ -448,6 +459,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 		span.Finish()
 		span = sentry.StartSpan(sentryCtx, "image_encode")
+		span.Description = "Encode resized img"
 
 		exportParams := vips.NewJpegExportParams()
 		exportParams.Quality = encodeImageQuality
@@ -480,6 +492,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		encodeResizedProcessingAverageMilliSecondsProm.Set(encodeResizedProcessingAverageMilliSeconds)
 
 		span = sentry.StartSpan(sentryCtx, "cache.put")
+		span.Description = "Put variant cache"
 		cachedImgKey = fmt.Sprintf("data/img/%s/%d", variant, imId)
 		span.SetData("cache.key", cachedImgKey)
 		span.SetData("cache.item_size", len(webpBytes))
@@ -491,6 +504,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		span.Finish()
 
 		span = sentry.StartSpan(sentryCtx, "cache.put")
+		span.Description = "Put valiant content-type cache"
 		cachedImgContentTypeKey = fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId)
 		span.SetData("cache.key", cachedImgContentTypeKey)
 		span.SetData("cache.item_size", len("image/jpeg"))
