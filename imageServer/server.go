@@ -264,7 +264,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		// If there are no raw level cache,
 		// read from disk
 
-		err = useDb()
+		err := useDb()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Db open fail"))
