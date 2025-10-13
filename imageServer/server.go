@@ -160,6 +160,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		hub = sentry.CurrentHub().Clone()
 		sentryCtx = sentry.SetHubOnContext(sentryCtx, hub)
 	}
+	transaction := sentry.TransactionFromContext(sentryCtx)
 
 	totalStartTime := time.Now()
 	defer func(startTime time.Time) {
@@ -171,6 +172,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	}(totalStartTime)
 
 	variant := r.PathValue("variant")
+	transaction.SetTag("variant", variant)
 
 	var doResize bool
 	var resizeSize int
@@ -198,6 +200,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	imageId := r.PathValue("imageId")
 	imId, err := strconv.Atoi(imageId)
+	transaction.SetTag("imageId", imId)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -206,18 +209,37 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check cache (variant level cache)
-	cachedImg, cErr1 := byteCacheManager.Get(cacheCtx, fmt.Sprintf("data/img/%s/%d", variant, imId))
-	cachedImgContentType, cErr2 := byteCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId))
+	span := sentry.StartSpan(sentryCtx, "cache.get")
+	cachedImgKey := fmt.Sprintf("data/img/%s/%d", variant, imId)
+	span.SetData("cache.key", cachedImgKey)
+	cachedImg, cErr1 := byteCacheManager.Get(cacheCtx, cachedImgKey)
+	if cErr1 == nil && len(cachedImg) > 1 {
+		span.SetData("cache.hit", true)
+		span.Finish()
 
-	if cErr1 == nil && cErr2 == nil && len(cachedImg) > 1 {
-		w.Header().Set("Content-Type", string(cachedImgContentType))
-		w.WriteHeader(http.StatusOK)
-		_, _ = io.Copy(w, bytes.NewReader(cachedImg))
+		span = sentry.StartSpan(sentryCtx, "cache.get")
+		cachedImgContentTypeKey := fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId)
+		span.SetData("cache.key", cachedImgContentTypeKey)
+		cachedImgContentType, cErr2 := byteCacheManager.Get(cacheCtx, cachedImgContentTypeKey)
+		if cErr2 == nil {
+			span.SetData("cache.hit", true)
+			span.Finish()
+			w.Header().Set("Content-Type", string(cachedImgContentType))
+			w.WriteHeader(http.StatusOK)
+			_, _ = io.Copy(w, bytes.NewReader(cachedImg))
 
-		imgCacheHitRate, imgCacheHitRateCount = avgProcess(imgCacheHitRate, imgCacheHitRateCount, 1.0)
-		imgCacheHitRateProm.Set(imgCacheHitRate)
+			imgCacheHitRate, imgCacheHitRateCount = avgProcess(imgCacheHitRate, imgCacheHitRateCount, 1.0)
+			imgCacheHitRateProm.Set(imgCacheHitRate)
 
-		return
+			return
+		} else {
+			span.SetData("cache.hit", false)
+			span.Finish()
+		}
+		
+	} else {
+		span.SetData("cache.hit", false)
+		span.Finish()
 	}
 
 	imgCacheHitRate, imgCacheHitRateCount = avgProcess(imgCacheHitRate, imgCacheHitRateCount, 0.0)
@@ -228,17 +250,40 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	var contentType string
 
 	// Check cache (raw level cache)
-	cachedImg, cErr1 = byteCacheManager.Get(cacheCtx, fmt.Sprintf("data/img/raw/%d", imId))
-	cachedImgContentType, cErr2 = byteCacheManager.Get(cacheCtx, fmt.Sprintf("meta/img/raw/%d/Content-Type", imId))
+	isRawCached := false
+	span = sentry.StartSpan(sentryCtx, "cache.get")
+	cachedImgKey = fmt.Sprintf("data/img/raw/%d", imId)
+	span.SetData("cache.key", cachedImgKey)
+	cachedImg, cErr1 = byteCacheManager.Get(cacheCtx, cachedImgKey)
+	if cErr1 == nil && len(cachedImg) > 0 {
+		span.SetData("cache.hit", true)
+		span.Finish()
 
-	if cErr1 == nil && cErr2 == nil && len(cachedImg) > 0 {
-		// if there are cached raw file
-		_, _ = io.Copy(readBuff, bytes.NewReader(cachedImg))
-		contentType = string(cachedImgContentType)
+		span = sentry.StartSpan(sentryCtx, "cache.get")
+		cachedImgContentTypeKey := fmt.Sprintf("meta/img/raw/%d/Content-Type", variant, imId)
+		span.SetData("cache.key", cachedImgContentTypeKey)
+		cachedImgContentType, cErr2 := byteCacheManager.Get(cacheCtx, cachedImgContentTypeKey)
+		if cErr2 == nil {
+			span.SetData("cache.hit", true)
+			span.Finish()
+			// if there are cached raw file
+			_, _ = io.Copy(readBuff, bytes.NewReader(cachedImg))
+			contentType = string(cachedImgContentType)
 
-		imgRawCacheHitRate, imgRawCacheHitRateCount = avgProcess(imgRawCacheHitRate, imgRawCacheHitRateCount, 1.0)
-		imgRawCacheHitRateProm.Set(imgRawCacheHitRate)
+			imgRawCacheHitRate, imgRawCacheHitRateCount = avgProcess(imgRawCacheHitRate, imgRawCacheHitRateCount, 1.0)
+			imgRawCacheHitRateProm.Set(imgRawCacheHitRate)
+
+			isRawCached = true
+		} else {
+			span.SetData("cache.hit", false)
+			span.Finish()
+		}
 	} else {
+		span.SetData("cache.hit", false)
+		span.Finish()
+	}
+
+	if (!isRawCached)
 		// If there are no raw level cache,
 		// read from disk
 
@@ -255,7 +300,11 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var path string
+		span = StartSpan(sentryCtx, "db.query")
+		span.SetData("db.system", "mariadb")
+		span.Description = "SELECT i.path FROM illusts i WHERE i.id = ?"
 		err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
+		span.Finish()
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			_, _ = w.Write([]byte("Image not found or DB error"))
@@ -264,6 +313,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		imgExt := getExtensionFromFilePath(path)
+		transaction.SetTag("imgExt", imgExt)
 
 		if !isSupportedImage(imgExt) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -272,6 +322,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		contentType = getContentTypeFromExtension(imgExt)
+		transaction.SetTag("imgContentType", contentType)
 
 		fp, err := os.OpenFile(path, os.O_RDONLY, 0666)
 		defer func(fp *os.File) {
@@ -329,16 +380,27 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	// This section is after read raw image.
 
 	// cache read image
+	span = sentry.StartSpan(sentryCtx, "cache.put")
+	cachedImgKey = fmt.Sprintf("data/img/raw/%d", imId)
+	span.SetData("cache.key", cachedImgKey)
+	span.SetData("cache.item_size", readBuff.Len())
 	_ = byteCacheManager.Set(
 		cacheCtx,
-		fmt.Sprintf("data/img/raw/%d", imId),
+		cachedImgKey,
 		readBuff.Bytes(),
 	)
+	span.Finish()
+
+	span = sentry.StartSpan(sentryCtx, "cache.put")
+	cachedImgContentTypeKey = fmt.Sprintf("data/img/raw/%d/Content-Type", imId)
+	span.SetData("cache.key", cachedImgContentTypeKey)
+	span.SetData("cache.item_size", len(contentType))
 	_ = byteCacheManager.Set(
 		cacheCtx,
-		fmt.Sprintf("meta/img/raw/%d/Content-Type", imId),
+		cachedImgContentTypeKey,
 		[]byte(contentType),
 	)
+	span.Finish()
 
 	if doResize {
 		// Resize
@@ -437,16 +499,27 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		encodeResizedProcessingAverageMilliSecondsProm.Set(encodeResizedProcessingAverageMilliSeconds)
 
+		span = sentry.StartSpan(sentryCtx, "cache.put")
+		cachedImgKey = fmt.Sprintf("data/img/%s/%d", variant, imId)
+		span.SetData("cache.key", cachedImgKey)
+		span.SetData("cache.item_size", len(webpBytes))
 		_ = byteCacheManager.Set(
 			cacheCtx,
-			fmt.Sprintf("data/img/%s/%d", variant, imId),
+			cachedImgKey,
 			webpBytes,
 		)
+		span.Finish()
+
+		span = sentry.StartSpan(sentryCtx, "cache.put")
+		cachedImgContentTypeKey = fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId)
+		span.SetData("cache.key", cachedImgContentTypeKey)
+		span.SetData("cache.item_size", len("image/jpeg"))
 		_ = byteCacheManager.Set(
 			cacheCtx,
-			fmt.Sprintf("meta/img/%s/%d/Content-Type", variant, imId),
+			cachedImgContentTypeKey,
 			[]byte("image/jpeg"),
 		)
+		span.Finish()
 
 		w.Header().Set("Content-Type", "image/jpeg")
 		w.WriteHeader(http.StatusOK)
