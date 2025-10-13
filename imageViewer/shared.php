@@ -29,7 +29,7 @@ function createAndStartRenderSpan($transaction) {
         ->setOp('view.render');
     $span = $transaction->startChild($spanContext);
     \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
-    return $span
+    return $span;
 }
 
 function finishSpanAndReturn($transaction, $span) {
