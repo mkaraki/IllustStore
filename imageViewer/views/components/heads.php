@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../../_config.php';
 if (!empty(SENTRY_DSN)) : ?>
+<?= sprintf('<meta name="baggage" content="%s"/>', \Sentry\getBaggage()); ?>
+<?= sprintf('<meta name="sentry-trace" content="%s"/>', \Sentry\getTraceparent()); ?>
 <script
   src="https://browser.sentry-cdn.com/10.19.0/bundle.tracing.replay.feedback.min.js"
   integrity="sha384-92N5u8Kf3n6PjH0F76yRkyEvEF5R0At4k2Ptj7eLJQqdHD3nhhFAezd3HbpbSNo8"

@@ -147,6 +147,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		hub = sentry.CurrentHub().Clone()
 		sentryCtx = sentry.SetHubOnContext(sentryCtx, hub)
 	}
+	sentry.ContinueTrace(hub, r.Header.Get(sentry.SentryTraceHeader), r.Header.Get(sentry.SentryBaggageHeader))
 	transaction := sentry.TransactionFromContext(sentryCtx)
 
 	w.Header().Set("Access-Control-Allow-Headers", "sentry-trace, baggage, traceparent")

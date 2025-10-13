@@ -131,6 +131,9 @@ $klein->respond('GET', '/', function ($request, $response, $service, $app) {
 });
 
 $klein->respond('POST', '/util/tag/complete', function ($request, $response, $service, $app) {
+    if (isset($request->headers()['sentry-trace']) && isset($request->headers()['baggage'])) {
+        \Sentry\continueTrace($request->headers()['sentry-trace'], $request->headers()['baggage']);
+    }
     $transaction = createAndStartWebTransaction('POST /util/tag/complete');
     $queryObj = json_decode($request->body(), true);
     if (!isset($queryObj['w'])) {
@@ -438,4 +441,5 @@ require __DIR__ . '/routes/search.php';
 require __DIR__ . '/routes/metric.php';
 
 header('Document-Policy: js-profiling');
+header('Access-Control-Allow-Headers: sentry-trace, baggage');
 $klein->dispatch();
