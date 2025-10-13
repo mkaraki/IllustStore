@@ -149,6 +149,8 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	transaction := sentry.TransactionFromContext(sentryCtx)
 
+	w.Header().Set("Access-Control-Allow-Headers", "sentry-trace, baggage, traceparent")
+
 	totalStartTime := time.Now()
 	defer func(startTime time.Time) {
 		totalQueryProcessingAverageMilliSeconds, totalQueryProcessingAverageMilliSecondsCount = avgProcess(
