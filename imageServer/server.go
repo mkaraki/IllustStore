@@ -187,7 +187,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	imageId := r.PathValue("imageId")
 	imId, err := strconv.Atoi(imageId)
-	transaction.SetTag("imageId", imId)
+	transaction.SetTag("imageId", imageId)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -219,7 +219,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			span.SetData("cache.hit", false)
 			span.Finish()
 		}
-		
+
 	} else {
 		span.SetData("cache.hit", false)
 		span.Finish()
@@ -240,7 +240,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		span.Finish()
 
 		span = sentry.StartSpan(sentryCtx, "cache.get")
-		cachedImgContentTypeKey := fmt.Sprintf("meta/img/raw/%d/Content-Type", variant, imId)
+		cachedImgContentTypeKey := fmt.Sprintf("meta/img/raw/%d/Content-Type", imId)
 		span.SetData("cache.key", cachedImgContentTypeKey)
 		cachedImgContentType, cErr2 := byteCacheManager.Get(cacheCtx, cachedImgContentTypeKey)
 		if cErr2 == nil {
@@ -260,11 +260,11 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		span.Finish()
 	}
 
-	if (!isRawCached)
+	if isRawCached == false {
 		// If there are no raw level cache,
 		// read from disk
 
-		err := useDb()
+		err = useDb()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Db open fail"))
@@ -274,7 +274,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var path string
-		span = StartSpan(sentryCtx, "db.query")
+		span = sentry.StartSpan(sentryCtx, "db.query")
 		span.SetData("db.system", "mariadb")
 		span.Description = "SELECT i.path FROM illusts i WHERE i.id = ?"
 		err = db.QueryRow("SELECT i.path FROM illusts i WHERE i.id = ?", imId).Scan(&path)
@@ -366,7 +366,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	span.Finish()
 
 	span = sentry.StartSpan(sentryCtx, "cache.put")
-	cachedImgContentTypeKey = fmt.Sprintf("data/img/raw/%d/Content-Type", imId)
+	cachedImgContentTypeKey := fmt.Sprintf("data/img/raw/%d/Content-Type", imId)
 	span.SetData("cache.key", cachedImgContentTypeKey)
 	span.SetData("cache.item_size", len(contentType))
 	_ = byteCacheManager.Set(
