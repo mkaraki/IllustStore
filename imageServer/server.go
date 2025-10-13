@@ -298,7 +298,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		contentType = getContentTypeFromExtension(imgExt)
 		transaction.SetTag("imgContentType", contentType)
 
+		span = sentry.StartSpan(sentryCtx, "file.open")
+		span.SetData("file.path", path)
 		fp, err := os.OpenFile(path, os.O_RDONLY, 0666)
+		span.Finish()
 		defer func(fp *os.File) {
 			_ = fp.Close()
 		}(fp)
@@ -340,7 +343,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			leptonProcessingAverageMilliSecondsProm.Set(leptonProcessingAverageMilliSeconds)
 		default:
+			span = sentry.StartSpan(sentryCtx, "file.read")
+			span.SetData("file.path", path)
 			_, err = io.Copy(readBuff, fp)
+			span.Finish()
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte("Unable to read file"))
