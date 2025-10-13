@@ -18,16 +18,18 @@ function createAndStartDbSpan($transaction, $sql) {
         ->setData([
             'db.system' => 'mariadb'
         ]);
-    $transaction->startChild($spanContext);
-    \Sentry\SentrySdk::getCurrentHub()->setSpan($spanContext);
+    $span = $transaction->startChild($spanContext);
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+    return $span;
 }
 
 function createAndStartRenderSpan($transaction) {
     # See: https://develop.sentry.dev/sdk/telemetry/traces/span-operations/
     $spanContext = \Sentry\Tracing\SpanContext::make()
         ->setOp('view.render');
-    $transaction->startChild($spanContext);
-    \Sentry\SentrySdk::getCurrentHub()->setSpan($spanContext);
+    $span = $transaction->startChild($spanContext);
+    \Sentry\SentrySdk::getCurrentHub()->setSpan($span);
+    return $span
 }
 
 function finishSpanAndReturn($transaction, $span) {
