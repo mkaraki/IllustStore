@@ -72,19 +72,6 @@ func getContentTypeFromExtension(requestExtension string) string {
 	return contentType
 }
 
-var imgCacheHitRate float64 = 0.0
-var imgCacheHitRateCount float64 = 1.0
-var imgCacheHitRateProm = promauto.NewGauge(prometheus.GaugeOpts{
-	Name: "image_cache_hit_rate",
-	Help: "Variant level image cache hit rate",
-})
-var imgRawCacheHitRate float64 = 0.0
-var imgRawCacheHitRateCount float64 = 0.0
-var imgRawCacheHitRateProm prometheus.Gauge = promauto.NewGauge(prometheus.GaugeOpts{
-	Name: "image_raw_cache_hit_rate",
-	Help: "Raw image cache hit rate",
-})
-
 var leptonProcessingAverageMilliSeconds float64 = 0.0
 var leptonProcessingAverageMilliSecondsCount float64 = 0.0
 var leptonProcessingAverageMilliSecondsProm = promauto.NewGauge(prometheus.GaugeOpts{
@@ -227,10 +214,6 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", string(cachedImgContentType))
 			w.WriteHeader(http.StatusOK)
 			_, _ = io.Copy(w, bytes.NewReader(cachedImg))
-
-			imgCacheHitRate, imgCacheHitRateCount = avgProcess(imgCacheHitRate, imgCacheHitRateCount, 1.0)
-			imgCacheHitRateProm.Set(imgCacheHitRate)
-
 			return
 		} else {
 			span.SetData("cache.hit", false)
@@ -241,9 +224,6 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		span.SetData("cache.hit", false)
 		span.Finish()
 	}
-
-	imgCacheHitRate, imgCacheHitRateCount = avgProcess(imgCacheHitRate, imgCacheHitRateCount, 0.0)
-	imgCacheHitRateProm.Set(imgCacheHitRate)
 
 	// Prepare for raw image reading
 	readBuff := &bytes.Buffer{}
@@ -270,9 +250,6 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			_, _ = io.Copy(readBuff, bytes.NewReader(cachedImg))
 			contentType = string(cachedImgContentType)
 
-			imgRawCacheHitRate, imgRawCacheHitRateCount = avgProcess(imgRawCacheHitRate, imgRawCacheHitRateCount, 1.0)
-			imgRawCacheHitRateProm.Set(imgRawCacheHitRate)
-
 			isRawCached = true
 		} else {
 			span.SetData("cache.hit", false)
@@ -286,9 +263,6 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	if (!isRawCached)
 		// If there are no raw level cache,
 		// read from disk
-
-		imgRawCacheHitRate, imgRawCacheHitRateCount = avgProcess(imgRawCacheHitRate, imgRawCacheHitRateCount, 0.0)
-		imgRawCacheHitRateProm.Set(imgRawCacheHitRate)
 
 		err = useDb()
 		if err != nil {
