@@ -140,8 +140,8 @@ $klein->respond('GET', '/search', function ($request, $response, $service, $app)
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 100,
     ]);
-    $transaction->finish();
     finishSpanAndReturn($transaction, $span);
+    $transaction->finish();
 });
 
 $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $response, $service, $app) {

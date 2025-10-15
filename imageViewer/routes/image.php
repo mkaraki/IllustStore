@@ -123,6 +123,7 @@ $klein->respond('GET', '/image/[i:imageId]', function ($request, $response, $ser
         'colorHash' => $img['colorHash'],
         'metadata' => $metadata,
     ]);
+    $transaction->finish();
 });
 
 $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $response, $service, $app) {
@@ -205,6 +206,7 @@ $klein->respond('GET', '/image/[i:imageId]/duplicate', function ($request, $resp
         'pageType' => 'duplicate',
         'images' => $duplicates,
     ]);
+    $transaction->finish();
 });
 
 $klein->respond('GET', '/image/[i:imageId]/neighbor', function ($request, $response, $service, $app) {
@@ -273,4 +275,5 @@ $klein->respond('GET', '/image/[i:imageId]/neighbor', function ($request, $respo
         'pageType' => 'neighbor',
         'images' => $neighbor_image,
     ]);
+    $transaction->finish();
 });
