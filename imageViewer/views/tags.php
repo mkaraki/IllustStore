@@ -39,6 +39,7 @@ $maxCount = DB::queryFirstField(
 );
 
 $maxCount = doubleval($maxCount);
+if ($maxCount == 0) { $maxCount = 1; }
 $calcMaxCount = $maxCount - 1.0;
 $usableSize = 20.0;
 $initSize = 12.0;
@@ -60,8 +61,10 @@ $initSize = 12.0;
         <a href="/tag/new">New tag</a> | <a href="/tag/pending">Tagging queue</a>
     </header>
     <ul class="forever-ul tag-cloud">
-        <?php foreach ($res as $v) : ?>
-            <li><a href="/tag/<?= $v['id'] ?>" style="font-size: <?= $initSize + ((-pow((doubleval($v['count']) / $maxCount) - 1, 2) + 1) * $usableSize) ?>pt"><?= htmlentities($v['tagName']) ?></a> (<?= $v['count'] ?>)</li>
+        <?php foreach ($res as $v) : 
+        $fontSize = $initSize + ((-pow((doubleval($v['count']) / $maxCount) - 1, 2) + 1) * $usableSize);
+        ?>
+            <li><a href="/tag/<?= $v['id'] ?>" style="font-size: <?= $fontSize ?>pt"><?= htmlentities($v['tagName']) ?></a> (<?= $v['count'] ?? 0 ?>)</li>
         <?php endforeach; ?>
     </ul>
     <footer>
