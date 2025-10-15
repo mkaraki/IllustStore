@@ -734,6 +734,7 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
 $klein->respond('GET', '/tag/assistant', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /tag/assistant');
     $service->render(__DIR__ . '/views/tagAssistant.php', [
+        'transaction' => $transaction,
     ]);
     $transaction->finish();
 });
