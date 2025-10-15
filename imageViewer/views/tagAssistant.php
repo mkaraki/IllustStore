@@ -13,6 +13,6 @@ require_once __DIR__ . '/components/tagging_assistant.php';
 </head>
 
 <body>
-    <?= component_tag_assistant_loader() ?>
+    <?= component_tag_assistant_loader($this->transaction) ?>
 </body>
 </html>

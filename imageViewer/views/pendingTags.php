@@ -27,34 +27,6 @@ require __DIR__ . '/components/tag_list.php';
             </thead>
             <tbody>
                 <?php foreach ($this->pendingTags as $i) : ?>
-                    <?php
-                    $tags = DB::query(
-                        'SELECT
-                            tA.tagId AS id,
-                            t.tagName,
-                            tA.autoAssigned
-                        FROM
-                            tagAssign tA,
-                            tags t
-                        WHERE
-                            tA.tagId = t.id AND
-                            tA.illustId = %i
-                        ORDER BY t.tagName',
-                        $i['imageId'],
-                    );
-                    $negativeTags = DB::query(
-                        'SELECT
-                            tNA.tagId AS id,
-                            t.tagName
-                        FROM
-                            tagNegativeAssign tNA,
-                            tags t
-                        WHERE
-                            tNA.tagId = t.id AND
-                            tNA.illustId = %i',
-                        $i['imageId'],
-                    )
-                    ?>
                     <tr>
                         <td>
                             <?= component_image_thumb_simple_go_raw($i['imageId']) ?>
@@ -63,11 +35,11 @@ require __DIR__ . '/components/tag_list.php';
                             <dl>
                                 <dt>Tags</dt>
                                 <dd>
-                                    <?= component_tag_list($tags, true, $i['imageId'], $this->paginationNow) ?>
+                                    <?= component_tag_list($i['tags'], true, $i['imageId'], $this->paginationNow) ?>
                                 </dd>
                                 <dt>Negative Tags</dt>
                                 <dd>
-                                    <?= component_negative_tag_list($negativeTags, true, $i['imageId'], $this->paginationNow) ?>
+                                    <?= component_negative_tag_list($i['negativeTags'], true, $i['imageId'], $this->paginationNow) ?>
                                 </dd>
                             </dl>
                         </td>

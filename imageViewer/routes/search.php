@@ -57,7 +57,7 @@ $klein->respond('GET', '/search', function ($request, $response, $service, $app)
             WHERE
                 tA.tagId = t.id AND
                 tA.illustId = i.id AND
-                tagId IN ?
+                tagId IN (?)
             GROUP BY i.id
             HAVING COUNT(i.id) = ?
             LIMIT 1');
@@ -97,7 +97,7 @@ $klein->respond('GET', '/search', function ($request, $response, $service, $app)
             WHERE
                 tA.tagId = t.id AND
                 tA.illustId = i.id AND
-                (tagId IN ?)
+                (tagId IN (?))
             GROUP BY i.id
             HAVING COUNT(i.id) = ?
             ORDER BY id DESC
@@ -140,8 +140,8 @@ $klein->respond('GET', '/search', function ($request, $response, $service, $app)
         'paginationItemStart' => $sttIdx,
         'paginationItemEnd' => $sttIdx + 100,
     ]);
-    $transaction->finish();
     finishSpanAndReturn($transaction, $span);
+    $transaction->finish();
 });
 
 $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $response, $service, $app) {
@@ -186,6 +186,12 @@ $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $respons
 
     if ($exact)
     {
+        $span = createAndStartDbSpan($transaction, "SELECT
+                COUNT(i.id)
+            FROM
+                illusts i
+            WHERE
+                i.$hashType = CONV(%s, 16, 10)");
         $imageCnt = DB::queryFirstField(
             "SELECT
                 COUNT(i.id)
@@ -195,9 +201,16 @@ $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $respons
                 i.$hashType = CONV(%s, 16, 10)",
             $request->hash,
         );
+        finishSpanAndReturn($transaction, $span);
     }
     else
     {
+        $span = createAndStartDbSpan($transaction, "SELECT
+                    COUNT(i.id)
+                FROM
+                    illusts i
+                WHERE
+                    BIT_COUNT(i.$hashType ^ CONV(%s, 16, 10)) < %s");
         $imageCnt = DB::queryFirstField(
             "SELECT
                     COUNT(i.id)
@@ -208,6 +221,7 @@ $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $respons
             $request->hash,
             $threshold,
         );
+        finishSpanAndReturn($transaction, $span);
     }
 
     $p = $_GET['p'] ?? '1';
@@ -217,6 +231,17 @@ $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $respons
 
     if ($exact)
     {
+        $span = createAndStartDbSpan($transaction, "SELECT
+                i.id,
+                i.width,
+                i.height
+            FROM
+                illusts i
+            WHERE
+                i.$hashType = CONV(%s, 16, 10)
+            ORDER BY i.id DESC
+            LIMIT 100
+            OFFSET %s");
         $images = DB::query(
             "SELECT
                 i.id,
@@ -232,9 +257,22 @@ $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $respons
             $request->hash,
             $sttIdx
         );
+        finishSpanAndReturn($transaction, $span);
     }
     else
     {
+        $span = createAndStartDbSpan($transaction, "SELECT
+                i.id,
+                i.width,
+                i.height,
+                BIT_COUNT(i.$hashType ^ CONV(%s, 16, 10)) AS similarity
+            FROM
+                illusts i
+            WHERE
+                BIT_COUNT(i.$hashType ^ CONV(%s, 16, 10)) < %s
+            ORDER BY similarity
+            LIMIT 100
+            OFFSET %s");
         $images = DB::query(
             "SELECT
                 i.id,
@@ -253,6 +291,7 @@ $klein->respond('GET', '/search/[s:type]/[s:hash]', function ($request, $respons
             $threshold,
             $sttIdx
         );
+        finishSpanAndReturn($transaction, $span);
     }
 
     $service->render(__DIR__ . '/../views/images.php', [

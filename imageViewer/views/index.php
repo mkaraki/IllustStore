@@ -36,7 +36,7 @@ require_once __DIR__ . '/components/image_thumbs.php'
     <div>
         Random tags
         <ul class="forever-ul">
-            <?php foreach (DB::query('SELECT * FROM tags ORDER BY RAND() LIMIT 7') as $v) : ?>
+            <?php foreach ($this->randomTags as $v) : ?>
                 <li><a href="/tag/<?= $v['id'] ?>"><?= htmlentities($v['tagName']) ?></a></li>
             <?php endforeach; ?>
             <li><a href="/tag/">more...</a></li>
@@ -44,29 +44,7 @@ require_once __DIR__ . '/components/image_thumbs.php'
     </div>
     <div>
         <?php
-        $nonTaggedImageAndTag = DB::queryFirstRow(
-            'SELECT
-                res.imageId,
-                res.tagId,
-                res.tagName
-            FROM
-                (
-                    SELECT
-                        tA.illustId AS imageId,
-                        tA.tagId AS tagId,
-                        t.tagName AS tagName
-                    FROM
-                        tagAssign tA,
-                        tags t
-                    WHERE
-                        tA.autoAssigned = 1 AND
-                        t.id = tA.tagId
-                    LIMIT 5000
-                ) res
-            ORDER BY
-                RAND()
-            LIMIT 1'
-        );
+        $nonTaggedImageAndTag = $this->nonTaggedImageAndTag;
         ?>
         <?php if ($nonTaggedImageAndTag !== null) : ?>
             Tagging
@@ -119,10 +97,7 @@ require_once __DIR__ . '/components/image_thumbs.php'
     </div>
     <div>
         <?php
-        $im_count = DB::queryFirstField(
-            'SELECT COUNT(*) FROM illusts'
-        );
-        $im_count = number_format($im_count);
+        $im_count = number_format($this->imCount);
         ?>
         - or -<br />
         <a href="/image/">See all <?= htmlspecialchars($im_count) ?> images</a>
@@ -140,7 +115,7 @@ require_once __DIR__ . '/components/image_thumbs.php'
                 return;
             let sentryTraceHeader = undefined;
             let sentryBaggageHeader = undefined;
-            if (Sentry) {
+            if (typeof Sentry !== 'undefined') {
                 const traceData = Sentry.getTraceData();
                 sentryTraceHeader = traceData['sentry-trace'];
                 sentryBaggageHeader = traceData['baggage'];
