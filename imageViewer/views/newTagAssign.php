@@ -1,13 +1,5 @@
 <?php
-$selectableTags = [];
-if (count($this->tags) > 0) {
-    $assignedTags = [];
-    foreach ($this->tags as $t)
-        $assignedTags[] = $t['id'];
-    $selectableTags = DB::query('SELECT id, tagName FROM tags WHERE id NOT IN %li ORDER BY tagName', $assignedTags);
-} else {
-    $selectableTags = DB::query('SELECT id, tagName FROM tags ORDER BY tagName');
-}
+$selectableTags = $this->selectableTags;
 
 require_once __DIR__ . '/components/image_thumbs.php';
 require_once __DIR__ . '/components/tag_list.php';
@@ -64,11 +56,21 @@ require_once __DIR__ . '/components/tag_list.php';
             'w': newTag.value
         })
 
+        let sentryTraceHeader = undefined;
+        let sentryBaggageHeader = undefined;
+        if (typeof Sentry !== 'undefined') {
+            const traceData = Sentry.getTraceData();
+            sentryTraceHeader = traceData['sentry-trace'];
+            sentryBaggageHeader = traceData['baggage'];
+        }
+
         fetch('/util/tag/complete', {
             'method': 'POST',
             body: sendBody,
             headers: {
                 "Content-Type": "application/json",
+                "baggage": sentryBaggageHeader,
+                "sentry-trace": sentryTraceHeader,
             },
         })
             .then(d => d.json())

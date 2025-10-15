@@ -404,11 +404,26 @@ $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $respo
     );
     finishSpanAndReturn($transaction, $span);
 
+    $selectableTags = [];
+    if (count($tags) > 0) {
+        $assignedTags = [];
+        foreach ($tags as $t)
+            $assignedTags[] = $t['id'];
+        $span = createAndStartDbSpan($transaction, 'SELECT id, tagName FROM tags WHERE id NOT IN ? ORDER BY tagName');
+        $selectableTags = DB::query('SELECT id, tagName FROM tags WHERE id NOT IN %li ORDER BY tagName', $assignedTags);
+        finishSpanAndReturn($transaction, $span);
+    } else {
+        $span = createAndStartDbSpan($transaction, 'SELECT id, tagName FROM tags ORDER BY tagName');
+        $selectableTags = DB::query('SELECT id, tagName FROM tags ORDER BY tagName');
+        finishSpanAndReturn($transaction, $span);
+    }
+
     $service->render(__DIR__ . '/views/newTagAssign.php', [
         'imageId' => $request->illustId,
         'srvPath' => $img['path'],
         'tags' => $tags,
         'pending' => intval($_GET['pending'] ?? '0'),
+        'selectableTags' => $selectableTags,
     ]);
     $transaction->finish();
 });
@@ -652,6 +667,58 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
         $sttIdx
     );
     finishSpanAndReturn($transaction, $span);
+
+    foreach ($pendingTags as $k => $i) {
+        $span = createAndStartDbSpan($transaction, 'SELECT
+                            tA.tagId AS id,
+                            t.tagName,
+                            tA.autoAssigned
+                        FROM
+                            tagAssign tA,
+                            tags t
+                        WHERE
+                            tA.tagId = t.id AND
+                            tA.illustId = ?
+                        ORDER BY t.tagName');
+        $pendingTags[$k]['tags'] = DB::query(
+            'SELECT
+                            tA.tagId AS id,
+                            t.tagName,
+                            tA.autoAssigned
+                        FROM
+                            tagAssign tA,
+                            tags t
+                        WHERE
+                            tA.tagId = t.id AND
+                            tA.illustId = %i
+                        ORDER BY t.tagName',
+            $i['imageId'],
+        );
+        finishSpanAndReturn($transaction, $span);
+
+        $span = createAndStartDbSpan($transaction, 'SELECT
+                            tNA.tagId AS id,
+                            t.tagName
+                        FROM
+                            tagNegativeAssign tNA,
+                            tags t
+                        WHERE
+                            tNA.tagId = t.id AND
+                            tNA.illustId = ?');
+        $pendingTags[$k]['negativeTags'] = DB::query(
+                        'SELECT
+                            tNA.tagId AS id,
+                            t.tagName
+                        FROM
+                            tagNegativeAssign tNA,
+                            tags t
+                        WHERE
+                            tNA.tagId = t.id AND
+                            tNA.illustId = %i',
+                        $i['imageId'],
+                    );
+        finishSpanAndReturn($transaction, $span);
+    }
 
     $service->render(__DIR__ . '/views/pendingTags.php', [
         'pendingTags' => $pendingTags,

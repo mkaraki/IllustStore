@@ -115,7 +115,7 @@ require_once __DIR__ . '/components/image_thumbs.php'
                 return;
             let sentryTraceHeader = undefined;
             let sentryBaggageHeader = undefined;
-            if (Sentry) {
+            if (typeof Sentry !== 'undefined') {
                 const traceData = Sentry.getTraceData();
                 sentryTraceHeader = traceData['sentry-trace'];
                 sentryBaggageHeader = traceData['baggage'];
