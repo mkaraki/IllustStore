@@ -16,19 +16,18 @@ $klein = new \Klein\Klein();
 $klein->respond('GET', '/image/', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /image/');
 
+    $span = createAndStartDbSpan($transaction, 'SELECT COUNT(id) FROM illusts');
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(id) FROM illusts'
     );
+    finishSpanAndReturn($transaction, $span);
 
     $p = $_GET['p'] ?? '1';
     $p = intval($p);
     $sttIdx = ($p - 1) * 100;
     $maxPage = ceil(doubleval($imageCnt) / 100.0);
 
-    $service->render(__DIR__ . '/views/images.php', [
-        'searchParam' => '*',
-        'images' => DB::query(
-            'SELECT
+    $span = createAndStartDbSpan($transaction, 'SELECT
                 i.id,
                 i.width,
                 i.height
@@ -36,9 +35,24 @@ $klein->respond('GET', '/image/', function ($request, $response, $service, $app)
                 illusts i
             ORDER BY i.id DESC
             LIMIT 100
-            OFFSET %i',
-            $sttIdx
-        ),
+            OFFSET ?');
+    $images = DB::query(
+        'SELECT
+            i.id,
+            i.width,
+            i.height
+        FROM
+            illusts i
+        ORDER BY i.id DESC
+        LIMIT 100
+        OFFSET %i',
+        $sttIdx
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $service->render(__DIR__ . '/views/images.php', [
+        'searchParam' => '*',
+        'images' => $images,
         'paginationTotal' => $maxPage,
         'paginationNow' => $p,
         'paginationItemCount' => $imageCnt,
@@ -52,14 +66,88 @@ require __DIR__ . '/routes/image.php';
 
 $klein->respond('GET', '/tag/', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /tag/');
-    $service->render(__DIR__ . '/views/tags.php');
+
+    $page = intval($_GET['p'] ?? 1);
+    if ($page < 1) {
+        $page = 1;
+    }
+
+    $limit = 500;
+    $offset = ($page - 1) * $limit;
+
+    $span = createAndStartDbSpan($transaction, 'SELECT
+        t.id,
+        t.tagName,
+        (
+            SELECT
+                COUNT(tA.tagId) AS count
+            FROM
+                tagAssign tA
+            WHERE
+                t.id = tA.tagId
+            GROUP BY 
+                tA.tagId
+        ) AS count
+    FROM
+        tags t
+    ORDER BY
+        t.tagName ASC
+    LIMIT ? OFFSET ?');
+    $res = DB::query(
+        'SELECT
+        t.id,
+        t.tagName,
+        (
+            SELECT
+                COUNT(tA.tagId) AS count
+            FROM
+                tagAssign tA
+            WHERE
+                t.id = tA.tagId
+            GROUP BY 
+                tA.tagId
+        ) AS count
+    FROM
+        tags t
+    ORDER BY
+        t.tagName ASC
+    LIMIT %i OFFSET %i',
+        $limit,
+        $offset
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT COUNT(id) FROM tags');
+    $tags = DB::queryFirstField(
+        'SELECT COUNT(id) FROM tags'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT MAX(cntHost.cnt) FROM (SELECT COUNT(tagId) AS cnt FROM tagAssign GROUP BY tagId) cntHost;');
+    $maxCount = DB::queryFirstField(
+        'SELECT MAX(cntHost.cnt) FROM (SELECT COUNT(tagId) AS cnt FROM tagAssign GROUP BY tagId) cntHost;'
+    );
+    finishSpanAndReturn($transaction, $span);
+    $maxCount = doubleval($maxCount);
+
+
+    $service->render(__DIR__ . '/views/tags.php', [
+        'res' => $res,
+        'page' => $page,
+        'offset' => $offset,
+        'limit' => $limit,
+        'tags' => $tags,
+        'maxCount' => $maxCount,
+    ]);
     $transaction->finish();
 });
 
 $klein->respond('GET', '/tag/[i:tagId]', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /tag/[i:tagId]');
 
+    $span = createAndStartDbSpan($transaction, 'SELECT * FROM tags WHERE id = ?');
     $tagData = DB::queryFirstRow('SELECT * FROM tags WHERE id = %i', $request->tagId);
+    finishSpanAndReturn($transaction, $span);
 
     if ($tagData === null) {
         $response->code(404);
@@ -67,16 +155,31 @@ $klein->respond('GET', '/tag/[i:tagId]', function ($request, $response, $service
         return;
     }
 
+    $span = createAndStartDbSpan($transaction, 'SELECT COUNT(tA.illustId) FROM tagAssign tA WHERE tA.tagId = ?');
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(tA.illustId) FROM tagAssign tA WHERE tA.tagId = %i',
         $request->tagId
     );
+    finishSpanAndReturn($transaction, $span);
 
     $p = $_GET['p'] ?? '1';
     $p = intval($p);
     $sttIdx = ($p - 1) * 100;
     $maxPage = ceil(doubleval($imageCnt) / 100.0);
 
+    $span = createAndStartDbSpan($transaction, 'SELECT
+                tA.illustId AS id,
+                i.width AS width,
+                i.height AS height
+            FROM
+                tagAssign tA,
+                illusts i
+            WHERE
+                tA.tagId = ? AND
+                tA.illustId = i.id
+            ORDER BY tA.illustId DESC
+            LIMIT 100
+            OFFSET ?');
     $images = DB::query(
         'SELECT
                 tA.illustId AS id,
@@ -94,6 +197,7 @@ $klein->respond('GET', '/tag/[i:tagId]', function ($request, $response, $service
         $request->tagId,
         $sttIdx
     );
+    finishSpanAndReturn($transaction, $span);
 
     $service->render(__DIR__ . '/views/images.php', [
         'searchParam' => 'tag:' . $service->escape($tagData['tagName']),
@@ -115,17 +219,89 @@ $klein->respond('GET', '/tag/[i:tagId]', function ($request, $response, $service
 
 $klein->respond('GET', '/', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /');
-    $service->render(__DIR__ . '/views/index.php', [
-        'images' => DB::query(
-            'SELECT
+    $span = createAndStartDbSpan($transaction, 'SELECT
                 i.id,
                 i.width,
                 i.height
             FROM
                 illusts i
             ORDER BY RAND()
-            LIMIT 20'
-        ),
+            LIMIT 20');
+    $images = DB::query(
+        'SELECT
+            i.id,
+            i.width,
+            i.height
+        FROM
+            illusts i
+        ORDER BY RAND()
+        LIMIT 20'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT * FROM tags ORDER BY RAND() LIMIT 7');
+    $randomTags = DB::query(
+        'SELECT * FROM tags ORDER BY RAND() LIMIT 7'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT
+                res.imageId,
+                res.tagId,
+                res.tagName
+            FROM
+                (
+                    SELECT
+                        tA.illustId AS imageId,
+                        tA.tagId AS tagId,
+                        t.tagName AS tagName
+                    FROM
+                        tagAssign tA,
+                        tags t
+                    WHERE
+                        tA.autoAssigned = 1 AND
+                        t.id = tA.tagId
+                    LIMIT 5000
+                ) res
+            ORDER BY
+                RAND()
+            LIMIT 1');
+    $nonTaggedImageAndTag = DB::queryFirstRow(
+        'SELECT
+                res.imageId,
+                res.tagId,
+                res.tagName
+            FROM
+                (
+                    SELECT
+                        tA.illustId AS imageId,
+                        tA.tagId AS tagId,
+                        t.tagName AS tagName
+                    FROM
+                        tagAssign tA,
+                        tags t
+                    WHERE
+                        tA.autoAssigned = 1 AND
+                        t.id = tA.tagId
+                    LIMIT 5000
+                ) res
+            ORDER BY
+                RAND()
+            LIMIT 1'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT COUNT(*) FROM illusts');
+    $im_count = DB::queryFirstField(
+        'SELECT COUNT(*) FROM illusts'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $service->render(__DIR__ . '/views/index.php', [
+        'images' => $images,
+        'randomTags' => $randomTags,
+        'nonTaggedImageAndTag' => $nonTaggedImageAndTag,
+        'imCount' => $im_count,
     ]);
     $transaction->finish();
 });
@@ -141,14 +317,18 @@ $klein->respond('POST', '/util/tag/complete', function ($request, $response, $se
         $transaction->finish();
         return;
     }
+    $span = createAndStartDbSpan($transaction, 'SELECT tagName FROM tags WHERE tagName LIKE ?');
     $res = DB::queryFirstColumn("SELECT tagName FROM tags WHERE tagName LIKE %ss", $queryObj['w']);
+    finishSpanAndReturn($transaction, $span);
     $response->json(['sw' => $res]);
     $transaction->finish();
 });
 
 $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/delete', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('POST /image/[i:illustId]/tag/[i:tagId]/delete');
+    $span = createAndStartDbSpan($transaction, 'SELECT * FROM tagNegativeAssign WHERE illustId = ? AND tagId = ?');
     $isNegativeExists = DB::queryFirstRow('SELECT * FROM tagNegativeAssign WHERE illustId = %i AND tagId = %i', $request->illustId, $request->tagId);
+    finishSpanAndReturn($transaction, $span);
     if ($isNegativeExists === null) {
         DB::insert('tagNegativeAssign', [
             'illustId' => $request->illustId,
@@ -188,18 +368,16 @@ $klein->respond('POST', '/image/[i:illustId]/tag/[i:tagId]/approve', function ($
 
 $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /image/[i:illustId]/tag/new');
+    $span = createAndStartDbSpan($transaction, 'SELECT path FROM illusts WHERE id = ?');
     $img = DB::queryFirstRow('SELECT path FROM illusts WHERE id = %i', $request->illustId);
+    finishSpanAndReturn($transaction, $span);
     if ($img === null) {
         $response->code(404);
         $transaction->finish();
         return;
     }
 
-    $service->render(__DIR__ . '/views/newTagAssign.php', [
-        'imageId' => $request->illustId,
-        'srvPath' => $img['path'],
-        'tags' => DB::query(
-            'SELECT
+    $span = createAndStartDbSpan($transaction, 'SELECT
                 tA.tagId AS id,
                 t.tagName,
                 tA.autoAssigned
@@ -208,11 +386,44 @@ $klein->respond('GET', '/image/[i:illustId]/tag/new', function ($request, $respo
                 tags t
             WHERE
                 tA.tagId = t.id AND
-                tA.illustId = %i
-            ORDER BY t.tagName',
-            $request->illustId,
-        ),
+                tA.illustId = ?
+            ORDER BY t.tagName');
+    $tags = DB::query(
+        'SELECT
+            tA.tagId AS id,
+            t.tagName,
+            tA.autoAssigned
+        FROM
+            tagAssign tA,
+            tags t
+        WHERE
+            tA.tagId = t.id AND
+            tA.illustId = %i
+        ORDER BY t.tagName',
+        $request->illustId,
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $selectableTags = [];
+    if (count($tags) > 0) {
+        $assignedTags = [];
+        foreach ($tags as $t)
+            $assignedTags[] = $t['id'];
+        $span = createAndStartDbSpan($transaction, 'SELECT id, tagName FROM tags WHERE id NOT IN ? ORDER BY tagName');
+        $selectableTags = DB::query('SELECT id, tagName FROM tags WHERE id NOT IN %li ORDER BY tagName', $assignedTags);
+        finishSpanAndReturn($transaction, $span);
+    } else {
+        $span = createAndStartDbSpan($transaction, 'SELECT id, tagName FROM tags ORDER BY tagName');
+        $selectableTags = DB::query('SELECT id, tagName FROM tags ORDER BY tagName');
+        finishSpanAndReturn($transaction, $span);
+    }
+
+    $service->render(__DIR__ . '/views/newTagAssign.php', [
+        'imageId' => $request->illustId,
+        'srvPath' => $img['path'],
+        'tags' => $tags,
         'pending' => intval($_GET['pending'] ?? '0'),
+        'selectableTags' => $selectableTags,
     ]);
     $transaction->finish();
 });
@@ -226,14 +437,18 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
         return;
     }
 
+    $span = createAndStartDbSpan($transaction, 'SELECT i.id, i.path FROM illusts i WHERE id = ?');
     $img = DB::queryFirstRow('SELECT i.id, i.path FROM illusts i WHERE id = %i', $request->illustId);
+    finishSpanAndReturn($transaction, $span);
     if ($img === null) {
         $response->code(404);
         $transaction->finish();
         return;
     }
 
+    $span = createAndStartDbSpan($transaction, 'SELECT t.id FROM tags t WHERE t.tagName = ?');
     $tagData = DB::queryFirstRow('SELECT t.id FROM tags t WHERE t.tagName = %s', $newTag);
+    finishSpanAndReturn($transaction, $span);
     if ($tagData === null) {
         $response->code(404);
         $transaction->finish();
@@ -246,11 +461,13 @@ $klein->respond('POST', '/image/[i:illustId]/tag/new', function ($request, $resp
         'autoAssigned' => false,
     ]);
 
+    $span = createAndStartDbSpan($transaction, 'SELECT * FROM tagNegativeAssign WHERE illustId = ? AND tagId = ?');
     $isNegativeExists = DB::queryFirstRow(
         'SELECT * FROM tagNegativeAssign WHERE illustId = %i AND tagId = %i',
         $img['id'],
         $tagData['id']
     );
+    finishSpanAndReturn($transaction, $span);
     if ($isNegativeExists !== null) {
         DB::delete('tagNegativeAssign', [
             'illustId' => $img['id'],
@@ -287,7 +504,9 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
         return 'Tag Name must not contains white space';
     }
 
+    $span = createAndStartDbSpan($transaction, 'SELECT id FROM tags WHERE tagName = ?');
     $searchTag = DB::queryFirstRow('SELECT id FROM tags WHERE tagName = %s', $tagName);
+    finishSpanAndReturn($transaction, $span);
     if ($searchTag !== null) {
         $response->code(400);
         $transaction->finish();
@@ -317,6 +536,18 @@ $klein->respond('POST', '/tag/new', function ($request, $response, $service, $ap
 
 $klein->respond('GET', '/tag/[i:tagId]/edit', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /tag/[i:tagId]/edit');
+    $span = createAndStartDbSpan($transaction, 'SELECT 
+        t.id,
+        t.tagName,
+        t.tagDanbooru,
+        t.tagPixivJpn,
+        t.tagPixivEng,
+        t.description,
+        t.taggingNote,
+        t.aliasOf,
+        t.tagGroup,
+        t.selectiveTagGroup
+     FROM tags t WHERE t.id = ?');
     $tagInfo = DB::queryFirstRow('SELECT 
         t.id,
         t.tagName,
@@ -329,6 +560,7 @@ $klein->respond('GET', '/tag/[i:tagId]/edit', function ($request, $response, $se
         t.tagGroup,
         t.selectiveTagGroup
      FROM tags t WHERE t.id = %i', $request->tagId);
+    finishSpanAndReturn($transaction, $span);
 
     if ($tagInfo === null) {
         $response->code(404);
@@ -357,7 +589,9 @@ function empty_to_null(string|null $value): string|null {
 
 $klein->respond('POST', '/tag/[i:tagId]/edit', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('POST /tag/[i:tagId]/edit');
+    $span = createAndStartDbSpan($transaction, 'SELECT t.id FROM tags t WHERE t.id = ?');
     $tagExists = DB::queryFirstField('SELECT t.id FROM tags t WHERE t.id = %i', $request->tagId);
+    finishSpanAndReturn($transaction, $span);
     if ($tagExists === null) {
         $response->code(404);
         $transaction->finish();
@@ -370,7 +604,9 @@ $klein->respond('POST', '/tag/[i:tagId]/edit', function ($request, $response, $s
         return;
     }
 
+    $span = createAndStartDbSpan($transaction, 'SELECT t.id FROM tags t WHERE t.id <> ? AND t.tagName = ?');
     $tagNameAlreadyInUse = DB::queryFirstField('SELECT t.id FROM tags t WHERE t.id <> %i AND t.tagName = %s', $request->tagId, $_POST['tagName']);
+    finishSpanAndReturn($transaction, $span);
     if ($tagNameAlreadyInUse !== null) {
         $response->code(404);
         $transaction->finish();
@@ -396,15 +632,27 @@ $klein->respond('POST', '/tag/[i:tagId]/edit', function ($request, $response, $s
 
 $klein->respond('GET', '/tag/pending', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /tag/pending');
+    $span = createAndStartDbSpan($transaction, 'SELECT COUNT(DISTINCT tA.illustId) FROM tagAssign tA WHERE tA.autoAssigned = TRUE');
     $imageCnt = DB::queryFirstField(
         'SELECT COUNT(DISTINCT tA.illustId) FROM tagAssign tA WHERE tA.autoAssigned = TRUE'
     );
+    finishSpanAndReturn($transaction, $span);
 
     $p = $_GET['p'] ?? '1';
     $p = intval($p);
     $sttIdx = ($p - 1) * 30;
     $maxPage = ceil(doubleval($imageCnt) / 30.0);
 
+    $span = createAndStartDbSpan($transaction, 'SELECT
+                tA.illustId AS imageId
+            FROM
+                tagAssign tA
+            WHERE
+                tA.autoAssigned = TRUE
+            GROUP BY
+                tA.illustId
+            LIMIT 30
+            OFFSET ?');
     $pendingTags = DB::query(
         'SELECT
                 tA.illustId AS imageId
@@ -418,6 +666,59 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
             OFFSET %i',
         $sttIdx
     );
+    finishSpanAndReturn($transaction, $span);
+
+    foreach ($pendingTags as $k => $i) {
+        $span = createAndStartDbSpan($transaction, 'SELECT
+                            tA.tagId AS id,
+                            t.tagName,
+                            tA.autoAssigned
+                        FROM
+                            tagAssign tA,
+                            tags t
+                        WHERE
+                            tA.tagId = t.id AND
+                            tA.illustId = ?
+                        ORDER BY t.tagName');
+        $pendingTags[$k]['tags'] = DB::query(
+            'SELECT
+                            tA.tagId AS id,
+                            t.tagName,
+                            tA.autoAssigned
+                        FROM
+                            tagAssign tA,
+                            tags t
+                        WHERE
+                            tA.tagId = t.id AND
+                            tA.illustId = %i
+                        ORDER BY t.tagName',
+            $i['imageId'],
+        );
+        finishSpanAndReturn($transaction, $span);
+
+        $span = createAndStartDbSpan($transaction, 'SELECT
+                            tNA.tagId AS id,
+                            t.tagName
+                        FROM
+                            tagNegativeAssign tNA,
+                            tags t
+                        WHERE
+                            tNA.tagId = t.id AND
+                            tNA.illustId = ?');
+        $pendingTags[$k]['negativeTags'] = DB::query(
+                        'SELECT
+                            tNA.tagId AS id,
+                            t.tagName
+                        FROM
+                            tagNegativeAssign tNA,
+                            tags t
+                        WHERE
+                            tNA.tagId = t.id AND
+                            tNA.illustId = %i',
+                        $i['imageId'],
+                    );
+        finishSpanAndReturn($transaction, $span);
+    }
 
     $service->render(__DIR__ . '/views/pendingTags.php', [
         'pendingTags' => $pendingTags,
@@ -433,6 +734,7 @@ $klein->respond('GET', '/tag/pending', function ($request, $response, $service, 
 $klein->respond('GET', '/tag/assistant', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /tag/assistant');
     $service->render(__DIR__ . '/views/tagAssistant.php', [
+        'transaction' => $transaction,
     ]);
     $transaction->finish();
 });
