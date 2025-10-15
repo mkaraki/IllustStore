@@ -166,8 +166,70 @@ $klein->respond('GET', '/', function ($request, $response, $service, $app) {
         LIMIT 20'
     );
     finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT * FROM tags ORDER BY RAND() LIMIT 7');
+    $randomTags = DB::query(
+        'SELECT * FROM tags ORDER BY RAND() LIMIT 7'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT
+                res.imageId,
+                res.tagId,
+                res.tagName
+            FROM
+                (
+                    SELECT
+                        tA.illustId AS imageId,
+                        tA.tagId AS tagId,
+                        t.tagName AS tagName
+                    FROM
+                        tagAssign tA,
+                        tags t
+                    WHERE
+                        tA.autoAssigned = 1 AND
+                        t.id = tA.tagId
+                    LIMIT 5000
+                ) res
+            ORDER BY
+                RAND()
+            LIMIT 1');
+    $nonTaggedImageAndTag = DB::queryFirstRow(
+        'SELECT
+                res.imageId,
+                res.tagId,
+                res.tagName
+            FROM
+                (
+                    SELECT
+                        tA.illustId AS imageId,
+                        tA.tagId AS tagId,
+                        t.tagName AS tagName
+                    FROM
+                        tagAssign tA,
+                        tags t
+                    WHERE
+                        tA.autoAssigned = 1 AND
+                        t.id = tA.tagId
+                    LIMIT 5000
+                ) res
+            ORDER BY
+                RAND()
+            LIMIT 1'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT COUNT(*) FROM illusts');
+    $im_count = DB::queryFirstField(
+        'SELECT COUNT(*) FROM illusts'
+    );
+    finishSpanAndReturn($transaction, $span);
+
     $service->render(__DIR__ . '/views/index.php', [
         'images' => $images,
+        'randomTags' => $randomTags,
+        'nonTaggedImageAndTag' => $nonTaggedImageAndTag,
+        'imCount' => $im_count,
     ]);
     $transaction->finish();
 });
