@@ -66,7 +66,79 @@ require __DIR__ . '/routes/image.php';
 
 $klein->respond('GET', '/tag/', function ($request, $response, $service, $app) {
     $transaction = createAndStartWebTransaction('GET /tag/');
-    $service->render(__DIR__ . '/views/tags.php');
+
+    $page = intval($_GET['p'] ?? 1);
+    if ($page < 1) {
+        $page = 1;
+    }
+
+    $limit = 500;
+    $offset = ($page - 1) * $limit;
+
+    $span = createAndStartDbSpan($transaction, 'SELECT
+        t.id,
+        t.tagName,
+        (
+            SELECT
+                COUNT(tA.tagId) AS count
+            FROM
+                tagAssign tA
+            WHERE
+                t.id = tA.tagId
+            GROUP BY 
+                tA.tagId
+        ) AS count
+    FROM
+        tags t
+    ORDER BY
+        t.tagName ASC
+    LIMIT ? OFFSET ?');
+    $res = DB::query(
+        'SELECT
+        t.id,
+        t.tagName,
+        (
+            SELECT
+                COUNT(tA.tagId) AS count
+            FROM
+                tagAssign tA
+            WHERE
+                t.id = tA.tagId
+            GROUP BY 
+                tA.tagId
+        ) AS count
+    FROM
+        tags t
+    ORDER BY
+        t.tagName ASC
+    LIMIT %i OFFSET %i',
+        $limit,
+        $offset
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT COUNT(id) FROM tags');
+    $tags = DB::queryFirstField(
+        'SELECT COUNT(id) FROM tags'
+    );
+    finishSpanAndReturn($transaction, $span);
+
+    $span = createAndStartDbSpan($transaction, 'SELECT MAX(cntHost.cnt) FROM (SELECT COUNT(tagId) AS cnt FROM tagAssign GROUP BY tagId) cntHost;');
+    $maxCount = DB::queryFirstField(
+        'SELECT MAX(cntHost.cnt) FROM (SELECT COUNT(tagId) AS cnt FROM tagAssign GROUP BY tagId) cntHost;'
+    );
+    finishSpanAndReturn($transaction, $span);
+    $maxCount = doubleval($maxCount);
+
+
+    $service->render(__DIR__ . '/views/tags.php', [
+        'res' => $res,
+        'page' => $page,
+        'offset' => $offset,
+        'limit' => $limit,
+        'tags' => $tags,
+        'maxCount' => $maxCount,
+    ]);
     $transaction->finish();
 });
 
