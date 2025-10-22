@@ -1,4 +1,6 @@
 name: imageViewer Laravel tests
+permissions:
+  contents: read
 
 on:
   push: {}
