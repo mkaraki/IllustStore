@@ -42,26 +42,26 @@ class ImageController extends Controller
 
         $metadataProviders = DB::table('metadata_provider')->get();
         foreach($metadataProviders as $provider) {
-            $provider['pathPattern'] = '/' . str_replace('/', '\/', $provider['pathPattern']) . '/';
+            $pathPattern = '/' . str_replace('/', '\/', $provider->pathPattern) . '/';
 
-            if (!preg_match($provider['pathPattern'], $imageData->path)) continue;
+            if (!preg_match($pathPattern, $imageData->path)) continue;
 
-            if (empty($provider['apiUrlReplacement'])) {
+            if (empty($provider->apiUrlReplacement)) {
                 $metadataApiUrl = null;
             } else {
-                $metadataApiUrl = preg_replace($provider['pathPattern'], $provider['apiUrlReplacement'], $imageData->path);
+                $metadataApiUrl = preg_replace($pathPattern, $provider->apiUrlReplacement, $imageData->path);
             }
 
-            if (empty($provider['providerUrlReplacement'])) {
+            if (empty($provider->providerUrlReplacement)) {
                 $metadataProviderUrl = null;
             } else {
-                $metadataProviderUrl = preg_replace($provider['pathPattern'], $provider['providerUrlReplacement'], $imageData->path);
+                $metadataProviderUrl = preg_replace($pathPattern, $provider->providerUrlReplacement, $imageData->path);
             }
 
-            $metadataProviderName = $provider['name'];
+            $metadataProviderName = $provider->name;
 
-            if ($provider['sourceUrlReplacement'] !== null) {
-                $metadataSourceUrl = preg_replace($provider['pathPattern'], $provider['sourceUrlReplacement'], $imageData->path);
+            if ($provider->sourceUrlReplacement !== null) {
+                $metadataSourceUrl = preg_replace($pathPattern, $provider->sourceUrlReplacement, $imageData->path);
             } else {
                 $metadataSourceUrl = null;
             }
