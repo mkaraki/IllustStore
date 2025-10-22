@@ -63,5 +63,5 @@ COPY .env.example /var/www/html/.env
 COPY --from=npm /app/public/build /var/www/html/public/build
 
 # Note you should re-run `php artisan key:generate` for safety.
-RUN chown www-data:www-data -R /var/www/html/.env && \
+RUN chown www-data:www-data -R /var/www/html/.env /var/www/html/storage && \
     php artisan key:generate
