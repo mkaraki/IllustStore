@@ -11,12 +11,20 @@ services:
       - db
 
   viewer:
-    build: imageViewer
+    build:
+      context: imageViewer
+      dockerfile: Dockerfile.nginx
     volumes:
-      - ./imageEvaller/images:/usr/src/app/images:ro
-      - ./imageViewer:/var/www/html
+      - ./imageViewer:/app
     ports:
       - 7090:80
+    depends_on:
+      - viewer-fpm
+
+  viewer-fpm:
+    build: imageViewer
+    volumes:
+      - ./imageViewer:/app
     depends_on:
       - db
       - memcached
