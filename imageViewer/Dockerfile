@@ -1,10 +1,11 @@
+# syntax=docker/dockerfile:1.7-labs
 FROM composer AS require-server
 
 WORKDIR /app
 
-COPY . /app/
+COPY --exclude=vendor --exclude=node_modules --exclude=public/build . /app/
 
-RUN composer install --no-dev --ignore-platform-reqs
+RUN composer install --ignore-platform-reqs
 
 FROM node:22-slim AS npm
 
@@ -56,11 +57,10 @@ EOF
 RUN a2enmod rewrite
 
 COPY --from=require-server /app/vendor /var/www/html/vendor
-
-COPY . /var/www/html
-COPY .env.example /var/www/html/.env
-
 COPY --from=npm /app/public/build /var/www/html/public/build
+
+COPY --exclude=vendor --exclude=node_modules --exclude=public/build . /var/www/html
+COPY .env.example /var/www/html/.env
 
 # Note you should re-run `php artisan key:generate` for safety.
 RUN chown www-data:www-data -R /var/www/html/.env /var/www/html/storage && \
