@@ -60,4 +60,4 @@ COPY --from=require-server /app/vendor /var/www/html/vendor
 COPY . /var/www/html
 COPY .env.example /var/www/html/.env
 
-COPY --from=npm /app/public/build /var/www/html/public/
+COPY --from=npm /app/public/build /var/www/html/public/build
