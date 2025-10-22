@@ -1,3 +1,11 @@
+FROM composer AS require-server
+
+WORKDIR /app
+
+COPY . /app/
+
+RUN composer install --no-dev --ignore-platform-reqs
+
 FROM node:22-slim AS npm
 
 RUN apt-get update && apt-get -y install ca-certificates && \
@@ -10,17 +18,9 @@ ENV PATH="$PNPM_HOME:$PATH"
 ENV CI=true
 RUN corepack enable
 
+COPY --from=require-server /app /app
 WORKDIR /app
-COPY . /app/
 RUN pnpm install --frozen-lockfile && pnpm run build
-
-FROM composer AS require-server
-
-WORKDIR /app
-
-COPY . /app/
-
-RUN composer install --no-dev --ignore-platform-reqs
 
 FROM php:8.4-apache-trixie
 
