@@ -63,7 +63,8 @@ class SearchController extends Controller
         $usedQuery = '';
 
         $queryBuilder = DB::table('tagAssign')
-            ->join('illusts', 'tagAssign.illustId', '=', 'illusts.id');
+            ->join('illusts', 'tagAssign.illustId', '=', 'illusts.id')
+            ->orderBy('tagAssign.illustId', 'desc');
 
         foreach($q as $t) {
             $searchedTag = self::searchTagIdFromTagString($t);
@@ -106,7 +107,7 @@ class SearchController extends Controller
         $queryBuilder = DB::table('illusts')
             ->select(['id', 'width', 'height'])
             ->orderBy('similarity')
-            ->orderBy('id');
+            ->orderBy('id', 'desc');
 
         if ($exact) {
             $queryBuilder = $queryBuilder

@@ -10,7 +10,9 @@ class ImageController extends Controller
 {
     public function index()
     {
-        $images = DB::table('illusts')->paginate(100);
+        $images = DB::table('illusts')
+            ->orderBy('id', 'desc')
+            ->paginate(100);
         $images = $images->onEachSide($images->lastPage());
 
         return Inertia::render('Image/Index', [
@@ -113,7 +115,8 @@ class ImageController extends Controller
         }
 
         $searchQuery = DB::table('illusts')
-            ->select(['id', 'width', 'height']);
+            ->select(['id', 'width', 'height'])
+            ->orderBy('id', 'desc');
 
         $queryStr = '';
 
@@ -187,6 +190,7 @@ class ImageController extends Controller
             ->where('tagAssign.illustId', '<>', $imageId)
             ->groupBy('tagAssign.illustId')
             ->orderBy('tag_match_count', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(100);
 
         $neighbors = $neighbors->onEachSide($neighbors->lastPage());

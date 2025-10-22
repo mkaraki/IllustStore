@@ -39,6 +39,7 @@ class TagController extends Controller
         $images = DB::table('illusts')
             ->join('tagAssign', 'illusts.id', '=', 'tagAssign.illustId')
             ->where('tagAssign.tagId', '=', $tagId)
+            ->orderBy('illusts.id', 'desc')
             ->paginate(100);
 
         $images = $images->onEachSide($images->lastPage());
