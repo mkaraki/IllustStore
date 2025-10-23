@@ -68,6 +68,6 @@ COPY .env.example /var/www/html/.env
 RUN chown www-data:www-data -R /var/www/html/.env /var/www/html/storage && \
     php artisan optimize:clear && \
     php artisan key:generate && \
-    php artisan events:cache && \
-    php artisan routes:cache && \
-    php artisan views:cache
+    php artisan event:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
