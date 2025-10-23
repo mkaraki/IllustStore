@@ -65,7 +65,7 @@ class TagController extends Controller
 
         $res = DB::table('tags')
             ->whereLike('tagName', '%' . addcslashes($w, '%_\\') . '%')
-            ->orderBy('tagName', 'ASC')
+            ->orderBy('tagName')
             ->select(['tagName'])
             ->pluck('tagName');
 

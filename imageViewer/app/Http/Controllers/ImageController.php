@@ -81,10 +81,12 @@ class ImageController extends Controller
         $tags = fn() => DB::table('tagAssign')
             ->join('tags', 'tagAssign.tagId', '=', 'tags.id')
             ->where('illustId', $imageId)
+            ->orderBy('tags.tagName')
             ->get();
         $negativeTags = fn() => DB::table('tagNegativeAssign')
             ->join('tags', 'tagNegativeAssign.tagId', '=', 'tags.id')
             ->where('illustId', $imageId)
+            ->orderBy('tags.tagName')
             ->get();
 
         return Inertia::render('Image/Show', [
@@ -308,10 +310,12 @@ class ImageController extends Controller
         $tags = fn() => DB::table('tagAssign')
             ->join('tags', 'tagAssign.tagId', '=', 'tags.id')
             ->where('illustId', $imageId)
+            ->orderBy('tags.tagName')
             ->get();
         $negativeTags = fn() => DB::table('tagNegativeAssign')
             ->join('tags', 'tagNegativeAssign.tagId', '=', 'tags.id')
             ->where('illustId', $imageId)
+            ->orderBy('tags.tagName')
             ->get();
 
         return Inertia::render('Image/TagAssign', [
