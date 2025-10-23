@@ -20,7 +20,9 @@ ENV CI=true
 RUN corepack enable
 
 COPY --from=require-server /app /app
+COPY .env.example /app/.env
 WORKDIR /app
+
 RUN pnpm install --frozen-lockfile && pnpm run build
 
 FROM php:8.4-apache-trixie
@@ -64,4 +66,5 @@ COPY .env.example /var/www/html/.env
 
 # Note you should re-run `php artisan key:generate` for safety.
 RUN chown www-data:www-data -R /var/www/html/.env /var/www/html/storage && \
+    php artisan optimize && \
     php artisan key:generate
