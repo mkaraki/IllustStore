@@ -92,6 +92,9 @@ const searchModel = ref('')
                 <p class="p-heading--1 u-no-margin u-no-padding">{{ tagAssignCount?.toLocaleString() }}</p>
               </div>
               <p class="p-equal-height-row__item p-heading--3 u-no-margin u-no-padding">Tags assigned</p>
+              <div class="p-equal-height-row__item">
+                <Link href="/tag/pending">Check tagging suggestions ›</Link>
+              </div>
             </div>
           </div>
         </section>
