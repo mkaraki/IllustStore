@@ -67,5 +67,4 @@ COPY .env.example /var/www/html/.env
 # Note you should re-run `php artisan key:generate` for safety.
 RUN chown www-data:www-data -R /var/www/html/.env /var/www/html/storage && \
     php artisan optimize:clear && \
-    php artisan optimize && \
     php artisan key:generate
