@@ -36,9 +36,9 @@ class SearchController extends Controller
             ->first();
         if ($exactTag === null) {
             $possibleTags = DB::table('tags')
-                ->whereRaw('LOWER(tagDanbooru) = ?', [$t], 'or')
-                ->whereRaw('LOWER(tagPixivJpn) = ?', [$t], 'or')
-                ->whereRaw('LOWER(tagPixivEng) = ?', [$t], 'or')
+                ->whereRaw('LOWER(tagDanbooru) = ?', [$t])
+                ->orWhereRaw('LOWER(tagPixivJpn) = ?', [$t])
+                ->orWhereRaw('LOWER(tagPixivEng) = ?', [$t])
                 ->select(['id', 'tagName'])
                 ->first();
 
