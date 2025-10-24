@@ -21,5 +21,4 @@ jobs:
           SENTRY_URL: ${{ secrets.SENTRY_URL_SELF_HOSTED }}
         with:
           environment: production
-          version: "v1.3.4"
-          projects: "illuststore-viewer illuststore-viewer-vue illuststore-evaller illuststore-img-server"
+          projects: "illuststore-viewer illuststore-viewer-vue illuststore-evaller illuststore-imgserver"

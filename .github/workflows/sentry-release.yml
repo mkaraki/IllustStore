@@ -20,5 +20,4 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
         with:
           environment: production
-          version: "v1.3.4"
           projects: "illust-store-viewer illust-store-viewer-vue illust-store-evaller illust-store-img-server"
