@@ -18,7 +18,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: "illust-store-viewer,illust-store-viewer-vue,illust-store-evaller,illust-store-img-server"
         with:
           environment: production
           version: "v1.3.4"
+          projects: "illust-store-viewer illust-store-viewer-vue illust-store-evaller illust-store-img-server"
