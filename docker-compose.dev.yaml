@@ -19,6 +19,7 @@ services:
       - 7090:80
     depends_on:
       - db
+      - memcached
 
   img-server:
     build: imageServer

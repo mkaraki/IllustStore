@@ -1,34 +1,78 @@
+# syntax=docker/dockerfile:1.7-labs
 FROM composer AS require-server
 
 WORKDIR /app
 
-COPY composer.* /app/
+COPY --exclude=vendor --exclude=node_modules --exclude=public/build . /app/
 
-RUN composer install --no-dev --ignore-platform-reqs
+RUN composer install --ignore-platform-reqs
 
-FROM php:8.4-apache
+FROM node:22-slim AS npm
+
+RUN apt-get update && apt-get -y install ca-certificates && \
+    sed -i.bak -r 's@http://deb\.debian\.org/?@https://ftp.riken.jp/Linux/debian/@g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update
+RUN apt-get update && apt-get install php -y
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV CI=true
+RUN corepack enable
+
+COPY --from=require-server /app /app
+COPY .env.example /app/.env
+WORKDIR /app
+
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ARG SENTRY_AUTH_TOKEN=""
+ARG SENTRY_URL=""
+
+RUN pnpm install --frozen-lockfile && pnpm run build
+
+FROM php:8.4-apache-trixie
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN apt-get update && apt-get -y install ca-certificates && \
+    sed -i.bak -r 's@http://deb\.debian\.org/?@https://ftp.riken.jp/Linux/debian/@g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update
+
 ENV IPE_GD_WITHOUTAVIF=1
-RUN install-php-extensions imagick mysqli excimer && \
-    docker-php-ext-install opcache
+RUN --mount=type=bind,from=ghcr.io/mlocati/php-extension-installer:latest,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
+    install-php-extensions imagick mysqli excimer memcached pdo_mysql
+RUN docker-php-ext-install opcache
 
 RUN <<EOF cat >> $PHP_INI_DIR/conf.d/more-upload-size.ini
 upload_max_filesize = 150M
 post_max_size = 150M
 EOF
 
+RUN <<EOF cat > /etc/apache2/sites-available/000-default.conf
+<VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/html/public
+        ErrorLog /dev/stderr
+        CustomLog /dev/stdout combined
+        <Directory "/var/www/html/public">
+                Options Indexes FollowSymLinks
+                AllowOverride All
+                Require all granted
+        </Directory>
+</VirtualHost>
+EOF
+
 RUN a2enmod rewrite
 
 COPY --from=require-server /app/vendor /var/www/html/vendor
+COPY --from=npm /app/public/build /var/www/html/public/build
 
-RUN mkdir /var/www/html/cache
+COPY --exclude=vendor --exclude=node_modules --exclude=public/build . /var/www/html
+COPY .env.example /var/www/html/.env
 
-COPY .htaccess /var/www/html/
-COPY ImageHash/*.php /var/www/html/ImageHash/
-COPY assets/* /var/www/html/assets/
-COPY *.php /var/www/html/
-COPY views/*.php /var/www/html/views/
-COPY views/components/* /var/www/html/views/components/
-COPY routes/*.php /var/www/html/routes/
+# Note you should re-run `php artisan key:generate` for safety.
+RUN chown www-data:www-data -R /var/www/html/.env /var/www/html/storage && \
+    php artisan optimize:clear && \
+    php artisan key:generate && \
+    php artisan event:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
