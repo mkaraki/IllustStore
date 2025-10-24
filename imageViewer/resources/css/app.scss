@@ -5,6 +5,7 @@
 @include vf-p-icon-conflict-resolution-grey;
 @include vf-p-icon-thumbs-up;
 @include vf-p-icon-thumbs-down;
+@include vf-u-animations;
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

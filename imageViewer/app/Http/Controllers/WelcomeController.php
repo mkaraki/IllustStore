@@ -25,7 +25,7 @@ class WelcomeController extends Controller
         $tagCount = fn() => DB::table('tags')->count();
         $tagAssignCount = fn() => DB::table('tagAssign')->count();
 
-        $nonTaggedImageAndTag = DB::table(
+        $nonTaggedImageAndTag = fn() => DB::table(
             DB::table('tagAssign')
                 ->select(['tagAssign.illustId as imageId', 'tagAssign.tagId as tagId', 'tags.tagName as tagName'])
                 ->join('tags', 'tagAssign.tagId', '=', 'tags.id')
@@ -40,13 +40,13 @@ class WelcomeController extends Controller
             ->first();
 
         return Inertia::render('Welcome', [
-            'randomTags' => $randomTags,
-            'nonTaggedImageAndTag' => $nonTaggedImageAndTag,
+            'randomTags' => Inertia::defer($randomTags),
+            'nonTaggedImageAndTag' => Inertia::Defer($nonTaggedImageAndTag),
             'images' => $images,
             'imgServerBase' => config('illuststore.image_server_base_url'),
-            'imageCount' => $imageCount,
-            'tagCount' => $tagCount,
-            'tagAssignCount' => $tagAssignCount,
+            'imageCount' => Inertia::Defer($imageCount),
+            'tagCount' => Inertia::Defer($tagCount),
+            'tagAssignCount' => Inertia::defer($tagAssignCount),
         ]);
     }
 }

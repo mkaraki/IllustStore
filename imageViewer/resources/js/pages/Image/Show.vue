@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TagList from "@/components/tag-list.vue";
 import NegativeTagList from "@/components/negative-tag-list.vue";
-import {Head, Link} from "@inertiajs/vue3";
+import {Deferred, Head, Link} from "@inertiajs/vue3";
 import ImageHashes from "@/components/image-hashes.vue";
 
 defineProps({
@@ -45,26 +45,33 @@ defineProps({
           <dt>Negative Tags</dt>
           <dd><negative-tag-list :tags="negativeTags" :allowEdit="true" :imageId="imageId" :pendingPaginationNow="0" /></dd>
           <ImageHashes :image-data="imageData"></ImageHashes>
-          <dt>Metadata Provider</dt>
-          <dd>{{ metadata?.metadataProviderName ?? 'No Provider' }}</dd>
-          <template v-if="metadata?.metadataProviderUrl != null">
-            <dt>Provider's content page</dt>
-            <dd>
-              <a :href="metadata.metadataProviderUrl" target="_blank" rel="noreferrer noopener">{{metadata.metadataProviderUrl}}</a>
-            </dd>
-          </template>
-          <template v-if="metadata?.apiMetadata != null">
-            <template v-for="(v, k) in metadata.apiMetadata" :key="k">
-              <dt>API Metadata: {{ k }}</dt>
-              <dd>{{ v }}</dd>
+          <Deferred data="metadata">
+            <template #fallback>
+              <dt>Metadata Provider</dt>
+              <dd><i class="p-icon--spinner u-animation--spin"></i> Loading</dd>
             </template>
-          </template>
-          <template v-if="metadata?.metadataSourceUrl != null">
-            <dt>Source URL</dt>
-            <dd>
-              <a :href="metadata.metadataSourceUrl" target="_blank" rel="noreferrer noopener">{{metadata.metadataSourceUrl}}</a>
-            </dd>
-          </template>
+
+            <dt>Metadata Provider</dt>
+            <dd>{{ metadata?.metadataProviderName ?? 'No Provider' }}</dd>
+            <template v-if="metadata?.metadataProviderUrl != null">
+              <dt>Provider's content page</dt>
+              <dd>
+                <a :href="metadata.metadataProviderUrl" target="_blank" rel="noreferrer noopener">{{metadata.metadataProviderUrl}}</a>
+              </dd>
+            </template>
+            <template v-if="metadata?.apiMetadata != null">
+              <template v-for="(v, k) in metadata.apiMetadata" :key="k">
+                <dt>API Metadata: {{ k }}</dt>
+                <dd>{{ v }}</dd>
+              </template>
+            </template>
+            <template v-if="metadata?.metadataSourceUrl != null">
+              <dt>Source URL</dt>
+              <dd>
+                <a :href="metadata.metadataSourceUrl" target="_blank" rel="noreferrer noopener">{{metadata.metadataSourceUrl}}</a>
+              </dd>
+            </template>
+          </Deferred>
           <dt>Server Path</dt>
           <dd>{{ imageData?.path ?? 'No path info' }}</dd>
         </dl>

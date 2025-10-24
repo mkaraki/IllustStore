@@ -40,43 +40,46 @@ class ImageController extends Controller
             return response(null, 404);
         }
 
-        $metadataProviders = DB::table('metadata_provider')->get();
-        foreach($metadataProviders as $provider) {
-            $pathPattern = '/' . str_replace('/', '\/', $provider->pathPattern) . '/';
+        $metadata = function() use($imageData) {
+            $metadataProviders = DB::table('metadata_provider')->get();
+            foreach($metadataProviders as $provider) {
+                $pathPattern = '/' . str_replace('/', '\/', $provider->pathPattern) . '/';
 
-            if (!preg_match($pathPattern, $imageData->path)) continue;
+                if (!preg_match($pathPattern, $imageData->path)) continue;
 
-            if (empty($provider->apiUrlReplacement)) {
-                $metadataApiUrl = null;
-            } else {
-                $metadataApiUrl = preg_replace($pathPattern, $provider->apiUrlReplacement, $imageData->path);
+                if (empty($provider->apiUrlReplacement)) {
+                    $metadataApiUrl = null;
+                } else {
+                    $metadataApiUrl = preg_replace($pathPattern, $provider->apiUrlReplacement, $imageData->path);
+                }
+
+                if (empty($provider->providerUrlReplacement)) {
+                    $metadataProviderUrl = null;
+                } else {
+                    $metadataProviderUrl = preg_replace($pathPattern, $provider->providerUrlReplacement, $imageData->path);
+                }
+
+                $metadataProviderName = $provider->name;
+
+                if ($provider->sourceUrlReplacement !== null) {
+                    $metadataSourceUrl = preg_replace($pathPattern, $provider->sourceUrlReplacement, $imageData->path);
+                } else {
+                    $metadataSourceUrl = null;
+                }
             }
 
-            if (empty($provider->providerUrlReplacement)) {
-                $metadataProviderUrl = null;
-            } else {
-                $metadataProviderUrl = preg_replace($pathPattern, $provider->providerUrlReplacement, $imageData->path);
+            $metadata = [
+                'metadataProviderName' => $metadataProviderName ?? null,
+                'metadataProviderUrl' => $metadataProviderUrl ?? null,
+                'metadataSourceUrl' => $metadataSourceUrl ?? null,
+                'metadataApiUrl' => $metadataApiUrl ?? null,
+                'apiMetadata' => null,
+            ];
+            if ($metadata['metadataApiUrl'] !== null) {
+                $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
             }
-
-            $metadataProviderName = $provider->name;
-
-            if ($provider->sourceUrlReplacement !== null) {
-                $metadataSourceUrl = preg_replace($pathPattern, $provider->sourceUrlReplacement, $imageData->path);
-            } else {
-                $metadataSourceUrl = null;
-            }
-        }
-
-        $metadata = [
-            'metadataProviderName' => $metadataProviderName ?? null,
-            'metadataProviderUrl' => $metadataProviderUrl ?? null,
-            'metadataSourceUrl' => $metadataSourceUrl ?? null,
-            'metadataApiUrl' => $metadataApiUrl ?? null,
-            'apiMetadata' => null,
-        ];
-        if ($metadata['metadataApiUrl'] !== null) {
-            $metadata['apiMetadata'] = json_decode(file_get_contents($metadata['metadataApiUrl']), true);
-        }
+            return $metadata;
+        };
 
         $tags = fn() => DB::table('tagAssign')
             ->join('tags', 'tagAssign.tagId', '=', 'tags.id')
@@ -92,7 +95,7 @@ class ImageController extends Controller
         return Inertia::render('Image/Show', [
             'imageId' => fn() => $imageId,
             'imageData' => $imageData,
-            'metadata' => $metadata,
+            'metadata' => Inertia::defer($metadata),
             'tags' => $tags,
             'negativeTags' => $negativeTags,
             'imgServerBase' => fn() => config('illuststore.image_server_base_url'),
