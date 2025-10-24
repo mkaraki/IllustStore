@@ -23,6 +23,11 @@ COPY --from=require-server /app /app
 COPY .env.example /app/.env
 WORKDIR /app
 
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ARG SENTRY_AUTH_TOKEN=""
+ARG SENTRY_URL=""
+
 RUN pnpm install --frozen-lockfile && pnpm run build
 
 FROM php:8.4-apache-trixie

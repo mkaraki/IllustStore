@@ -7,14 +7,14 @@ name: Docker (Viewer)
 
 on:
   push:
-    branches: [ "*" ]
+    branches: ["*"]
     # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    tags: ["v*.*.*"]
     paths:
-      - 'imageViewer/**'
-      - '.github/**'
+      - "imageViewer/**"
+      - ".github/**"
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
   workflow_dispatch:
 
 env:
@@ -23,10 +23,8 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}-viewer
 
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -75,3 +73,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN_SELF_HOSTED }}
+            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
+            SENTRY_PROJECT=illuststore-viewer-vue
+            SENTRY_URL=${{ secrets.SENTRY_URL_SELF_HOSTED }}
