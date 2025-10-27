@@ -69,14 +69,7 @@ const searchModel = ref('')
             <div class="p-equal-height-row__col u-no-margin--bottom p-data-spotlight__block">
               <div class="p-equal-height-row__item">
                 <hr class="p-rule--highlight">
-                <Deferred data="imageCount">
-                  <template #fallback>
-                    <p class="p-heading--1 u-no-margin u-no-padding">
-                      <i class="p-icon--spinner u-animation--spin">Loading</i>
-                    </p>
-                  </template>
-                  <p class="p-heading--1 u-no-margin u-no-padding">{{ imageCount?.toLocaleString() }}</p>
-                </Deferred>
+                <p class="p-heading--1 u-no-margin u-no-padding">{{ imageCount?.toLocaleString() }}</p>
               </div>
               <p class="p-equal-height-row__item p-heading--3 u-no-margin u-no-padding">Searchable illustrations</p>
               <div class="p-equal-height-row__item">
@@ -86,14 +79,7 @@ const searchModel = ref('')
             <div class="p-equal-height-row__col u-no-margin--bottom p-data-spotlight__block">
               <div class="p-equal-height-row__item">
                 <hr class="p-rule--highlight">
-                <Deferred data="tagCount">
-                  <template #fallback>
-                    <p class="p-heading--1 u-no-margin u-no-padding">
-                      <i class="p-icon--spinner u-animation--spin">Loading</i>
-                    </p>
-                  </template>
-                  <p class="p-heading--1 u-no-margin u-no-padding">{{ tagCount?.toLocaleString() }}</p>
-                </Deferred>
+                <p class="p-heading--1 u-no-margin u-no-padding">{{ tagCount?.toLocaleString() }}</p>
               </div>
               <p class="p-equal-height-row__item p-heading--3 u-no-margin u-no-padding">Tags</p>
               <div class="p-equal-height-row__item">
@@ -103,14 +89,7 @@ const searchModel = ref('')
             <div class="p-equal-height-row__col u-no-margin--bottom p-data-spotlight__block">
               <div class="p-equal-height-row__item">
                 <hr class="p-rule--highlight">
-                <Deferred data="tagAssignCount">
-                  <template #fallback>
-                    <p class="p-heading--1 u-no-margin u-no-padding">
-                      <i class="p-icon--spinner u-animation--spin">Loading</i>
-                    </p>
-                  </template>
-                  <p class="p-heading--1 u-no-margin u-no-padding">{{ tagAssignCount?.toLocaleString() }}</p>
-                </Deferred>
+                <p class="p-heading--1 u-no-margin u-no-padding">{{ tagAssignCount?.toLocaleString() }}</p>
               </div>
               <p class="p-equal-height-row__item p-heading--3 u-no-margin u-no-padding">Tags assigned</p>
               <div class="p-equal-height-row__item">
@@ -124,16 +103,9 @@ const searchModel = ref('')
     <div class="row row-custom-margin-bottom">
       <div class="col u-align-text--center">
         <h2 class="p-muted-heading centered-section-muted-heading">Random Tags</h2>
-        <Deferred data="randomTags">
-          <template #fallback>
-            <div>
-              <i class="p-icon--spinner u-animation--spin">Loading</i>
-            </div>
-          </template>
-          <ul class="forever-ul">
-            <li v-for="v in randomTags" :key="v.id"><Link :href="`/tag/${v.id}`">{{v.tagName}}</Link></li>
-          </ul>
-        </Deferred>
+        <ul class="forever-ul">
+          <li v-for="v in randomTags" :key="v.id"><Link :href="`/tag/${v.id}`">{{v.tagName}}</Link></li>
+        </ul>
       </div>
     </div>
     <template v-if="nonTaggedImageAndTag != null">
