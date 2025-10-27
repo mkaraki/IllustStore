@@ -11,7 +11,7 @@ class WelcomeController extends Controller
 {
     public function index()
     {
-        [$randomTags, $images, $imageCount, $tagCount, $tagAssignCount] = Concurrency::run([
+        [$randomTags, $images] = Concurrency::run([
             fn() => DB::table('tags')
                 ->orderByRaw('RAND()')
                 ->limit(7)
@@ -21,10 +21,11 @@ class WelcomeController extends Controller
                 ->orderByRaw('RAND()')
                 ->limit(19) /* 18 (3 x 6) for random. 1 for heading */
                 ->get(),
-            fn() => DB::table('illusts')->count(),
-            fn() => DB::table('tags')->count(),
-            fn() => DB::table('tagAssign')->count(),
         ]);
+
+        $imageCount = fn() => DB::table('illusts')->count();
+        $tagCount = fn() => DB::table('tags')->count();
+        $tagAssignCount = fn() => DB::table('tagAssign')->count();
 
         $nonTaggedImageAndTag = fn() => DB::table(
             DB::table('tagAssign')
@@ -45,9 +46,9 @@ class WelcomeController extends Controller
             'nonTaggedImageAndTag' => Inertia::defer($nonTaggedImageAndTag),
             'images' => $images,
             'imgServerBase' => config('illuststore.image_server_base_url'),
-            'imageCount' => $imageCount,
-            'tagCount' => $tagCount,
-            'tagAssignCount' => $tagAssignCount,
+            'imageCount' => Inertia::defer($imageCount),
+            'tagCount' => Inertia::defer($tagCount),
+            'tagAssignCount' => Inertia::defer($tagAssignCount),
         ]);
     }
 }
