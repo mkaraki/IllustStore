@@ -30,7 +30,7 @@ class WelcomeController extends Controller
                 ->select(['tagAssign.illustId as imageId', 'tagAssign.tagId as tagId', 'tags.tagName as tagName'])
                 ->join('tags', 'tagAssign.tagId', '=', 'tags.id')
                 ->where('tagAssign.autoAssigned', '=', 1)
-                ->limit(5000 /* Due to extremely slow query. */),
+                ->limit(10000 /* Due to extremely slow query. */),
             'res'
         )
             ->select(['res.imageId', 'res.tagId', 'res.tagName', 'illusts.width', 'illusts.height'])
@@ -41,12 +41,12 @@ class WelcomeController extends Controller
 
         return Inertia::render('Welcome', [
             'randomTags' => $randomTags,
-            'nonTaggedImageAndTag' => Inertia::defer($nonTaggedImageAndTag),
+            'nonTaggedImageAndTag' => Inertia::defer($nonTaggedImageAndTag, 'nonTaggedImageAndTag'),
             'images' => $images,
             'imgServerBase' => config('illuststore.image_server_base_url'),
-            'imageCount' => Inertia::defer($imageCount),
-            'tagCount' => Inertia::defer($tagCount),
-            'tagAssignCount' => Inertia::defer($tagAssignCount),
+            'imageCount' => Inertia::defer($imageCount, 'stats'),
+            'tagCount' => Inertia::defer($tagCount, 'stats'),
+            'tagAssignCount' => Inertia::defer($tagAssignCount, 'stats'),
         ]);
     }
 }
