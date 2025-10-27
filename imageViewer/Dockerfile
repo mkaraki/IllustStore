@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7-labs
 FROM composer AS require-server
 
 WORKDIR /app
