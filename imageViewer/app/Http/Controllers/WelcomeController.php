@@ -11,17 +11,15 @@ class WelcomeController extends Controller
 {
     public function index()
     {
-        [$randomTags, $images] = Concurrency::run([
-            fn() => DB::table('tags')
+        $randomTags = fn() => DB::table('tags')
                 ->orderByRaw('RAND()')
                 ->limit(7)
-                ->get(),
-            fn() => DB::table('illusts')
+                ->get();
+        $images = fn() => DB::table('illusts')
                 ->select('id', 'width', 'height')
                 ->orderByRaw('RAND()')
                 ->limit(19) /* 18 (3 x 6) for random. 1 for heading */
-                ->get(),
-        ]);
+                ->get();
 
         $imageCount = fn() => DB::table('illusts')->count();
         $tagCount = fn() => DB::table('tags')->count();
