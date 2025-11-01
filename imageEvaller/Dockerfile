@@ -13,7 +13,7 @@ RUN cargo build --release --workspace --locked
 
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
-FROM python:3.12-bookworm
+FROM python:3.14-bookworm
 
 WORKDIR /usr/src/app
 
