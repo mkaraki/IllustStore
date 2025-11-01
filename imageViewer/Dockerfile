@@ -6,7 +6,7 @@ COPY --exclude=vendor --exclude=node_modules --exclude=public/build . /app/
 
 RUN composer install --ignore-platform-reqs
 
-FROM node:22-slim AS npm
+FROM node:25-slim AS npm
 
 RUN apt-get update && apt-get -y install ca-certificates && \
     sed -i.bak -r 's@http://deb\.debian\.org/?@https://ftp.riken.jp/Linux/debian/@g' /etc/apt/sources.list.d/debian.sources && \
