@@ -80,7 +80,7 @@ const searchModel = ref('')
               </div>
               <p class="p-equal-height-row__item p-heading--3 u-no-margin u-no-padding">Searchable illustrations</p>
               <div class="p-equal-height-row__item">
-                <Link href="/image/">Check all illusts ›</Link>
+                <Link href="/image">Check all illusts ›</Link>
               </div>
             </div>
             <div class="p-equal-height-row__col u-no-margin--bottom p-data-spotlight__block">
@@ -97,7 +97,7 @@ const searchModel = ref('')
               </div>
               <p class="p-equal-height-row__item p-heading--3 u-no-margin u-no-padding">Tags</p>
               <div class="p-equal-height-row__item">
-                <Link href="/tag/">Check registered tags ›</Link>
+                <Link href="/tag">Check registered tags ›</Link>
               </div>
             </div>
             <div class="p-equal-height-row__col u-no-margin--bottom p-data-spotlight__block">
