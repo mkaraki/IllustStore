@@ -25,7 +25,7 @@ watch(() => props.input, (newInput) => {
   const sendBody = JSON.stringify({
     'w': sendWord
   });
-  if (sendWord == '')
+  if (sendWord.length < 3)
     return;
   let sentryTraceHeader = undefined;
   let sentryBaggageHeader = undefined;
@@ -37,7 +37,7 @@ watch(() => props.input, (newInput) => {
   }
 
   if (abortSignal.value !== null) {
-    abortSignal.value.abort();
+    abortSignal.value.abort('New input received.');
   }
   const abortController = new AbortController();
   abortSignal.value = abortController;
@@ -70,6 +70,16 @@ watch(() => props.input, (newInput) => {
           }
           searchTagAutoComplete.value?.appendChild(acObj);
         })
+      })
+      .catch(e => {
+        if (typeof e.name === 'undefined' || e.name === 'AbortError') {
+          // This is not an error.
+          return;
+        }
+        Sentry.captureException(e);
+        console.error(e);
+        if (searchTagAutoComplete.value === undefined || searchTagAutoComplete.value === null) return;
+        searchTagAutoComplete.value.innerHTML = 'Failed to retrieve completion';
       })
 
 });
