@@ -11,7 +11,7 @@ console.log(props.images);
 </script>
 
 <template>
-  <header class="is-shallow p-strip">
+  <header class="is-shallow p-strip" id="top-header">
     <div class="row">
       <div class="col">
         <h1 class="query-ind query-h1">Query: {{ searchParam }}</h1>
@@ -29,6 +29,13 @@ console.log(props.images);
         <span v-for="image in images?.data" :key="image.id" class="image-for">
           <ImageThumb :image="image"></ImageThumb>
         </span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div class="p-top is-dark">
+          <a href="#top-header" class="p-top__link">Back to top</a>
+        </div>
       </div>
     </div>
   </main>
