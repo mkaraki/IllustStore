@@ -30,7 +30,7 @@ RUN --mount=type=secret,id=SENTRY_ORG,env=SENTRY_ORG \
     --mount=type=secret,id=SENTRY_URL,env=SENTRY_URL \
     pnpm run build
 
-FROM php:8.4-apache-trixie
+FROM php:8.5-apache-trixie
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 RUN apt-get update && apt-get -y install ca-certificates && \
