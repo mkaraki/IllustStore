@@ -3,4 +3,4 @@ tensorflow==2.20.0
 tensorflow-io==0.37.1
 mysql-connector-python==9.5.0
 ImageHash==4.3.2
-sentry-sdk==2.43.0
+sentry-sdk==2.46.0
