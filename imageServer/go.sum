@@ -15,8 +15,8 @@ github.com/eko/gocache/lib/v4 v4.2.2 h1:jUQ1EPoapmnxeDfekdu8nb2D5d5nSgxSJyPZ1Psl
 github.com/eko/gocache/lib/v4 v4.2.2/go.mod h1:/Lpnfie38P4Qkun24jyIVRv95GzhbC90dsq6Q7AtQ2I=
 github.com/eko/gocache/store/memcache/v4 v4.2.3 h1:/TpSmG3aghdS4nSbA11wWvkQa7tyHf8z//s19ixZhCY=
 github.com/eko/gocache/store/memcache/v4 v4.2.3/go.mod h1:DxmvRb6CIb8GKnNFgn+A+hhAEeFZRxThLo9+v3Z6TMs=
-github.com/getsentry/sentry-go v0.36.2 h1:uhuxRPTrUy0dnSzTd0LrYXlBYygLkKY0hhlG5LXarzM=
-github.com/getsentry/sentry-go v0.36.2/go.mod h1:p5Im24mJBeruET8Q4bbcMfCQ+F+Iadc4L48tB1apo2c=
+github.com/getsentry/sentry-go v0.40.0 h1:VTJMN9zbTvqDqPwheRVLcp0qcUcM+8eFivvGocAaSbo=
+github.com/getsentry/sentry-go v0.40.0/go.mod h1:eRXCoh3uvmjQLY6qu63BjUZnaBu5L5WhMV1RwYO8W5s=
 github.com/go-errors/errors v1.4.2 h1:J6MZopCL4uSllY1OfXM374weqZFFItUbrImctkmUxIA=
 github.com/go-errors/errors v1.4.2/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/go-sql-driver/mysql v1.9.3 h1:U/N249h2WzJ3Ukj8SowVFjdtZKfu9vlLZxjPXV1aweo=
