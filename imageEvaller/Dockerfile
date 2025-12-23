@@ -12,7 +12,7 @@ WORKDIR /lepton_jpeg_rust/dll
 RUN cargo build --release --workspace --locked
 
 # -----------------------------------------------------
-FROM dhi.io/uv:0.9.18-dev AS pip-build
+FROM dhi.io/uv:0.9.18 AS pip-build
 
 WORKDIR /usr/src/app
 COPY pyproject.toml uv.lock ./
