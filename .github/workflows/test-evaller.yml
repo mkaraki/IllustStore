@@ -15,12 +15,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Authenticate to DHI
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        with:
-          registry: dhi.io
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PAT }}
+      - name: Login to DHI
+        run: echo "${{ secrets.DOCKER_PAT }}" | sudo docker login dhi.io -u "${{ secrets.DOCKER_USER }}" --password-stdin
 
       - name: Install required package
         run: sudo apt-get update && sudo apt-get install -y unzip imagemagick
