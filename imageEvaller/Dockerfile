@@ -32,7 +32,6 @@ COPY --from=build-lepton_jpeg_rust /lepton_jpeg_rust/target/release/liblepton_jp
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/usr/src/app/.venv/bin:$PATH"
-ENV PYTHONHOME="/usr/src/app/.venv/lib/python3.12/site-packages"
 
 COPY --from=pip-build /usr/src/app/.venv /usr/src/app/.venv
 
