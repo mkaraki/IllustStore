@@ -1,6 +1,0 @@
-pyproject.toml
-imageEvaller.egg-info/PKG-INFO
-imageEvaller.egg-info/SOURCES.txt
-imageEvaller.egg-info/dependency_links.txt
-imageEvaller.egg-info/requires.txt
-imageEvaller.egg-info/top_level.txt
