@@ -7,7 +7,7 @@ name: Docker (Evaller)
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "*" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
     paths:
