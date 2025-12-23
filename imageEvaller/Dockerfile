@@ -43,4 +43,4 @@ COPY --from=pip-build /usr/src/app/venv /usr/src/app/venv
 
 COPY LibLepton.py processImageGlob.py deepdanbooruEval.py /usr/src/app/
 
-ENTRYPOINT [ "python", "/usr/src/app/processImageGlob.py" ]
+ENTRYPOINT [ "/usr/src/app/venv/bin/python", "/usr/src/app/processImageGlob.py" ]
