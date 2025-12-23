@@ -1,5 +1,5 @@
 deepdanbooru==1.0.4
-#tensorflow==2.20.0
+tensorflow==2.20.0
 tensorflow-io==0.37.1
 mysql-connector-python==9.5.0
 ImageHash==4.3.2
