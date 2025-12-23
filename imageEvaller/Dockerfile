@@ -14,6 +14,19 @@ RUN cargo build --release --workspace --locked
 # -----------------------------------------------------
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
+FROM dhi.io/python:3.12-dev AS pip-build
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/src/app/venv/bin:$PATH"
+
+WORKDIR /usr/src/app
+
+RUN python -m venv /usr/src/app/venv
+COPY requirements.embed.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# -----------------------------------------------------
 FROM dhi.io/python:3.12
 
 WORKDIR /usr/src/app
@@ -24,10 +37,9 @@ COPY --from=build-lepton_jpeg_rust /lepton_jpeg_rust/target/release/liblepton_jp
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/src/app/venv/bin:$PATH"
 
-COPY requirements.embed.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt &&\
-    rm requirements.txt
+COPY --from=pip-build /usr/src/app/venv /usr/src/app/venv
 
 COPY LibLepton.py processImageGlob.py deepdanbooruEval.py /usr/src/app/
 
