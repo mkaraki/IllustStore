@@ -11,9 +11,23 @@ WORKDIR /lepton_jpeg_rust/dll
 
 RUN cargo build --release --workspace --locked
 
+# -----------------------------------------------------
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
-FROM python:3.12-bookworm
+FROM dhi.io/python:3.12-dev AS pip-build
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/src/app/venv/bin:$PATH"
+
+WORKDIR /usr/src/app
+
+RUN python -m venv /usr/src/app/venv
+COPY requirements.embed.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# -----------------------------------------------------
+FROM dhi.io/python:3.12
 
 WORKDIR /usr/src/app
 
@@ -23,13 +37,14 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.embed.txt requirements.txt
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
-
 COPY --from=build-lepton_jpeg_rust /lepton_jpeg_rust/target/release/liblepton_jpeg_dll.so /usr/lib/liblepton_jpeg.so
 
-COPY LibLepton.py /usr/src/app/
-COPY processImageGlob.py /usr/src/app/
-COPY deepdanbooruEval.py /usr/src/app/
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/src/app/venv/bin:$PATH"
+
+COPY --from=pip-build /usr/src/app/venv /usr/src/app/venv
+
+COPY LibLepton.py processImageGlob.py deepdanbooruEval.py /usr/src/app/
 
 ENTRYPOINT [ "python", "/usr/src/app/processImageGlob.py" ]

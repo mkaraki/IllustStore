@@ -1,4 +1,4 @@
-FROM rust:1-bookworm AS lepton_jpeg_build
+FROM rust:1-trixie AS lepton_jpeg_build
 
 RUN apt-get update && apt-get install -y git
 
@@ -8,7 +8,7 @@ WORKDIR lepton_jpeg_rust/dll
 
 RUN cargo build --release --workspace --locked
 
-FROM golang:1.25-bookworm AS build
+FROM golang:1.25-trixie AS build
 
 RUN apt-get update && \
     apt-get install -y \
@@ -20,11 +20,11 @@ COPY . /app/
 
 RUN go build -ldflags '-linkmode external -extldflags=-L=.'
 
-FROM debian:bookworm
+FROM debian:trixie-slim
 
 RUN apt-get update && \
     apt-get install -y \
-    libvips42 \
+    libvips42t64 \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
