@@ -113,7 +113,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           organization: ${{ env.DOCKER_ORG }}
           environment: prod
-          keep-previous-comments: true
 
       - name: Analyze for critical and high CVEs
         id: docker-scout-cves
