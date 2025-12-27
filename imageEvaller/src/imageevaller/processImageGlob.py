@@ -36,7 +36,10 @@ import numpy as np
 import lepton_jpeg_python
 
 # Call internal library
-from .deepdanbooruEval import evaluateTfImage
+if __name__ == '__main__':
+    from deepdanbooruEval import evaluateTfImage
+else:
+    from .deepdanbooruEval import evaluateTfImage
 
 db = mysql.connector.connect(
     user=os.getenv("MYSQL_USER", "illustStore"),
