@@ -1,8 +1,10 @@
 services:
   runner:
-    build: imageEvaller
+    build:
+      context: imageEvaller
+      dockerfile: Dockerfile.dev
     volumes:
-      - ./imageEvaller/:/usr/src/app/
+      - ./imageEvaller/src/imageevaller:/usr/src/app/
       - ./imageEvaller/models:/usr/src/app/models:ro
       - ./imageEvaller/images:/usr/src/app/images:ro
     environment:
@@ -11,15 +13,18 @@ services:
       - db
 
   viewer:
-    build: imageViewer
+    build:
+      context: imageViewer
+      dockerfile: Dockerfile.dev
     volumes:
       - ./imageEvaller/images:/usr/src/app/images:ro
-      - ./imageViewer:/var/www/html
+      - ./imageViewer:/app
     ports:
-      - 7090:80
+      - 7090:8000
     depends_on:
       - db
       - memcached
+    entrypoint: php artisan octane:frankenphp --workers=1 --max-requests=1
 
   img-server:
     build: imageServer

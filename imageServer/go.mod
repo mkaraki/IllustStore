@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
-	github.com/davidbyttow/govips/v2 v2.16.0
+	github.com/cshum/vipsgen v1.3.0
 	github.com/eko/gocache/lib/v4 v4.2.2
 	github.com/eko/gocache/store/memcache/v4 v4.2.3
 	github.com/getsentry/sentry-go v0.40.0
@@ -22,8 +22,6 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa // indirect
-	golang.org/x/image v0.19.0 // indirect
-	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect

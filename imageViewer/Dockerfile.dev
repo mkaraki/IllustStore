@@ -1,0 +1,10 @@
+FROM dunglas/frankenphp
+
+RUN install-php-extensions \
+    pcntl \
+    mysqli \
+    pdo_mysql \
+    memcached \
+    opcache
+
+ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
