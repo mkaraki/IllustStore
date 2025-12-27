@@ -1,0 +1,7 @@
+Dockerfile
+Dockerfile.dev
+images
+models
+imageEvaller.*
+__pycache__
+.venv

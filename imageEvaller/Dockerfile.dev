@@ -13,7 +13,7 @@ RUN cargo build --release --workspace --locked
 
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
-FROM python:3.12-bookworm
+FROM dhi.io/python:3.12.12-debian13-dev
 
 WORKDIR /usr/src/app
 
@@ -28,8 +28,6 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 COPY --from=build-lepton_jpeg_rust /lepton_jpeg_rust/target/release/liblepton_jpeg_dll.so /usr/lib/liblepton_jpeg.so
 
-COPY LibLepton.py /usr/src/app/
-COPY processImageGlob.py /usr/src/app/
-COPY deepdanbooruEval.py /usr/src/app/
+COPY src/imageevaller/*.py /usr/src/app/
 
 ENTRYPOINT [ "python", "/usr/src/app/processImageGlob.py" ]
