@@ -15,6 +15,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Login to DHI
+        run: echo "$DOCKER_PAT" | sudo docker login dhi.io -u "$DOCKER_USER" --password-stdin
+        env:
+          DOCKER_PAT: ${{ secrets.DOCKER_PAT }}
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+
       - name: Install required package
         run: sudo apt-get update && sudo apt-get install -y unzip imagemagick
 

@@ -1,35 +1,32 @@
-FROM rust:1-bookworm AS build-lepton_jpeg_rust
-
-RUN apt-get update && \
-    apt-get install -y \
-    git && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN git clone --branch v0.5.3 --depth 1 https://github.com/microsoft/lepton_jpeg_rust.git /lepton_jpeg_rust
-WORKDIR /lepton_jpeg_rust/dll
-
-RUN cargo build --release --workspace --locked
-
+# -----------------------------------------------------
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
-FROM python:3.12-bookworm
+FROM dhi.io/python:3.12.12-debian13-dev AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+ARG UV_NO_DEV=1
+ARG UV_COMPILE_BYTECODE=1
+ARG UV_LINK_MODE=copy
+ARG UV_PYTHON_DOWNLOADS=0
+
+WORKDIR /usr/src/app
+COPY pyproject.toml uv.lock /usr/src/app/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-editable
+
+COPY src /usr/src/app/src
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-editable
+
+# -----------------------------------------------------
+FROM dhi.io/python:3.12.12-debian13
 
 WORKDIR /usr/src/app
 
-RUN apt-get update && \
-    apt-get install -y \
-    default-libmysqlclient-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+COPY --from=dhi.io/mysql:9.5-debian13 /opt/mysql/lib/libmysqlclient* /usr/lib/
+COPY --from=builder /usr/src/app/.venv /usr/src/app/.venv
+ENV PATH="/usr/src/app/.venv/bin:$PATH"
 
-COPY requirements.embed.txt requirements.txt
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+VOLUME ["/usr/src/app/images"]
 
-COPY --from=build-lepton_jpeg_rust /lepton_jpeg_rust/target/release/liblepton_jpeg_dll.so /usr/lib/liblepton_jpeg.so
-
-COPY LibLepton.py /usr/src/app/
-COPY processImageGlob.py /usr/src/app/
-COPY deepdanbooruEval.py /usr/src/app/
-
-ENTRYPOINT [ "python", "/usr/src/app/processImageGlob.py" ]
+ENTRYPOINT [ "/usr/src/app/.venv/bin/imageevaller" ]

@@ -1,10 +1,7 @@
 services:
   runner:
-    build:
-      context: imageEvaller
-      dockerfile: Dockerfile.dev
+    build: imageEvaller
     volumes:
-      - ./imageEvaller/src/imageevaller:/usr/src/app/
       - ./imageEvaller/models:/usr/src/app/models:ro
       - ./imageEvaller/images:/usr/src/app/images:ro
     environment:
@@ -13,20 +10,18 @@ services:
       - db
 
   viewer:
-    build:
-      context: imageViewer
-      dockerfile: Dockerfile.dev
+    build: imageViewer
     volumes:
       - ./imageEvaller/images:/usr/src/app/images:ro
-      - ./imageViewer:/app
+      - ./imageViewer:/var/www/html
     ports:
       - 7090:8000
     depends_on:
       - db
       - memcached
-    entrypoint: php artisan octane:frankenphp --workers=1 --max-requests=1
 
   img-server:
+    image: ghcr.io/mkaraki/illuststore-viewer:head
     build: imageServer
     volumes:
       - ./imageEvaller/images:/usr/src/app/images:ro

@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/davidbyttow/govips/v2/vips"
+	"github.com/cshum/vipsgen/vips"
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/eko/gocache/lib/v4/store"
 	memcache_store "github.com/eko/gocache/store/memcache/v4"
@@ -397,11 +397,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 	if doResize {
 		// Resize
 		imageBytes := readBuff.Bytes()
-		bytesReader := bytes.NewReader(imageBytes)
 
 		span := sentry.StartSpan(sentryCtx, "image_read")
 		span.Description = "Read raw image to img object"
-		imgRef, err := vips.NewImageFromReader(bytesReader)
+		imgRef, err := vips.NewImageFromBuffer(imageBytes, vips.DefaultLoadOptions())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Unable to read image"))
@@ -419,7 +418,7 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 			// No resize. Return as is.
 			w.Header().Set("Content-Type", contentType)
 			w.WriteHeader(http.StatusOK)
-			bytesReader = bytes.NewReader(imageBytes)
+			bytesReader := bytes.NewReader(imageBytes)
 			_, err = io.Copy(w, bytesReader)
 			if err != nil {
 				span.Finish()
@@ -444,8 +443,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 
 		span = sentry.StartSpan(sentryCtx, "image_resize")
 		span.Description = "Resize img"
+		resizeOptions := vips.DefaultResizeOptions()
+		resizeOptions.Kernel = vips.KernelLanczos2
 		startTime := time.Now()
-		err = imgRef.Resize(scale, vips.KernelLanczos2)
+		err = imgRef.Resize(scale, resizeOptions)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Failed to scale"))
@@ -464,10 +465,10 @@ func imageFileHandler(w http.ResponseWriter, r *http.Request) {
 		span = sentry.StartSpan(sentryCtx, "image_encode")
 		span.Description = "Encode resized img"
 
-		exportParams := vips.NewJpegExportParams()
-		exportParams.Quality = encodeImageQuality
+		exportParams := vips.DefaultJpegsaveBufferOptions()
+		exportParams.Q = encodeImageQuality
 		startTime = time.Now()
-		webpBytes, _, err := imgRef.ExportJpeg(exportParams)
+		webpBytes, err := imgRef.JpegsaveBuffer(exportParams)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = w.Write([]byte("Failed to write thumb data"))
