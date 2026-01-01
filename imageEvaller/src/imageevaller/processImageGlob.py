@@ -101,12 +101,12 @@ def get_image_id(img_path):
         cache_exists_parent = image_parent
         cache_exists = []
         cache_exists_overflow = False
-        # if there are more than 250 images (LIMIT of cache), cache all and set cache_exists_overflow to True
+    # if there are more than 250 images (LIMIT of cache), cache all and set cache_exists_overflow to True
     elif dbLength > 250:
         cache_exists_parent = image_parent
         cache_exists = dbCursor.fetchall()
         cache_exists_overflow = True
-        # if there are less than 250 images, cache all and set cache_exists_overflow to False
+    # if there are less than 250 images, cache all and set cache_exists_overflow to False
     else:
         cache_exists_parent = image_parent
         cache_exists = dbCursor.fetchall()
@@ -135,7 +135,7 @@ def create_tag_or_get_tag_id(tag):
             "INSERT INTO tags(tagName, tagDanbooru) VALUES (%s, %s)", (tag, tag)
         )
         tagId = dbCursor.lastrowid
-        return tagId
+    return tagId
 
 
 @functools.cache
@@ -148,7 +148,7 @@ def is_need_scan_even_exists():
 def add_image(i_path, image):
     image_abs = os.path.abspath(i_path)
     dbCursor.execute("INSERT INTO illusts(path) VALUES(%s)",
-                    (image_abs,))
+                      (image_abs,))
     illustId = dbCursor.lastrowid
 
     res = try_update_image_info(i_path, image, illustId)
@@ -365,8 +365,8 @@ if args.force_delete_all_images:
     dbCursor.execute("DELETE FROM illusts")
     if args.delete_all_tags:
         dbCursor.execute("DELETE FROM tags")
-        db.commit()
-        print("Deleted all images")
+    db.commit()
+    print("Deleted all images")
 
     sys.exit(0)
 
@@ -378,7 +378,7 @@ for i in iglob("./images/**/*.jpg", recursive=True):
     if img_id != False and is_need_scan_even_exists() == False:
         if args.verbose:
             print(f"Exists: {i}")
-            continue
+        continue
 
     img = None
 
@@ -397,13 +397,13 @@ for i in iglob("./images/**/*.jpg", recursive=True):
         if img_id != False:
             if args.verbose:
                 print(f"Exists: {i}")
-                call_try_update_image_info(i, img, img_id)
-                continue
+            call_try_update_image_info(i, img, img_id)
+            continue
 
         if img_id == False:
             if args.verbose:
                 print(f"Processing: {i}")
-                add_image(i, img)
+            add_image(i, img)
 
 
 
@@ -414,7 +414,7 @@ for i in iglob("./images/**/*.png", recursive=True):
     if img_id != False and is_need_scan_even_exists() == False:
         if args.verbose:
             print(f"Exists: {i}")
-            continue
+        continue
 
     img = None
 
@@ -432,13 +432,13 @@ for i in iglob("./images/**/*.png", recursive=True):
         if img_id != False:
             if args.verbose:
                 print(f"Exists: {i}")
-                call_try_update_image_info(i, img, img_id)
-                continue
+            call_try_update_image_info(i, img, img_id)
+            continue
 
         if img_id == False:
             if args.verbose:
                 print(f"Processing: {i}")
-                add_image(i, img)
+            add_image(i, img)
 
 
 
@@ -449,7 +449,7 @@ for i in iglob("./images/**/*.webp", recursive=True):
     if img_id != False and is_need_scan_even_exists() == False:
         if args.verbose:
             print(f"Exists: {i}")
-            continue
+        continue
 
     img = None
 
@@ -467,13 +467,13 @@ for i in iglob("./images/**/*.webp", recursive=True):
         if img_id != False:
             if args.verbose:
                 print(f"Exists: {i}")
-                call_try_update_image_info(i, img, img_id)
-                continue
+            call_try_update_image_info(i, img, img_id)
+            continue
 
         if img_id == False:
             if args.verbose:
                 print(f"Processing: {i}")
-                add_image(i, img)
+            add_image(i, img)
 
 
 print("glob: *.lep")
@@ -483,7 +483,7 @@ for i in iglob("./images/**/*.lep", recursive=True):
     if img_id != False and is_need_scan_even_exists() == False:
         if args.verbose:
             print(f"Exists: {i}")
-            continue
+        continue
 
     img = None
 
@@ -493,8 +493,8 @@ for i in iglob("./images/**/*.lep", recursive=True):
             raw_data = bytearray(os.path.getsize(i))
             with open(i, "rb") as f:
                 f.readinto(raw_data)
-                jpeg_data = lepton_jpeg_python.decompress_bytes(raw_data)
-                img = tensorflow.io.decode_jpeg(bytes(jpeg_data), channels=3)
+            jpeg_data = lepton_jpeg_python.decompress_bytes(raw_data)
+            img = tensorflow.io.decode_jpeg(bytes(jpeg_data), channels=3)
         except Exception as e:
             sys.stderr.write(f"Failed to read {i}: {e}\n")
             continue
@@ -504,13 +504,13 @@ for i in iglob("./images/**/*.lep", recursive=True):
         if img_id != False:
             if args.verbose:
                 print(f"Exists: {i}")
-                call_try_update_image_info(i, img, img_id)
-                continue
+            call_try_update_image_info(i, img, img_id)
+            continue
 
         if img_id == False:
             if args.verbose:
                 print(f"Processing: {i}")
-                add_image(i, img)
+            add_image(i, img)
 
 
 db.close()
