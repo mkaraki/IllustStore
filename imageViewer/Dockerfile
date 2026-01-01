@@ -2,11 +2,12 @@ FROM composer AS require-server
 
 WORKDIR /app
 
-COPY --exclude=vendor --exclude=node_modules --exclude=public/build . /app/
+COPY --exclude=vendor --exclude=node_modules --exclude=public/build --exclude=Caddyfile . /app/
 
 RUN composer install --ignore-platform-reqs
 
-FROM node:22-slim AS npm
+# ---------------------------------------------------------------
+FROM node:24-slim AS npm
 
 RUN apt-get update && apt-get -y install ca-certificates && \
     sed -i.bak -r 's@http://deb\.debian\.org/?@https://ftp.riken.jp/Linux/debian/@g' /etc/apt/sources.list.d/debian.sources && \
@@ -22,7 +23,8 @@ COPY --from=require-server /app /app
 COPY .env.example /app/.env
 WORKDIR /app
 
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
 RUN --mount=type=secret,id=SENTRY_ORG,env=SENTRY_ORG \
     --mount=type=secret,id=SENTRY_PROJECT,env=SENTRY_PROJECT \
@@ -30,49 +32,32 @@ RUN --mount=type=secret,id=SENTRY_ORG,env=SENTRY_ORG \
     --mount=type=secret,id=SENTRY_URL,env=SENTRY_URL \
     pnpm run build
 
-FROM php:8.4-apache-trixie
+# ---------------------------------------------------------------
+FROM dunglas/frankenphp:php8.4.16-alpine
 
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-RUN apt-get update && apt-get -y install ca-certificates && \
-    sed -i.bak -r 's@http://deb\.debian\.org/?@https://ftp.riken.jp/Linux/debian/@g' /etc/apt/sources.list.d/debian.sources && \
-    apt-get update
+RUN install-php-extensions \
+    pcntl \
+    mysqli \
+    pdo_mysql \
+    excimer \
+    memcached \
+    opcache
 
-ENV IPE_GD_WITHOUTAVIF=1
-RUN --mount=type=bind,from=ghcr.io/mlocati/php-extension-installer:latest,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-    install-php-extensions imagick mysqli excimer memcached pdo_mysql
-RUN docker-php-ext-install opcache
+ARG USER=www-data
+RUN adduser -D ${USER}; \
+    setcap -r /usr/local/bin/frankenphp; \
+    chown -R ${USER}:${USER} /config/caddy /data/caddy
+USER ${USER}
 
-RUN <<EOF cat >> $PHP_INI_DIR/conf.d/more-upload-size.ini
-upload_max_filesize = 150M
-post_max_size = 150M
-EOF
+WORKDIR /var/www/html
+COPY --from=npm --chown=${USER}:${USER} /app .
+COPY --chown=${USER}:${USER} .env.example ./.env
+COPY --chown=${USER}:${USER} Caddyfile .
 
-RUN <<EOF cat > /etc/apache2/sites-available/000-default.conf
-<VirtualHost *:80>
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/html/public
-        ErrorLog /dev/stderr
-        CustomLog /dev/stdout combined
-        <Directory "/var/www/html/public">
-                Options Indexes FollowSymLinks
-                AllowOverride All
-                Require all granted
-        </Directory>
-</VirtualHost>
-EOF
-
-RUN a2enmod rewrite
-
-COPY --from=require-server /app/vendor /var/www/html/vendor
-COPY --from=npm /app/public/build /var/www/html/public/build
-
-COPY --exclude=vendor --exclude=node_modules --exclude=public/build . /var/www/html
-COPY .env.example /var/www/html/.env
-
-# Note you should re-run `php artisan key:generate` for safety.
-RUN chown www-data:www-data -R /var/www/html/.env /var/www/html/storage && \
-    php artisan optimize:clear && \
+RUN php artisan optimize:clear && \
     php artisan key:generate && \
     php artisan event:cache && \
     php artisan route:cache && \
     php artisan view:cache
+
+CMD ["frankenphp", "run"]

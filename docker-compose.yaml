@@ -15,11 +15,10 @@ services:
       - ./imageEvaller/images:/usr/src/app/images:ro
       - ./imageViewer:/var/www/html
     ports:
-      - 7090:80
+      - 7090:8000
     depends_on:
       - db
       - memcached
-    command: php-cli artisan octane:frankenphp
 
   img-server:
     image: ghcr.io/mkaraki/illuststore-viewer:head

@@ -1,10 +1,17 @@
-FROM dunglas/frankenphp
+FROM dunglas/frankenphp:php8.4.16-alpine
 
 RUN install-php-extensions \
     pcntl \
     mysqli \
     pdo_mysql \
+    excimer \
     memcached \
     opcache
 
-ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
+#ARG USER=www-data
+#RUN adduser -D ${USER}; \
+#    setcap -r /usr/local/bin/frankenphp; \
+#	chown -R ${USER}:${USER} /config/caddy /data/caddy
+#USER ${USER}
+
+CMD ["frankenphp", "run"]
