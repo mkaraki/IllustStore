@@ -37,7 +37,7 @@ COPY . /app/
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=1 CGO_CFLAGS_ALLOW="-Xpreprocessor" go build
 
 # -----------------------------------------------------
-FROM dhi.io/alpine-base:3.22-dev
+FROM dhi.io/alpine-base:3.23-dev
 
 RUN apk update && apk add glib expat zlib gettext libwebp \
     libpng libjpeg-turbo libwebpmux libwebpdemux libgcc

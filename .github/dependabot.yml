@@ -4,6 +4,13 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
+registries:
+  dhi:
+    type: docker-registry
+    url: https://dhi.io
+    username: ${{secrets.DOCKER_USER}}
+    password: ${{secrets.DOCKER_PAT}}
+    replaces-base: true
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -25,6 +32,7 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    registries: "*"
 
   - package-ecosystem: "docker"
     directory: "/imageEvaller/"
@@ -32,23 +40,10 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    registries: "*"
 
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/imageEvaller/"
-    schedule:
-      interval: "monthly"
-    assignees:
-      - "mkaraki"
-
-  - package-ecosystem: "docker"
-    directory: "/utils/imageCompress/"
-    schedule:
-      interval: "monthly"
-    assignees:
-      - "mkaraki"
-
-  - package-ecosystem: "pip"
-    directory: "/uitls/imageCompress/"
     schedule:
       interval: "monthly"
     assignees:
@@ -60,6 +55,7 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    registries: "*"
 
   - package-ecosystem: "gomod"
     directory: "/imageServer/"
