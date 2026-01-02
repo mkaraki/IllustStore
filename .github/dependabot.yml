@@ -49,16 +49,8 @@ updates:
     assignees:
       - "mkaraki"
 
-  - package-ecosystem: "docker"
-    directory: "/utils/imageCompress/"
-    schedule:
-      interval: "monthly"
-    assignees:
-      - "mkaraki"
-    registries: "*"
-
-  - package-ecosystem: "pip"
-    directory: "/uitls/imageCompress/"
+  - package-ecosystem: "uv"
+    directory: "/imageEvaller/"
     schedule:
       interval: "monthly"
     assignees:
