@@ -13,7 +13,7 @@ RUN cargo build --release --workspace --locked
 
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
-FROM dhi.io/python:3.12.12-debian13-dev
+FROM dhi.io/python:3.14.2-debian13-dev
 
 WORKDIR /usr/src/app
 
