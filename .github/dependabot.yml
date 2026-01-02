@@ -32,6 +32,7 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    registries: "*"
 
   - package-ecosystem: "docker"
     directory: "/imageEvaller/"
@@ -39,6 +40,7 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    registries: "*"
 
   - package-ecosystem: "pip"
     directory: "/imageEvaller/"
@@ -53,6 +55,7 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    registries: "*"
 
   - package-ecosystem: "pip"
     directory: "/uitls/imageCompress/"
@@ -67,6 +70,7 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    registries: "*"
 
   - package-ecosystem: "gomod"
     directory: "/imageServer/"
