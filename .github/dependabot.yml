@@ -42,13 +42,6 @@ updates:
       - "mkaraki"
     registries: "*"
 
-  - package-ecosystem: "pip"
-    directory: "/imageEvaller/"
-    schedule:
-      interval: "monthly"
-    assignees:
-      - "mkaraki"
-
   - package-ecosystem: "uv"
     directory: "/imageEvaller/"
     schedule:
