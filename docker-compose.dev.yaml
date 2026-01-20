@@ -11,6 +11,8 @@ services:
       - CUDA_VISIBLE_DEVICES=""
     depends_on:
       - db
+    profiles:
+      - tools
 
   viewer:
     build:
@@ -24,7 +26,7 @@ services:
     depends_on:
       - db
       - memcached
-    entrypoint: php artisan octane:frankenphp --workers=1 --max-requests=1
+    entrypoint: php artisan octane:frankenphp --workers=4 --max-requests=1
 
   img-server:
     build: imageServer
@@ -45,9 +47,11 @@ services:
       - MARIADB_USER=illustStore
       - MARIADB_PASSWORD=illustStore
     volumes:
-      - ./dbdebug:/var/lib/mysql:Z
-      - ./init.db:/docker-entrypoint-initdb.d:ro
+      - dbdebug:/var/lib/mysql:Z
 
   memcached:
     image: memcached:1.6-alpine
     command: memcached -m 1024
+
+volumes:
+  dbdebug: {}

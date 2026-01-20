@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX tags_tagName_index ON tags(tagName);

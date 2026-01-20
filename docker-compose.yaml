@@ -8,6 +8,8 @@ services:
       - CUDA_VISIBLE_DEVICES=""
     depends_on:
       - db
+    profiles:
+      - tools
 
   viewer:
     build: imageViewer

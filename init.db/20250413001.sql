@@ -1,1 +1,0 @@
-CREATE INDEX tagAssign_illustId_index ON tagAssign(illustId);
