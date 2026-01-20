@@ -45,8 +45,12 @@ jobs:
 
       - name: Run mariadb
         run: |
-          sudo docker compose -f docker-compose.dev.yaml up -d --wait db
+          sudo docker compose -f docker-compose.dev.yaml up -d --wait db viewer
           sleep 60
+
+      - name: Migrate database
+        run: |
+          sudo docker compose -f docker-compose.dev.yaml exec viewer php artisan migrate
 
       - name: Run test
         env:
