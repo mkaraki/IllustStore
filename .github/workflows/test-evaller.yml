@@ -48,6 +48,10 @@ jobs:
           sudo docker compose -f docker-compose.dev.yaml up -d --wait db
           sleep 60
 
+      - name: Prepare for Docker based dev env
+        run: |
+          cp imageViewer/.env.example imageViewer/.env
+
       - name: Install PHP dependencies
         uses: php-actions/composer@v6
         with:
