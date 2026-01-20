@@ -60,7 +60,7 @@ jobs:
 
       - name: Migrate database
         run: |
-          sudo docker compose -f docker-compose.dev.yaml run --rm viewer php artisan migrate
+          sudo docker compose -f docker-compose.dev.yaml run --rm viewer php artisan migrate --force
 
       - name: Run test
         env:
