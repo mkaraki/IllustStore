@@ -135,15 +135,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::drop('illusts');
-        Schema::drop('tagGroups');
-        Schema::drop('selectiveTagGroups');
-        Schema::drop('tags');
-        Schema::drop('tagAssign');
-        Schema::drop('tagNegativeAssign');
-        Schema::drop('metadata_provider');
-        Schema::drop('tagDependRelation');
-        Schema::drop('tagRelatedRelation');
         Schema::drop('tagCantWithRelation');
+        Schema::drop('tagRelatedRelation');
+        Schema::drop('tagDependRelation');
+        Schema::drop('metadata_provider');
+        Schema::drop('tagNegativeAssign');
+        Schema::drop('tagAssign');
+        Schema::drop('tags');
+        Schema::drop('selectiveTagGroups');
+        Schema::drop('tagGroups');
+        Schema::drop('illusts');
     }
 };
