@@ -15,6 +15,9 @@ on:
       - '.github/**'
   pull_request:
     branches: [ "master" ]
+    paths:
+      - 'imageServer/**'
+      - '.github/**'
   workflow_dispatch:
 
 env:
