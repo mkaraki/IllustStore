@@ -19,3 +19,19 @@ In default, tagger will include character tags.
 If you want to exclude character tags, you need to rename `tags-general.txt` to `tags.txt`.
 
 You can also [generate your own model](https://github.com/KichangKim/DeepDanbooru?tab=readme-ov-file#usage) and use it.
+
+## Migrate from `init.db` method to `artisan migrate` method
+
+Export database values and insert after migration.
+
+```bash
+# You have to export database except table schema
+docker compose exec db mariadb-dump -B illustStore -t --complete-insert > db_data.sql
+```
+
+Then migrate and re-import.
+
+```bash
+# Migrate
+docker compose exec viewer php artisan migrate
+```
