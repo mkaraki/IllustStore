@@ -26,7 +26,7 @@ services:
     depends_on:
       - db
       - memcached
-    entrypoint: php artisan octane:frankenphp --workers=4 --max-requests=1
+    command: php artisan octane:frankenphp --workers=4 --max-requests=1
 
   img-server:
     build: imageServer
