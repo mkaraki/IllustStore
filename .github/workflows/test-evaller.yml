@@ -4,8 +4,18 @@ permissions:
 
 on:
   push:
+    paths:
+      - "imageViewer/**"
+      - "imageEvaller/**"
+      - "docker-compose.dev.yaml"
+      - '.github/**'
   pull_request:
     branches: [ "master" ]
+    paths:
+      - "imageViewer/**"
+      - "imageEvaller/**"
+      - "docker-compose.dev.yaml"
+      - '.github/**'
   workflow_dispatch:
 
 jobs:
