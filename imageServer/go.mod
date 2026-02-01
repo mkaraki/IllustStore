@@ -7,7 +7,7 @@ require (
 	github.com/cshum/vipsgen v1.3.0
 	github.com/eko/gocache/lib/v4 v4.2.3
 	github.com/eko/gocache/store/memcache/v4 v4.2.4
-	github.com/getsentry/sentry-go v0.40.0
+	github.com/getsentry/sentry-go v0.42.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/prometheus/client_golang v1.23.2
 )
