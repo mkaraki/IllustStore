@@ -266,7 +266,7 @@ dependencies = [
 requires-dist = [
     { name = "deepdanbooru", specifier = "==1.0.4" },
     { name = "imagehash", specifier = "==4.3.2" },
-    { name = "lepton-jpeg-python", specifier = "==0.5.5" },
+    { name = "lepton-jpeg-python", specifier = "==0.5.8" },
     { name = "mysql-connector-python", specifier = "==9.5.0" },
     { name = "sentry-sdk", specifier = "==2.51.0" },
     { name = "tensorflow", specifier = "==2.20.0" },
@@ -364,18 +364,18 @@ wheels = [
 
 [[package]]
 name = "lepton-jpeg-python"
-version = "0.5.5"
+version = "0.5.8"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/24/88c6fb8e7158cb4b339e6c6ac6f1536c4ce4dcd09c116aca012b94b0d002/lepton_jpeg_python-0.5.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:777b3e4a2da08f6c938d5dd60e57ec6f742cb588eee7d76d0dbbf9015161f26a", size = 538852, upload-time = "2025-10-27T17:20:33.813Z" },
-    { url = "https://files.pythonhosted.org/packages/93/79/6ec47eb48b1cb51d763280e68ca8090290e03680ecf7988992a23b0b1002/lepton_jpeg_python-0.5.5-cp310-cp310-manylinux_2_34_x86_64.whl", hash = "sha256:ef6b82316c9f8fb3fb6ddd87e5d546bfdab30d3040c24eded4112b066d694438", size = 5256163, upload-time = "2025-10-27T15:45:06.282Z" },
-    { url = "https://files.pythonhosted.org/packages/58/2f/877f7fd32d797b33e5469d4797e409526dfc2ef912713c5539d89d448134/lepton_jpeg_python-0.5.5-cp310-cp310-win_amd64.whl", hash = "sha256:d9beb5e9184475b54743f3c23f657048a722bd4776c1cfce677825ab4ca522af", size = 380272, upload-time = "2025-10-27T16:49:11.436Z" },
-    { url = "https://files.pythonhosted.org/packages/74/86/91a28ed6dbf3d567c15972c631dbc9401cf879364cbac81d3cf3f58f054a/lepton_jpeg_python-0.5.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:33f66d663c8561f6dfb6f67e48e5345ef2b01ec5b7329cdfd086bb64488c00d8", size = 538542, upload-time = "2025-10-27T17:21:05.445Z" },
-    { url = "https://files.pythonhosted.org/packages/29/f2/303e05e20a53007191b1b1e5b9dca9cd0eea3b3d89309526e9c50e38824a/lepton_jpeg_python-0.5.5-cp311-cp311-manylinux_2_34_x86_64.whl", hash = "sha256:740dad52bfd5166a5e5fc6943812ff914a1611809d121fc0aca5d11a8bd67f68", size = 5257357, upload-time = "2025-10-27T15:45:06.323Z" },
-    { url = "https://files.pythonhosted.org/packages/fd/75/03708ff9346d9a3dddbdbdaefe34f1cd8be30faf78935daa4010b9c0a9fd/lepton_jpeg_python-0.5.5-cp311-cp311-win_amd64.whl", hash = "sha256:7a9efad492d40bdf7554d1b609f731efbd3b3c046eeab37169be6f54c6c33f42", size = 380337, upload-time = "2025-10-27T16:47:50.94Z" },
-    { url = "https://files.pythonhosted.org/packages/38/e2/a1047d254aa90dded8e88a9fd2cda751e936ddba35aa843214d862595782/lepton_jpeg_python-0.5.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:55b4d29362b1b641c4a2cac18bced89433f20d3b4bac2ae39abb9a558785b823", size = 536076, upload-time = "2025-10-27T17:21:12.84Z" },
-    { url = "https://files.pythonhosted.org/packages/af/f4/7d814dc378787a182a8dc975eb028c569dd87191512584728faf954648b3/lepton_jpeg_python-0.5.5-cp312-cp312-manylinux_2_34_x86_64.whl", hash = "sha256:6fa24f44f0f18d4deeaf93ab612fde79e4e63d222208738ad851071301f01c27", size = 5263541, upload-time = "2025-10-27T15:44:56.73Z" },
-    { url = "https://files.pythonhosted.org/packages/50/4e/c1cc2038a6c81da383bbab80272a66126dd3e4bfa70e7a05d468ed74cde2/lepton_jpeg_python-0.5.5-cp312-cp312-win_amd64.whl", hash = "sha256:db2be8910dbbbee0e72b7d9940b57215102fbe670ff4a4011a4a285dbca7c147", size = 379520, upload-time = "2025-10-27T16:46:45.577Z" },
+    { url = "https://files.pythonhosted.org/packages/26/97/1a9dc580eaa6781c7805d76ba49e50518e63200114ad406204434947bea1/lepton_jpeg_python-0.5.8-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2f4ad568ba8f8d874c5156bf0d85d0eb8e0b0cd93ec764d3783c241834c49112", size = 480140, upload-time = "2026-01-27T05:44:20.347Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/1b/c31a2d9b99eab29260406f97e49c3ba20fa965019d242bbaafca907bea08/lepton_jpeg_python-0.5.8-cp310-cp310-manylinux_2_34_x86_64.whl", hash = "sha256:f89bda80973714b6c125501cc6c42d8c17cbf22d921510b91d7ddba062063452", size = 3062552, upload-time = "2026-01-27T05:43:09.247Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/e0/1d2319fa1368d00cbd8b366cd82d818ed278b660ecc2a2981b03e4e2870a/lepton_jpeg_python-0.5.8-cp310-cp310-win_amd64.whl", hash = "sha256:ad133e08ac724c8910388b7743adc1573678b0dd9407d98962dbbfdc5bd13f13", size = 435642, upload-time = "2026-01-27T05:44:13.74Z" },
+    { url = "https://files.pythonhosted.org/packages/39/e0/c72e282b041b932ef7828e03c3ae9ba657211084f690bcd2e3a66b804704/lepton_jpeg_python-0.5.8-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:db2e62899e22c8a01071d7ebad0aae844c6a0605285f077a9d71df1716e5dad7", size = 479876, upload-time = "2026-01-27T05:43:16.364Z" },
+    { url = "https://files.pythonhosted.org/packages/df/a2/52ac4c6238265008eda0accfd9a757f5799af0acf13d5eb4b652d82cb3ec/lepton_jpeg_python-0.5.8-cp311-cp311-manylinux_2_34_x86_64.whl", hash = "sha256:3dff40ed30fc6834166f3cc4d4a6365f3019a9a440cb918f0c2db112f6704056", size = 3063910, upload-time = "2026-01-27T05:43:06.525Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/c2/5794f57eadfcd641b1a2053072e6b5dc6b4e3afd9c684b19ba32b5e2d1c4/lepton_jpeg_python-0.5.8-cp311-cp311-win_amd64.whl", hash = "sha256:a88c1fd83df8316592a5d94d7ec2363e72e9f0dea68d9c6b226a8b5f10b2d133", size = 435688, upload-time = "2026-01-27T05:44:13.489Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/55/68f29e2b1aba67ae8151fb994062ffe155882c93fc75f4ec6d3c24ee2092/lepton_jpeg_python-0.5.8-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:665e15ddc586346416680b9ab9a6009630bba4e0d50f431c024b1f1d76ff8bbc", size = 479037, upload-time = "2026-01-27T05:43:19.907Z" },
+    { url = "https://files.pythonhosted.org/packages/05/18/608d4924a66dc5fbf872ee5bea58ad6586ca766caa439278c4e23bafad73/lepton_jpeg_python-0.5.8-cp312-cp312-manylinux_2_34_x86_64.whl", hash = "sha256:05016e2d22900f7aa4c01275b86bf41037c9fba1a733b2816f2f19412afae172", size = 3059572, upload-time = "2026-01-27T05:43:07.492Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/75/72e4c6a1d1ec6558160996990668b5042415194a8bd231d0c9461ce0b184/lepton_jpeg_python-0.5.8-cp312-cp312-win_amd64.whl", hash = "sha256:f96fab57eb0947886fa507e2f5eba9175b70b9dc20236e21e5b4703d71c1a998", size = 434598, upload-time = "2026-01-27T05:44:19.49Z" },
 ]
 
 [[package]]
