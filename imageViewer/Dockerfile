@@ -33,7 +33,7 @@ RUN --mount=type=secret,id=SENTRY_ORG,env=SENTRY_ORG \
     pnpm run build
 
 # ---------------------------------------------------------------
-FROM dunglas/frankenphp:php8.4.16-alpine
+FROM dunglas/frankenphp:php8.4.16
 
 RUN install-php-extensions \
     pcntl \
