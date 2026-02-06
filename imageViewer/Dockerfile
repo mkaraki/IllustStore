@@ -54,6 +54,8 @@ COPY --from=npm --chown=${USER}:${USER} /app .
 COPY --chown=${USER}:${USER} .env.example ./.env
 COPY --chown=${USER}:${USER} Caddyfile .
 
+RUN chmod +x optimize-and-start.sh
+
 RUN php artisan optimize:clear && \
     php artisan key:generate && \
     php artisan event:cache && \
