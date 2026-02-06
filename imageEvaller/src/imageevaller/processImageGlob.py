@@ -61,7 +61,7 @@ def image_proc(image):
 
 
 @sentry_sdk.trace
-def get_image_id(img_path):
+def get_image_id(img_path: str) -> int | bool:
     """
     Return Image ID if exists in DB.
     Return False if not exists.
@@ -120,7 +120,7 @@ cache_exists_overflow = False
 cache_exists = []
 
 
-def is_tag_danbooru_exists(tag):
+def is_tag_danbooru_exists(tag: str) -> int | bool:
     dbCursor.execute("SELECT id FROM tags WHERE tagDanbooru = %s", (tag,))
     if dbCursor.rowcount < 1:
         return False
@@ -128,7 +128,7 @@ def is_tag_danbooru_exists(tag):
 
 
 @functools.cache
-def create_tag_or_get_tag_id(tag):
+def create_tag_or_get_tag_id(tag: str) -> int:
     tagId = is_tag_danbooru_exists(tag)
     if tagId == False:
         dbCursor.execute(
@@ -139,17 +139,17 @@ def create_tag_or_get_tag_id(tag):
 
 
 @functools.cache
-def is_need_scan_even_exists():
+def is_need_scan_even_exists() -> bool:
     if args.migrate_scan == False:
         return False
     return True
 
 
-def add_image(i_path, image):
-    image_abs = os.path.abspath(i_path)
+def add_image(i_path: str, image):
+    image_abs: str = os.path.abspath(i_path)
     dbCursor.execute("INSERT INTO illusts(path) VALUES(%s)",
                       (image_abs,))
-    illustId = dbCursor.lastrowid
+    illustId: int = dbCursor.lastrowid
 
     res = try_update_image_info(i_path, image, illustId)
 
@@ -159,7 +159,7 @@ def add_image(i_path, image):
         db.commit()
 
 
-def call_try_update_image_info(i_path, image, img_id):
+def call_try_update_image_info(i_path: str, image, img_id: int):
     """
     Call try_update_image_info and commit or rollback.
     This should be called from image glob loop (when Image exists in DB).
@@ -179,8 +179,8 @@ def call_try_update_image_info(i_path, image, img_id):
 
 
 @sentry_sdk.trace
-def try_update_image_info(i_path, image, img_id):
-    pilImg = tensorflow.keras.utils.array_to_img(image)
+def try_update_image_info(i_path: str, image, img_id: int):
+    pilImg: Image.Image = tensorflow.keras.utils.array_to_img(image)
 
     # Check is aHash, pHash, dHash, colorHash exists
     dbCursor.execute("SELECT id FROM illusts WHERE id = %s AND aHash IS NULL OR pHash IS NULL OR dHash IS NULL OR colorHash IS NULL", (img_id,))
@@ -210,7 +210,7 @@ def try_update_image_info(i_path, image, img_id):
 
 
 @sentry_sdk.trace
-def add_image_size(img_id, pilImg):
+def add_image_size(img_id: int, pilImg: Image.Image) -> bool:
     width, height = pilImg.size
 
     dbCursor.execute("UPDATE illusts SET width = %s, height = %s WHERE id = %s", (width, height, img_id,))
@@ -219,15 +219,15 @@ def add_image_size(img_id, pilImg):
 
 
 @sentry_sdk.trace
-def get_negative_tags(illustId):
+def get_negative_tags(illustId: int) -> list[int]:
     dbCursor.execute("SELECT tagId FROM tagNegativeAssign WHERE illustId = %s", (illustId,))
     lst = np.array(dbCursor.fetchall()).flatten()
     return lst.tolist()
 
 
 @sentry_sdk.trace
-def add_image_tags(illustId, image):
-    negative_tags = get_negative_tags(illustId)
+def add_image_tags(illustId: int, image):
+    negative_tags: list[int] = get_negative_tags(illustId)
     insert_data = []
 
     tag_items = None
@@ -239,7 +239,7 @@ def add_image_tags(illustId, image):
         return False
 
     for t, a in tag_items:
-        tagId = create_tag_or_get_tag_id(t)
+        tagId: int = create_tag_or_get_tag_id(t)
 
         # Skip if detected tag is blacklisted in illust.
         # This may won't work as user expected. Because this method only runs when program didn't detected any tags registered in DB.
@@ -257,7 +257,7 @@ def add_image_tags(illustId, image):
 
 
 @sentry_sdk.trace
-def calc_image_hash_average_hash(pilImage):
+def calc_image_hash_average_hash(pilImage: Image.Image):
     try:
         v = str(imagehash.average_hash(pilImage))
         return { 'average_hash': v }
@@ -268,7 +268,7 @@ def calc_image_hash_average_hash(pilImage):
 
 
 @sentry_sdk.trace
-def calc_image_hash_d_hash(pilImage):
+def calc_image_hash_d_hash(pilImage: Image.Image):
     try:
         v = str(imagehash.dhash(pilImage))
         return { 'd_hash': v }
@@ -279,7 +279,7 @@ def calc_image_hash_d_hash(pilImage):
 
 
 @sentry_sdk.trace
-def calc_image_hash_p_hash(pilImage):
+def calc_image_hash_p_hash(pilImage: Image.Image):
     try:
         v = str(imagehash.phash(pilImage))
         return { 'p_hash': v }
@@ -290,7 +290,7 @@ def calc_image_hash_p_hash(pilImage):
 
 
 @sentry_sdk.trace
-def calc_image_hash_color_hash(pilImage):
+def calc_image_hash_color_hash(pilImage: Image.Image):
     try:
         v = str(imagehash.colorhash(pilImage))
         return { 'color_hash': v }
@@ -301,7 +301,7 @@ def calc_image_hash_color_hash(pilImage):
 
 
 @sentry_sdk.trace
-def calc_hashes(pilImage):
+def calc_hashes(pilImage: Image.Image):
     hashes = {}
 
     with ThreadPoolExecutor(max_workers=4, thread_name_prefix="im_hash_thread") as executor:
@@ -328,7 +328,7 @@ def calc_hashes(pilImage):
 
 
 @sentry_sdk.trace
-def add_image_hash(img_id, pilImg):
+def add_image_hash(img_id: int, pilImg: Image.Image):
     aHash = None
     dHash = None
     pHash = None

@@ -34,4 +34,7 @@ Then migrate and re-import.
 ```bash
 # Migrate
 docker compose exec viewer php artisan migrate
+
+# Import
+docker compose exec -T db mariadb illustStore < db_data.sql
 ```
