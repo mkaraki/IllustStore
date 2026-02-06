@@ -105,7 +105,13 @@ func openDb() error {
 	if db != nil {
 		_ = db.Close()
 	}
-	db, err = sql.Open("mysql", "illustStore:illustStore@tcp(db:3306)/illustStore")
+
+	dsn := os.Getenv("MYSQL_DSN")
+	if dsn == "" {
+		dsn = "illustStore:illustStore@tcp(db:3306)/illustStore"
+	}
+
+	db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return err
 	}
@@ -578,6 +584,11 @@ func main() {
 	http.HandleFunc("/image/{imageId}/{variant}", sentryHandler.HandleFunc(imageFileHandler))
 	// Ignore metrics path for sentry
 	http.Handle("/metrics", promhttp.Handler())
+
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "OK")
+	})
 
 	fmt.Println("Starting server")
 	err := http.ListenAndServe(":8080", nil)
