@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-pgp artisan optimize:clear
+php artisan optimize:clear
 
 php artisan event:cache
 php artisan route:cache
