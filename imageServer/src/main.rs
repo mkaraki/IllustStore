@@ -1,10 +1,12 @@
 use std::{env, fs, io};
 use actix_web::{get, App, HttpServer, HttpRequest, HttpResponse, web, middleware::Logger};
 use sqlx::mysql::{MySqlPoolOptions, MySqlPool};
-use image::{ImageReader, ImageEncoder};
+use image::{ImageReader, ImageEncoder, codecs::*};
 use fast_image_resize::IntoImageView;
 use fast_image_resize::images::Image;
 use env_logger;
+
+mod image_lepton;
 
 #[get("/image/{image_id}/{variant}")]
 async fn get_image(
@@ -119,19 +121,55 @@ async fn get_image(
                 return HttpResponse::InternalServerError().body("Failed to resize image");
             }
 
+            let color_type: image::ExtendedColorType = img.color().into();
+
             let mut result_vec = Vec::new();
             let mut result_buf = io::Cursor::new(&mut result_vec);
-            let encode_res = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut result_buf, encode_quality)
-                .write_image(
-                    dst_image.buffer(),
-                    new_size.0,
-                    new_size.1,
-                    img.color().into(),
-                );
-
-            if encode_res.is_err() {
-                sentry::capture_error(&encode_res.unwrap_err());
-                return HttpResponse::InternalServerError().body("Failed to encode image");
+            match color_type {
+                image::ExtendedColorType::L8 |
+                image::ExtendedColorType::Rgb8 => {
+                    let encode_res = jpeg::JpegEncoder::new_with_quality(&mut result_buf, encode_quality)
+                        .write_image(
+                            dst_image.buffer(),
+                            new_size.0,
+                            new_size.1,
+                            color_type,
+                        );
+        
+                    if encode_res.is_err() {
+                        sentry::capture_error(&encode_res.unwrap_err());
+                        return HttpResponse::InternalServerError().body("Failed to encode image");
+                    }
+                },
+                image::ExtendedColorType::La8 |
+                image::ExtendedColorType::Rgba8 => {
+                    let encode_res = webp::WebPEncoder::new_lossless(&mut result_buf)
+                        .write_image(
+                            dst_image.buffer(),
+                            new_size.0,
+                            new_size.1,
+                            color_type,
+                        );
+        
+                    if encode_res.is_err() {
+                        sentry::capture_error(&encode_res.unwrap_err());
+                        return HttpResponse::InternalServerError().body("Failed to encode image");
+                    }
+                },
+                _ => {
+                    let encode_res = png::PngEncoder::new(&mut result_buf)
+                        .write_image(
+                            dst_image.buffer(),
+                            new_size.0,
+                            new_size.1,
+                            color_type,
+                        );
+        
+                    if encode_res.is_err() {
+                        sentry::capture_error(&encode_res.unwrap_err());
+                        return HttpResponse::InternalServerError().body("Failed to encode image");
+                    }
+                },
             }
 
             return HttpResponse::Ok().body(result_vec);
@@ -201,6 +239,8 @@ async fn return_file(
 }
 
 fn main() {
+    image_lepton::register();
+
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     let _guard = sentry::init((
             env::var("SENTRY_DSN").unwrap_or("".to_string()),
