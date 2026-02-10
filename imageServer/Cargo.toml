@@ -1,0 +1,14 @@
+[package]
+name = "imageServer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = "4"
+sqlx = { version = "0.8", features = [ "runtime-tokio", "mysql" ] }
+sentry = { version = "0.46.2", default-features = false, features = ["actix", "backtrace", "contexts", "panic", "debug-images", "reqwest", "rustls"] }
+image = "0.25.9"
+fast_image_resize = { version = "6.0.0", features = ["image", "rayon"] }
+lepton_jpeg = "0.5.8"
+actix-files = "0.6.10"
+env_logger = "0.11.8"
