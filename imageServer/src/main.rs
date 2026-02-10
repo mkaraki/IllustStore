@@ -1,4 +1,4 @@
-use std::{env, fs, io};
+use std::{env, fs, io, path};
 use actix_web::{get, App, HttpServer, HttpRequest, HttpResponse, web, middleware::Logger};
 use sqlx::mysql::{MySqlPoolOptions, MySqlPool};
 use image::{ImageReader, ImageEncoder, codecs::*};
@@ -64,6 +64,11 @@ async fn get_image(
     }
     let image_info = image_info.unwrap();
     let image_path = image_info.0;
+
+    if !path::Path::new(&image_path).is_file() {
+        sentry::capture_message("Image ID exists in DB, but not found in real FS.", sentry::Level::Warning);
+        return HttpResponse::NotFound().body("Image file not found.");
+    }
 
     if resize_size.is_some() {
         let img: Result<_, io::Error> = ImageReader::open(&image_path);
