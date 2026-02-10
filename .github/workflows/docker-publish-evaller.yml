@@ -13,11 +13,6 @@ on:
     paths:
       - 'imageEvaller/**'
       - '.github/**'
-  pull_request:
-    branches: [ "master" ]
-    paths:
-      - 'imageEvaller/**'
-      - '.github/**'
   workflow_dispatch:
 
 env:
@@ -25,8 +20,6 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}-evaller
-  DOCKER_IMAGE_NAME: mkaraki1111/illuststore-evaller
-  DOCKER_ORG: mkaraki1111
 
 jobs:
   build:
@@ -61,14 +54,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # You can skip this step if Docker Hub is your registry
-      # and you already authenticated before
-      - name: Authenticate to Docker
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PAT }}
-
       - name: Authenticate to DHI
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
@@ -84,7 +69,6 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            ${{ env.DOCKER_IMAGE_NAME }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
@@ -101,37 +85,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Docker Scout (PR)
-        id: docker-scout
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1.18.2
-        with:
-          # disable recommendations for scratch image.
-          command: compare,cves,environment
-          image: local://${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          to: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.base_ref }}
-          ignore-unchanged: true
-          only-severities: critical,high
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          organization: ${{ env.DOCKER_ORG }}
-          environment: prod
-
-      - name: Analyze for critical and high CVEs
-        id: docker-scout-cves
-        if: ${{ github.event_name != 'pull_request_target' }}
-        uses: docker/scout-action@f8c776824083494ab0d56b8105ba2ca85c86e4de # v1.18.2
-        with:
-          command: cves,environment
-          image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          sarif-file: sarif.output.json
-          organization: ${{ env.DOCKER_ORG }}
-          environment: prod
-          summary: true
-
-      - name: Upload SARIF result
-        id: upload-sarif
-        if: ${{ github.event_name != 'pull_request_target' }}
-        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30 # v4.32.0
-        with:
-          sarif_file: sarif.output.json
