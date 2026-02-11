@@ -4,7 +4,7 @@ use sqlx::mysql::{MySqlPoolOptions, MySqlPool};
 use image::{ImageReader, ImageEncoder, codecs::*};
 use fast_image_resize::IntoImageView;
 use fast_image_resize::images::Image;
-use env_logger;
+use tracing_subscriber::prelude::*;
 
 mod image_lepton;
 
@@ -42,7 +42,8 @@ async fn get_image(
         db_span = Some(span);
     }
 
-    let image_info: Result<(String, ), sqlx::Error> = sqlx::query_as("SELECT path FROM illusts WHERE id = ?")
+    let image_info: Result<(String, Option<u64>, Option<u64>), sqlx::Error> = sqlx::query_as(
+        "SELECT path, width, height FROM illusts WHERE id = ?")
         .bind(image_id)
         .fetch_one(&**pool).await;
 
@@ -64,6 +65,8 @@ async fn get_image(
     }
     let image_info = image_info.unwrap();
     let image_path = image_info.0;
+    let mut img_width: Option<u64> = image_info.1;
+    let mut img_height: Option<u64> = image_info.2;
 
     if !path::Path::new(&image_path).is_file() {
         sentry::capture_message("Image ID exists in DB, but not found in real FS.", sentry::Level::Warning);
@@ -71,22 +74,23 @@ async fn get_image(
     }
 
     if resize_size.is_some() {
-        let img: Result<_, io::Error> = ImageReader::open(&image_path);
-        if img.is_err() {
-            sentry::capture_message("Failed to open image file via ImageReader::open()", sentry::Level::Error);
-            return HttpResponse::InternalServerError().body("Failed to open image file");
+        let mut img: Option<image::DynamicImage> = None;
+
+        if img_width.is_none() || img_height.is_none() {
+            let img_try = read_image(&image_path);
+            if img_try.is_err() {
+                return img_try.unwrap_err();
+            }
+            let img_try = img_try.unwrap();
+            img_width = Some(img_try.width() as u64);
+            img_height = Some(img_try.height() as u64);
+            img = Some(img_try);
         }
-        let img = img.unwrap().decode();
-        if img.is_err() {
-            sentry::capture_error(&img.unwrap_err());
-            return HttpResponse::InternalServerError().body("Failed to decode image file");
-        }
-        let img = img.unwrap();
 
         let mut new_size: Option<(u32, u32)> = None;
 
-        let img_width: f32 = img.width() as f32;
-        let img_height: f32 = img.height() as f32;
+        let img_width: f32 = img_width.unwrap() as f32;
+        let img_height: f32 = img_height.unwrap() as f32;
         let resize_size = resize_size.unwrap();
 
 
@@ -104,6 +108,15 @@ async fn get_image(
 
         if new_size.is_some() {
             let new_size = new_size.unwrap();
+
+            if img.is_none() {
+                let img_try = read_image(&image_path);
+                if img_try.is_err() {
+                    return img_try.unwrap_err();
+                }
+                img = Some(img_try.unwrap());
+            }
+            let img = img.unwrap();
 
             let mut resizer = fast_image_resize::Resizer::new();
             #[cfg(target_arch = "x86_64")]
@@ -179,54 +192,86 @@ async fn get_image(
 
             return HttpResponse::Ok().body(result_vec);
         } else if image_path.ends_with(".lep") {
-            // Not to resize. But have to decode.
-            let mut result_vec = Vec::new();
-            let mut result_buf = io::Cursor::new(&mut result_vec);
-            let encode_res = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut result_buf, encode_quality)
-                .encode_image(
-                    &img,
-                );
-            if encode_res.is_err() {
-                sentry::capture_error(&encode_res.unwrap_err());
-                return HttpResponse::InternalServerError().body("Failed to encode image");
+            // Not to resize.
+            if img.is_some() {
+                // To reduce processing time, re-encode to jpeg if already decoded lepton.
+                let img = img.unwrap();
+                let mut result_vec = Vec::new();
+                let mut result_buf = io::Cursor::new(&mut result_vec);
+                let encode_res = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut result_buf, encode_quality)
+                    .encode_image(
+                        &img,
+                    );
+                if encode_res.is_err() {
+                    sentry::capture_error(&encode_res.unwrap_err());
+                    return HttpResponse::InternalServerError().body("Failed to encode image");
+                }
+                return HttpResponse::Ok().body(result_vec);
+            } else {
+                // If not, decode and return.
+                return return_lepton(&image_path);
             }
-            return HttpResponse::Ok().body(result_vec);
         } else {
             // Not to resize, and re-encode. (Discard decoded result)
             return return_file(&request, &image_path).await;
         }
     } else if /* raw variant and */ image_path.ends_with(".lep") {
-        let file = fs::File::options()
-            .read(true)
-            .write(false)
-            .create(false)
-            .append(false)
-            .open(image_path);
-        if file.is_err() {
-            sentry::capture_error(&file.unwrap_err());
-            return HttpResponse::InternalServerError().body("Unable to open file");
-        }
-        let file = file.unwrap();
-        let mut reader = io::BufReader::new(file);
-
-        let mut result_vec = Vec::new();
-        let mut result_buf = io::Cursor::new(&mut result_vec);
-        let decode_res = lepton_jpeg::decode_lepton(
-            &mut reader,
-            &mut result_buf,
-            &lepton_jpeg::EnabledFeatures::compat_lepton_vector_read(),
-            &lepton_jpeg::DEFAULT_THREAD_POOL
-        );
-
-        if decode_res.is_err() {
-            sentry::capture_error(&decode_res.unwrap_err());
-            return HttpResponse::InternalServerError().body("Failed to decode image");
-        }
-
-        return HttpResponse::Ok().body(result_vec);
+        return return_lepton(&image_path);
     } else /* raw variant and not lepton image */ {
         return return_file(&request, &image_path).await;
     }
+}
+
+#[tracing::instrument(skip_all)]
+fn return_lepton(
+    image_path: &str
+) -> HttpResponse {
+    let file = fs::File::options()
+        .read(true)
+        .write(false)
+        .create(false)
+        .append(false)
+        .open(image_path);
+    if file.is_err() {
+        sentry::capture_error(&file.unwrap_err());
+        return HttpResponse::InternalServerError().body("Unable to open file");
+    }
+    let file = file.unwrap();
+    let mut reader = io::BufReader::new(file);
+
+    let mut result_vec = Vec::new();
+    let mut result_buf = io::Cursor::new(&mut result_vec);
+    let decode_res = lepton_jpeg::decode_lepton(
+        &mut reader,
+        &mut result_buf,
+        &lepton_jpeg::EnabledFeatures::compat_lepton_vector_read(),
+        &lepton_jpeg::DEFAULT_THREAD_POOL
+    );
+
+    if decode_res.is_err() {
+        sentry::capture_error(&decode_res.unwrap_err());
+        return HttpResponse::InternalServerError().body("Failed to decode image");
+    }
+
+    return HttpResponse::Ok().body(result_vec);
+}
+
+#[tracing::instrument(skip_all)]
+fn read_image(
+    image_path: &str,
+) -> Result<image::DynamicImage, HttpResponse> {
+    let img_try: Result<_, io::Error> = ImageReader::open(&image_path);
+    if img_try.is_err() {
+        sentry::capture_message("Failed to open image file via ImageReader::open()", sentry::Level::Error);
+        return Err(HttpResponse::InternalServerError().body("Failed to open image file"));
+    }
+    let img_try = img_try.unwrap().decode();
+    if img_try.is_err() {
+        sentry::capture_error(&img_try.unwrap_err());
+        return Err(HttpResponse::InternalServerError().body("Failed to decode image file"));
+    }
+
+    Ok(img_try.unwrap())
 }
 
 async fn return_file(
@@ -246,7 +291,11 @@ async fn return_file(
 fn main() {
     image_lepton::register();
 
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    tracing_subscriber::Registry::default()
+        //.with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(sentry::integrations::tracing::layer())
+        .init();
+
     let _guard = sentry::init((
             env::var("SENTRY_DSN").unwrap_or("".to_string()),
             sentry::ClientOptions {
@@ -266,7 +315,7 @@ fn main() {
         let pool = MySqlPoolOptions::new()
             .max_connections(5)
             .connect(
-                &env::var("DB_DSN")
+               &env::var("DB_DSN")
                     .unwrap_or("mysql://illustStore:illustStore@db/illustStore".to_string())
             ).await.expect("Unable to connect to DB");
 
