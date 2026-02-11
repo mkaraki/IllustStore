@@ -26,6 +26,13 @@ updates:
     assignees:
       - "mkaraki"
 
+  - package-ecosystem: "npm"
+    directory: "/imageViewer/"
+    schedule:
+      interval: "monthly"
+    assignees:
+      - "mkaraki"
+
   - package-ecosystem: "docker"
     directory: "/imageViewer/"
     schedule:
@@ -57,7 +64,7 @@ updates:
       - "mkaraki"
     registries: "*"
 
-  - package-ecosystem: "gomod"
+  - package-ecosystem: "cargo"
     directory: "/imageServer/"
     schedule:
       interval: "monthly"
