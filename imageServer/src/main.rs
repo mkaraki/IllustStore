@@ -33,6 +33,14 @@ async fn get_image(
         return HttpResponse::BadRequest().into();
     }
 
+    let db_connection = (&**pool).acquire().await;
+    if db_connection.is_err() {
+        let e = db_connection.unwrap_err();
+        sentry::capture_error(&e);
+        return HttpResponse::InternalServerError().body("Failed to acquire DB connection.");
+    }
+    let mut db_connection = db_connection.unwrap();
+
     let parent_span = sentry::configure_scope(|scope| scope.get_span());
     let mut db_span: Option<sentry::Span> = None;
     if parent_span.is_some() {
@@ -45,10 +53,16 @@ async fn get_image(
     let image_info: Result<(String, Option<u64>, Option<u64>), sqlx::Error> = sqlx::query_as(
         "SELECT path, width, height FROM illusts WHERE id = ?")
         .bind(image_id)
-        .fetch_one(&**pool).await;
+        .fetch_one(&mut *db_connection).await;
 
     if db_span.is_some() {
         db_span.unwrap().finish();
+    }
+
+    let db_close_res = db_connection.close().await;
+    if db_close_res.is_err() {
+        sentry::capture_error(&db_close_res.unwrap_err());
+        // This is not fatal error. Continue.
     }
 
     if image_info.is_err() {
@@ -313,10 +327,10 @@ fn main() {
 
     actix_web::rt::System::new().block_on(async {
         let pool = MySqlPoolOptions::new()
-            .max_connections(5)
+            .max_connections(50)
             .connect(
                &env::var("DB_DSN")
-                    .unwrap_or("mysql://illustStore:illustStore@db/illustStore".to_string())
+                    .unwrap_or("mysql://illustStore:illustStore@db/illustStore".to_string()),
             ).await.expect("Unable to connect to DB");
 
         HttpServer::new(move || {
