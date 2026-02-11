@@ -98,8 +98,8 @@ importers:
         version: 3.2.4(typescript@5.9.3)
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu':
-        specifier: 4.9.5
-        version: 4.9.5
+        specifier: 4.57.1
+        version: 4.57.1
       '@tailwindcss/oxide-linux-x64-gnu':
         specifier: ^4.1.18
         version: 4.1.18
@@ -605,11 +605,6 @@ packages:
 
   '@rollup/rollup-linux-x64-gnu@4.57.1':
     resolution: {integrity: sha512-ABca4ceT4N+Tv/GtotnWAeXZUZuM/9AQyCyKYyKnpk4yoA7QIAuBt6Hkgpw8kActYlew2mvckXkvx0FfoInnLg==}
-    cpu: [x64]
-    os: [linux]
-
-  '@rollup/rollup-linux-x64-gnu@4.9.5':
-    resolution: {integrity: sha512-Dq1bqBdLaZ1Gb/l2e5/+o3B18+8TI9ANlA1SkejZqDgdU/jK/ThYaMPMJpVMMXy2uRHvGKbkz9vheVGdq3cJfA==}
     cpu: [x64]
     os: [linux]
 
@@ -2565,9 +2560,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-x64-gnu@4.57.1':
-    optional: true
-
-  '@rollup/rollup-linux-x64-gnu@4.9.5':
     optional: true
 
   '@rollup/rollup-linux-x64-musl@4.57.1':
