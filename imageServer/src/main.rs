@@ -37,7 +37,7 @@ async fn get_image(
     let mut db_span: Option<sentry::Span> = None;
     if parent_span.is_some() {
         let parent_span = parent_span.unwrap();
-        let span = parent_span.start_child("db.query", "SELECT path FROM illusts WHERE id = ?");
+        let span = parent_span.start_child("db.query", "SELECT path, width, height FROM illusts WHERE id = ?");
         span.set_data("db:system", "mariadb".into());
         db_span = Some(span);
     }
