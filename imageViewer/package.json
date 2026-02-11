@@ -43,7 +43,7 @@
         "vue": "^3.5.28"
     },
     "optionalDependencies": {
-        "@rollup/rollup-linux-x64-gnu": "4.9.5",
+        "@rollup/rollup-linux-x64-gnu": "4.57.1",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.1.18",
         "lightningcss-linux-x64-gnu": "^1.31.1"
     }
