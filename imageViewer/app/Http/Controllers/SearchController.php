@@ -77,7 +77,7 @@ class SearchController extends Controller
             $searchTagIds[] = $tagId;
         }
 
-        if (count($searchTagIds) == 0) {
+        if (count($searchTagIds) === 0) {
             return Inertia::render('Image/Index', [
                 'searchParam' => "",
                 'images' => new Paginator(
