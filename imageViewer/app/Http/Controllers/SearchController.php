@@ -87,6 +87,8 @@ class SearchController extends Controller
             ]);
         }
 
+        $searchTagIds = array_unique($searchTagIds);
+
         $paginate = DB::table('tagAssign')
             ->join('illusts', 'tagAssign.illustId', '=', 'illusts.id')
             ->orderBy('tagAssign.illustId', 'desc')
