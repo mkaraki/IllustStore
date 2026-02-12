@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Pagination\Paginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -74,6 +75,16 @@ class SearchController extends Controller
             $usedQuery .= ' tag:' . $searchedTag[1];
 
             $searchTagIds[] = $tagId;
+        }
+
+        if (count($searchTagIds) == 0) {
+            return Inertia::render('Image/Index', [
+                'searchParam' => "",
+                'images' => new Paginator(
+                    [], 100, 0, []
+                ),
+                'imgServerBase' => config('illuststore.image_server_base_url'),
+            ]);
         }
 
         $paginate = DB::table('tagAssign')
