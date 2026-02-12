@@ -1,12 +1,18 @@
 FROM dunglas/frankenphp:php8.4.17
 
-RUN install-php-extensions \
-    pcntl \
-    mysqli \
-    pdo_mysql \
-    excimer \
-    memcached \
-    opcache
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        git \
+	nodejs \
+	npm \
+    && npm install -g pnpm@latest-10 \
+    && install-php-extensions \
+        pcntl \
+        mysqli \
+        pdo_mysql \
+        excimer \
+        memcached \
+        opcache
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
@@ -17,3 +23,4 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 #USER ${USER}
 
 CMD ["frankenphp", "run"]
+#CMD ["php", "artisan", "octane:frankenphp", "--log-level", "debug"]
