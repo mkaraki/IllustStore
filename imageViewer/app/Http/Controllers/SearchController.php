@@ -79,7 +79,7 @@ class SearchController extends Controller
         $paginate = DB::table('tagAssign')
             ->join('illusts', 'tagAssign.illustId', '=', 'illusts.id')
             ->orderBy('tagAssign.illustId', 'desc')
-	    ->whereIn('tagAssign.tagId', $searchTagIds)
+            ->whereIn('tagAssign.tagId', $searchTagIds)
             ->havingRaw('COUNT(illusts.id) = ?', [count($searchTagIds)])
             ->groupBy('tagAssign.illustId')
             ->select(['tagAssign.illustId AS id'])
