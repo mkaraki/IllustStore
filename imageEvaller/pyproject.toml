@@ -2,8 +2,8 @@
 name = "imageEvaller"
 version = "0.1.0"
 # https://www.tensorflow.org/install/pip#software_requirements
-# Uses 3.10 as minimum version because mysql-connector-python does not support Python 3.9
-requires-python = ">=3.10,<3.13"
+# Uses 3.11 as minimum version because mysql-connector-python does not support Python 3.9 and CVE of Keras library
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "deepdanbooru==1.0.4",
     "tensorflow==2.20.0",
