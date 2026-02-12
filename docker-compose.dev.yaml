@@ -17,6 +17,7 @@ services:
   viewer:
     build:
       context: imageViewer
+      #dockerfile: Dockerfile
       dockerfile: Dockerfile.dev
     volumes:
       - ./imageEvaller/images:/usr/src/app/images:ro

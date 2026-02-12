@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Pagination\Paginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -62,9 +63,7 @@ class SearchController extends Controller
 
         $usedQuery = '';
 
-        $queryBuilder = DB::table('tagAssign')
-            ->join('illusts', 'tagAssign.illustId', '=', 'illusts.id')
-            ->orderBy('tagAssign.illustId', 'desc');
+        $searchTagIds = [];
 
         foreach($q as $t) {
             $searchedTag = self::searchTagIdFromTagString($t);
@@ -75,10 +74,26 @@ class SearchController extends Controller
             $tagId = $searchedTag[0];
             $usedQuery .= ' tag:' . $searchedTag[1];
 
-            $queryBuilder = $queryBuilder->where('tagAssign.tagId', '=', $tagId, 'and');
+            $searchTagIds[] = $tagId;
         }
 
-        $paginate = $queryBuilder
+        if (count($searchTagIds) === 0) {
+            return Inertia::render('Image/Index', [
+                'searchParam' => "",
+                'images' => new Paginator(
+                    [], 100, 0, []
+                ),
+                'imgServerBase' => config('illuststore.image_server_base_url'),
+            ]);
+        }
+
+        $searchTagIds = array_unique($searchTagIds);
+
+        $paginate = DB::table('tagAssign')
+            ->join('illusts', 'tagAssign.illustId', '=', 'illusts.id')
+            ->orderBy('tagAssign.illustId', 'desc')
+            ->whereIn('tagAssign.tagId', $searchTagIds)
+            ->havingRaw('COUNT(illusts.id) = ?', [count($searchTagIds)])
             ->groupBy('tagAssign.illustId')
             ->select(['tagAssign.illustId AS id'])
             ->selectRaw('MIN(illusts.width) AS width')
