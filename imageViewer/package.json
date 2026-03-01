@@ -27,7 +27,7 @@
     "dependencies": {
         "@inertiajs/vue3": "^2.3.13",
         "@sentry/vue": "^10.38.0",
-        "@tailwindcss/vite": "^4.1.18",
+        "@tailwindcss/vite": "^4.2.1",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vueuse/core": "^14.2.1",
         "class-variance-authority": "^0.7.1",
