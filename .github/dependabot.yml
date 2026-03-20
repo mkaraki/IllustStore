@@ -18,6 +18,10 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    groups:
+      github-actions-all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "composer"
     directory: "/imageViewer/"
@@ -25,6 +29,10 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    groups:
+      composer-all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/imageViewer/"
@@ -32,6 +40,10 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    groups:
+      npm-all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/imageViewer/"
@@ -40,6 +52,10 @@ updates:
     assignees:
       - "mkaraki"
     registries: "*"
+    groups:
+      docker-imageViewer:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/imageEvaller/"
@@ -48,6 +64,10 @@ updates:
     assignees:
       - "mkaraki"
     registries: "*"
+    groups:
+      docker-imageEvaller:
+        patterns:
+          - "*"
 
   - package-ecosystem: "uv"
     directory: "/imageEvaller/"
@@ -55,6 +75,10 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    groups:
+      uv-all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/imageServer/"
@@ -63,6 +87,10 @@ updates:
     assignees:
       - "mkaraki"
     registries: "*"
+    groups:
+      docker-imageServer:
+        patterns:
+          - "*"
 
   - package-ecosystem: "cargo"
     directory: "/imageServer/"
@@ -70,3 +98,7 @@ updates:
       interval: "monthly"
     assignees:
       - "mkaraki"
+    groups:
+      cargo-all:
+        patterns:
+          - "*"
