@@ -6,10 +6,10 @@ edition = "2024"
 [dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros", "http2", "unicode", "compat"] }
 sqlx = { version = "0.8", default-features = false, features = [ "any", "runtime-tokio", "mysql" ] }
-sentry = { version = "0.46.2", default-features = false, features = ["actix", "tracing", "contexts", "panic", "reqwest", "rustls"] }
-image = { version = "0.25.9", default-features = false, features = ["rayon", "jpeg", "png", "webp"] }
+sentry = { version = "0.47.0", default-features = false, features = ["actix", "tracing", "contexts", "panic", "reqwest", "rustls"] }
+image = { version = "0.25.10", default-features = false, features = ["rayon", "jpeg", "png", "webp"] }
 fast_image_resize = { version = "6.0.0", features = ["image", "rayon"] }
 lepton_jpeg = "0.5.8"
 actix-files = "0.6.10"
-tracing-subscriber = { version = "0.3.22", default-features = false, features = ["std", "fmt"] }
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["std", "fmt"] }
 tracing = "0.1.44"
