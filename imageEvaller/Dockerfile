@@ -1,7 +1,7 @@
 # -----------------------------------------------------
 # Check https://www.tensorflow.org/install/pip#software_requirements
 # for supported python versions
-FROM dhi.io/python:3.12.12-debian13-dev AS builder
+FROM dhi.io/python:3.13.12-debian13-dev AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ARG UV_NO_DEV=1
@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-editable
 
 # -----------------------------------------------------
-FROM dhi.io/python:3.12.12-debian13
+FROM dhi.io/python:3.13.12-debian13
 
 WORKDIR /usr/src/app
 
