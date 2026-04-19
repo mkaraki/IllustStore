@@ -48,3 +48,14 @@ services:
   memcached:
     image: memcached:1.6-alpine
     command: memcached -m 1024
+
+  util_lepton_convert:
+    build:
+      context: utils/ilstr_jpeg_lepton_compress
+      dockerfile: Dockerfile
+    volumes:
+      - ./imageEvaller/images:/usr/src/app/images
+    depends_on:
+      - db
+    profiles:
+      - tools
