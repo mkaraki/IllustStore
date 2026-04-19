@@ -47,7 +47,10 @@ def process_jpeg_image(db, dbCursor, i):
     if image_id is None:
         sys.stderr.write(f"Image {i} not found in database, skipping.\n")
         return
-    
+
+    path_info = Path(i)
+    absolute_path = str(path_info.absolute())
+
     with sentry_sdk.start_transaction(op="process_jpeg_image", name="Process JPEG Image") as transaction:
         raw_data = None
         span = sentry_sdk.start_span(op="loadJpgImage", description="Load Jpg Image")
@@ -89,7 +92,7 @@ def process_jpeg_image(db, dbCursor, i):
             sys.stderr.write(f"Decompressed data does not match original data for {i}\n")
             return
 
-        file_ext_splitted = i.split(".")
+        file_ext_splitted = absolute_path.split(".")
         file_ext_splitted[-1] = "lep"
         lepton_file_path = ".".join(file_ext_splitted)
 
