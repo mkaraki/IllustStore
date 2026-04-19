@@ -1,0 +1,15 @@
+[project]
+name = "ilstr_jpeg_lepton_compress"
+version = "0.1.0"
+dependencies = [
+    "mysql-connector-python==9.6.0",
+    "sentry-sdk==2.55.0",
+    "lepton-jpeg-python==0.5.8",
+]
+
+[project.scripts]
+ilstr_jpeg_lepton_compress = "ilstr_jpeg_lepton_compress:main"
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.11.0"]
+build-backend = "uv_build"
