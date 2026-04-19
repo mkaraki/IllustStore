@@ -76,7 +76,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
-          context: src/ilstr_jpeg_lepton_compress
+          context: utils/ilstr_jpeg_lepton_compress
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
