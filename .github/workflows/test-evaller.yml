@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Login to DHI
         run: echo "$DOCKER_PAT" | sudo docker login dhi.io -u "$DOCKER_USER" --password-stdin
