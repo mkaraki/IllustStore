@@ -1,0 +1,131 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Group and automerge vulnerability fixes (by Muse)",
+      "groupName": "Vulnerability fixes",
+      "isVulnerabilityAlert": true,
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false
+    },
+    {
+      "description": "Group composer updates (by Muse)",
+      "matchManagers": [
+        "composer"
+      ],
+      "groupName": "Composer dependencies",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false
+    },
+    {
+      "description": "Group npm updates (by Muse)",
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "npm dependencies",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false
+    },
+    {
+      "description": "Group Docker image updates (by Muse)",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "groupName": "Docker images",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false
+    },
+    {
+      "description": "Group Python (uv/pip) updates (by Muse)",
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "groupName": "Python dependencies",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false
+    },
+    {
+      "description": "Group Cargo updates (by Muse)",
+      "matchManagers": [
+        "cargo"
+      ],
+      "groupName": "Cargo dependencies",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false
+    },
+    {
+      "description": "Group GitHub Actions updates (by Muse)",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "GitHub Actions",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": false
+    },
+    {
+      "description": "Assign non-automerge PRs to the repository owner (by Muse)",
+      "matchUpdateTypes": [
+        "major",
+        "replacement",
+        "bump",
+        "pin",
+        "pinDigest",
+        "digest",
+        "lockFileMaintenance"
+      ],
+      "assignees": [
+        "mkaraki"
+      ]
+    }
+  ]
+}
